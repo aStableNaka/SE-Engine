@@ -1,0 +1,19 @@
+{
+  "name": "summersend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "compile":"tsc",
+    "test": "jest --passWithNoTests",
+    "build":"npm run compile; npm run test;"
+  },
+  "author": "Naka",
+  "license": "MIT",
+  "description": "",
+  "dependencies": {
+    "three": "^0.104.0"
+  }
+}

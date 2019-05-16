@@ -1,0 +1,7 @@
+package-lock.json
+tsconfig.json
+node_modules
+node_modules/*
+*.code-workspace*
+build
+build/*
