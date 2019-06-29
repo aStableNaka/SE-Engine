@@ -12,3 +12,5 @@ dist
 dist/*
 out
 out/*
+coverage
+coverage/*
