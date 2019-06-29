@@ -12,5 +12,8 @@ dist
 dist/*
 out
 out/*
-coverage
-coverage/*
+!coverage/*.svg
+coverage/coverage*
+coverage/lcov*/
+coverage/clover*
+lcov.info

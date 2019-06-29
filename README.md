@@ -1,1 +1,2 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/c79a6ec84a3d5cfa6637/maintainability)](https://codeclimate.com/github/aStableNaka/SEFramework/maintainability)
+[![Jest Coverage](https://api.codeclimate.com/v1/badges/c79a6ec84a3d5cfa6637/maintainability)](https://codeclimate.com/github/aStableNaka/SEFramework/maintainability)
