@@ -6,14 +6,20 @@
     "lib": "lib"
   },
   "scripts": {
-    "compile":"tsc",
+    "compile": "tsc",
+    "webpack": "webpack out",
     "test": "jest --passWithNoTests",
-    "build":"npm run compile; npm run test;"
+    "build": "npm run compile && npm run webpack && npm run test"
   },
   "author": "Naka",
   "license": "GNU General Public License v3.0",
   "description": "",
   "dependencies": {
+    "@types/three": "^0.103.2",
     "three": "^0.104.0"
+  },
+  "devDependencies": {
+    "webpack": "^4.35.0",
+    "webpack-cli": "^3.3.5"
   }
 }
