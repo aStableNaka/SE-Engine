@@ -16,6 +16,7 @@
   "description": "",
   "dependencies": {
     "@types/three": "^0.103.2",
+    "simplex-noise": "^2.4.0",
     "three": "^0.104.0"
   },
   "devDependencies": {
@@ -24,7 +25,7 @@
   },
   "jest": {
     "coverageReporters": [
-      "json-summary", 
+      "json-summary",
       "text",
       "lcov"
     ]

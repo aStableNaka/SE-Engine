@@ -1,5 +1,7 @@
 import { RegionMesh } from '../rendering/RegionMesh';
-import { MapObject } from './Map';
+import { MapObject } from './MapObject';
+import { CreateGrid } from '../utils/Spaces';
+import {EventEmitter} from 'events';
 
 class BlockMapObject implements MapObject{
 	x: number;
@@ -14,20 +16,24 @@ class BlockMapObject implements MapObject{
 	}
 }
 
-export function CreateTable<T>( size:number, callback:( x : number, y : number ) => T ) : T[][]{
-	return new Array< null >( size ).fill( null ).map( (a, y)=>{
-		return new Array< null >( size ).fill( null ).map( (b, x)=>{
-			return callback(x,y);
-		})
-	});
+class RegionEventEmitter extends EventEmitter{
+	constructor(){
+		super();
+		this.on('set', this.eventSet);
+	}
+
+	eventSet():void{
+
+	}
 }
 
 export class Region{
 	mesh:RegionMesh;
 	contents: ( MapObject | null )[][];
+	eventEmitter:RegionEventEmitter = new RegionEventEmitter();
 	constructor( size:number ){
 		this.mesh = new RegionMesh(  );
-		this.contents = CreateTable< BlockMapObject >( size, (x,y)=>{
+		this.contents = CreateGrid< BlockMapObject >( size, (x,y)=>{
 			return new BlockMapObject( x, y, {} );
 		} );
 	}

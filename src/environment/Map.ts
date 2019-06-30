@@ -1,5 +1,6 @@
 import * as three from 'three';
 import { Region } from './Region';
+import { MapObject } from './MapObject'
 
 export type StorableBuffer = Buffer;
 
@@ -11,13 +12,6 @@ export type StorableBuffer = Buffer;
 /**
  * Defines a single map-object, stored within regions
  */
-export interface MapObject{
-	ref: any,
-	x: number,
-	y: number,
-	z?: number,
-	meta?: any
-}
 
 /**
  * A storable object is an object that
