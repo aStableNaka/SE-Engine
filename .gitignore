@@ -18,3 +18,5 @@ coverage/lcov*/
 coverage/clover*
 lcov.info
 *.config.js
+assets
+*.exe

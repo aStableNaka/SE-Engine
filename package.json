@@ -7,6 +7,7 @@
   },
   "scripts": {
     "compile": "tsc",
+    "compilewatch":"tsc --watch --pretty",
     "webpack": "webpack out",
     "test": "jest --passWithNoTests --coverage && jest-coverage-badges",
     "build": "npm run compile && npm run webpack && npm run test"
