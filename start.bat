@@ -1,0 +1,1 @@
+start .\runtime\nwjs-sdk-v0.40.1-win-x64\nw.exe

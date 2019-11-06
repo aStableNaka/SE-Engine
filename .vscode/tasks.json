@@ -9,15 +9,25 @@
 			"problemMatcher": []
 		},
 		{
-			"label":"Jestify",
+			"label": "Jestify",
 			"type": "shell",
 			"command": "npm run test",
 			"problemMatcher": []
 		},
 		{
-			"label":"Build and Jestify",
+			"label": "Build and Jestify",
 			"type": "shell",
 			"command": "tsc; npm run test",
+			"problemMatcher": []
+		},
+		{
+			"type": "npm",
+			"script": "run",
+			"problemMatcher": []
+		},
+		{
+			"type": "npm",
+			"script": "test-server",
 			"problemMatcher": []
 		}
 	]

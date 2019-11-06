@@ -8,9 +8,11 @@
   "scripts": {
     "compile": "tsc",
     "compilewatch":"tsc --watch --pretty",
-    "webpack": "webpack out",
+    "webpack": "webpack out --output-path runtime/nwjs-sdk-v0.40.1-win-x64",
     "test": "jest --passWithNoTests --coverage && jest-coverage-badges",
-    "build": "npm run compile && npm run webpack && npm run test"
+    "test-server": "ws",
+    "build": "npm run compile && npm run webpack && npm run test",
+    "run": "start.bat"
   },
   "author": "Naka",
   "license": "GNU General Public License v3.0",
