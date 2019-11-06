@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 /**
  * Creates a 2D grid
  * @param size Size of a sidelength of a table
@@ -24,4 +26,23 @@ export function CreateVolume<T>( size:number, fill:( x : number, y : number, z :
 			})
 		})
 	});
+}
+
+export function getSpaceDepth( space:any[] ):number{
+	if(space[0]){
+		if(Array.isArray(space[0])){
+			return 1 + getSpaceDepth(space[0]);
+		}
+	}
+	return 1;
+}
+
+export class Position extends THREE.Vector3{};
+
+export class Space<T> extends Array<T>{
+	depth:number;
+	constructor(depth){
+		super();
+		this.depth = depth;
+	}
 }

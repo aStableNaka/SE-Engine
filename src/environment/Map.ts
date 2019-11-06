@@ -13,18 +13,6 @@ export type StorableBuffer = Buffer;
  * Defines a single map-object, stored within regions
  */
 
-/**
- * A storable object is an object that
- * has methods for converting its own
- * data into a format meant for saving
- * 
- * as well as methods for loading
- * and an identifier
- */
-export interface Storable{
-	toBuffer(): StorableBuffer; // Converts storable to a buffer object
-	fromBuffer( buffer:Buffer ):void; // Transfers buffer data from a storable object
-}
 
 /**
  * Defines the map as a whole
