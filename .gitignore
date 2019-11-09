@@ -18,6 +18,7 @@ coverage/clover*
 lcov.info
 *.config.js
 /assets
+/other
 *.exe
 THREE/
 runtime/
@@ -29,5 +30,4 @@ runtime/
 *.bin
 *.glb
 *.exr
-/tests/*
 *.json
