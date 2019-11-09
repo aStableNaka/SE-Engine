@@ -1,11 +1,12 @@
-import { RegionMesh } from '../rendering/RegionMesh';
-import { MapObject } from './MapObject';
-import { CreateGrid, Position, getSpaceDepth } from '../utils/Spaces';
+import { RegionMesh } from '../../rendering/region/RegionMesh';
+import { MapObject } from '../MapObject';
+import { CreateGrid, Position, getSpaceDepth } from '../../utils/Spaces';
 import {EventEmitter} from 'events';
 import { PositionalAudio } from 'three';
-import { Dictionary } from '../utils/Dictionary';
-import { World } from './World';
-import { Layer } from './Layer';
+import { Dictionary } from '../../utils/Dictionary';
+import { World } from '../World';
+import { Layer } from '../Layer';
+import { Block, BlockData } from '../blocks/Block';
 
 /**
  * How blocks are represented in regions
@@ -39,9 +40,21 @@ export class Region{
 	eventEmitter:RegionEventEmitter = new RegionEventEmitter();
 	world:World;
 
+	/**
+	 * produces a region of size x size x height
+	 * @param size sidelength of the region
+	 * @param parent the world that this region inhabits
+	 */
 	constructor( size:number, parent:World ){
 		this.world = World;
 		this.meshGroup = new RegionMesh( this );
+		
+		// Generate the terrain
+		this.layers.push( new Layer(size, 0) );
+	}
+
+	getBlock( x:number, y:number, z:number ):BlockData{
+		return this.layers[z].getBlock(x,y);
 	}
 
 	/**

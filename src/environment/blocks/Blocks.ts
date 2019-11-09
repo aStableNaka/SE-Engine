@@ -1,5 +1,5 @@
 import { BlockRegistry } from "./BlockRegistry";
-import { BlockEmpty } from "./BlockEmpty";
+import { BlockEmpty } from "./base/BlockEmpty";
 
 export const baseRegistry = new BlockRegistry();
 

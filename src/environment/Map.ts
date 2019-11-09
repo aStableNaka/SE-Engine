@@ -1,5 +1,5 @@
 import * as three from 'three';
-import { Region } from './Region';
+import { Region } from './region/Region';
 import { MapObject } from './MapObject'
 
 export type StorableBuffer = Buffer;

@@ -17,7 +17,8 @@
 		{
 			"label": "Build and Jestify",
 			"type": "shell",
-			"command": "tsc; npm run test",
+			"group": "build",
+			"command": "rm -r ./out/*; tsc; npm run test",
 			"problemMatcher": []
 		},
 		{
@@ -28,6 +29,12 @@
 		{
 			"type": "npm",
 			"script": "test-server",
+			"problemMatcher": []
+		},
+		{
+			"type": "npm",
+			"script": "compile",
+			"group": "build",
 			"problemMatcher": []
 		}
 	]

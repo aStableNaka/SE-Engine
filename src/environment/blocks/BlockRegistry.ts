@@ -1,6 +1,4 @@
-import { Block } from "./Block";
-
-export type BlockClass = Function & { module:string };
+import { Block, BlockClass } from "./Block";
 
 export class RegistryComponent{
 	blockClass:BlockClass;
@@ -42,7 +40,7 @@ export class BlockRegistry{
 	 * @param forceRegister force the registry to override the old block
 	 */
 	register( blockClass: BlockClass, forceRegister:boolean=false ){
-		let blockID:string = `${blockClass.module}:${blockClass.name}`;
+		let blockID:string = blockClass.blockId;
 
 		if( this.blocks[blockID] ){
 			// If a block has already been registered and forceRegister is false

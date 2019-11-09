@@ -1,8 +1,11 @@
 import { MapObject } from '../MapObject';
 import { Storable } from '../../io/Storable';
 import * as Space from '../../utils/Spaces';
-import * as Regions from '../Region';
+import * as Regions from '../region/Region';
 import { BlockRegistry } from './BlockRegistry';
+
+
+export type BlockClass = Function & { module:string, blockId:string };
 
 /**
  * Blocks are *small* representations of objects which form the environment
@@ -19,9 +22,32 @@ export class Block extends Storable{
 	constructor(){
 		super();
 	}
+
+	static get blockId():string{
+		return  `${this.module}:${this.name}`
+	}
+
+	static createBlockData(data?:any):BlockData{
+		return new BlockData(this, data);
+	}
 	
 	// Storable definitions
 	toStorageObject(){
 		return { className:this.constructor.name };
+	}
+}
+
+export class BlockData extends Storable{
+	baseClass: any;
+	data: any;
+	constructor( baseClass:BlockClass, data?:any ){
+		super();
+		this.baseClass = baseClass;
+		this.data = data;
+	}
+
+	// Storable definitions
+	toStorageObject(){
+		return { baseClass:this.constructor.name, data:this.data };
 	}
 }

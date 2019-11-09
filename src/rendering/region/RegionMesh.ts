@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Region } from '../environment/Region';
+import { Region } from '../../environment/region/Region';
 
 export class RegionMesh extends THREE.Group{
 	region:Region;

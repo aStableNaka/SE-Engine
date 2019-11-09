@@ -1,7 +1,12 @@
-const Region = require( '../out/src/environment/Region' ).Region;
+const Region = require( '../out/environment/region/Region' ).Region;
+const World = require( '../out/environment/world' ).World;
+const baseRegistry = require( '../out/environment/blocks/Blocks' ).baseRegistry;
+
+const world = new World()
+const region = new Region(16, world);
+
+
 
 test('Region contents should not be null', ()=>{
-	let n = new Region( 2 );
-	console.log(n.contents);
-	expect(Array.isArray( n.contents[0] )).toBe( true );
+	
 })

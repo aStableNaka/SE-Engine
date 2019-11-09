@@ -7,7 +7,7 @@
   },
   "scripts": {
     "compile": "tsc",
-    "compilewatch":"tsc --watch --pretty",
+    "compilewatch": "tsc --watch --pretty",
     "webpack": "webpack out --output-path runtime/nwjs-sdk-v0.40.1-win-x64",
     "test": "jest --passWithNoTests --coverage && jest-coverage-badges",
     "test-server": "ws",
@@ -19,6 +19,7 @@
   "description": "",
   "dependencies": {
     "@types/three": "^0.103.2",
+    "jest-coverage-badges": "^1.1.2",
     "simplex-noise": "^2.4.0",
     "three": "^0.104.0"
   },

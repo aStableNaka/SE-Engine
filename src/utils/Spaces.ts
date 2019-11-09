@@ -41,7 +41,7 @@ export class Position extends THREE.Vector3{};
 
 export class Space<T> extends Array<T>{
 	depth:number;
-	constructor(depth){
+	constructor(depth : number){
 		super();
 		this.depth = depth;
 	}
