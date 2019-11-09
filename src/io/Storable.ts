@@ -18,7 +18,13 @@ export class Storable{
 
 	// Converts this object into a json string
 	toString():string{
-		return JSON.stringify( this.toStorageObject() );
+		let obj = this.toStorageObject();
+		Object.keys(obj).map((key)=>{
+			if(obj[key] && obj[key].toStorageObject){
+				obj[key] = obj[key].toStorageObject();
+			}
+		});
+		return JSON.stringify( obj );
 	};
 
 	// Converts storable to a buffer object

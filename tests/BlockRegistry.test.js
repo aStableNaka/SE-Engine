@@ -4,9 +4,13 @@ test("[ BlockRegistry ] base:BlockEmpty should be defined", ()=>{
 	expect(typeof baseRegistry.get("base:BlockEmpty")).toBe("object");
 })
 
+test("[ Block Registry ] storageObject to recursive to string", ()=>{
+	let blockRegistryEntry = baseRegistry.get("base:BlockEmpty");
+	console.log(blockRegistryEntry.baseClass.toStorageObject());
+})
+
 test("[ BlockRegistry ] base:BlockEmpty toStorageObject", ()=>{
-	console.log(baseRegistry.get("base:BlockEmpty"));
-	let blockData = baseRegistry.get("base:BlockEmpty").blockClass.createBlockData(); 
-	console.log(blockData)
+	let blockData = baseRegistry.get("base:BlockEmpty").baseClass.createBlockData(); 
+	console.log(blockData.toString())
 	expect(typeof blockData).toBe("object");
 })

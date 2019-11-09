@@ -5,7 +5,7 @@ import * as Regions from '../region/Region';
 import { BlockRegistry } from './BlockRegistry';
 
 
-export type BlockClass = Function & { module:string, blockId:string };
+export type baseClass = Function & { module:string, blockId:string };
 
 /**
  * Blocks are *small* representations of objects which form the environment
@@ -31,6 +31,10 @@ export class Block extends Storable{
 		return new BlockData(this, data);
 	}
 	
+	static toStorageObject(){
+		return { type:this.name };
+	}
+
 	// Storable definitions
 	toStorageObject(){
 		return { className:this.constructor.name };
@@ -40,7 +44,7 @@ export class Block extends Storable{
 export class BlockData extends Storable{
 	baseClass: any;
 	data: any;
-	constructor( baseClass:BlockClass, data?:any ){
+	constructor( baseClass:baseClass, data?:any ){
 		super();
 		this.baseClass = baseClass;
 		this.data = data;
@@ -48,6 +52,6 @@ export class BlockData extends Storable{
 
 	// Storable definitions
 	toStorageObject(){
-		return { baseClass:this.constructor.name, data:this.data };
+		return { baseClass:this.baseClass, data:this.data };
 	}
 }
