@@ -7,6 +7,7 @@ const region = new Region(16, world);
 
 
 
-test('[ Region ] Region contents should not be null', ()=>{
-	
+test('[ Storable ] There should be no information loss in conversion toString', ()=>{
+	let data = JSON.parse(region.toString());
+	expect(data.layers[0].contents[0][0].blockId).toBe('base:BlockEmpty');
 })

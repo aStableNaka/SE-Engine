@@ -12,20 +12,62 @@ export class Storable{
 		this.type = this.constructor.name;
 	}
 	
+	/** @virtual */
 	toStorageObject():any{
 		return {};
+	}
+
+	/** @virtual */
+	fromString():void{
+
+	}
+
+	/** @virtual compress the data */
+	compress(data:any):void{
+		return data;
+	}
+
+	/** @virtual decompress the data */
+	decompress(data:any):void{
+		return data;
 	}
 
 	// Converts this object into a json string
 	toString():string{
 		let obj = this.toStorageObject();
-		Object.keys(obj).map((key)=>{
-			if(obj[key] && obj[key].toStorageObject){
-				obj[key] = obj[key].toStorageObject();
+		function deepDough(data:any):any{
+			/* If for any reason, the property value is undefined */
+			if(!data){
+				return data;
 			}
+
+			if(typeof(data)=='object'){
+				Object.keys(data).map((key)=>{
+					data[key] = deepDough(data[key]);
+				});
+			}
+
+			/* if the property value is an object */
+			if(data.toStorageObject){
+				return data.toStorageObject();
+			}
+
+			/* if the property value is an array */
+			else if(Array.isArray(data)){
+				return data.map(deepDough);
+			}
+
+			return data;
+		}
+
+		Object.keys(obj).map((key)=>{
+			obj[key] = deepDough(obj[key]);
 		});
-		return JSON.stringify( obj );
+		
+		return JSON.stringify( this.compress( obj ) )
 	};
+
+	
 
 	// Converts storable to a buffer object
 	toBuffer():Buffer{

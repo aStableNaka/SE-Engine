@@ -12,7 +12,8 @@
     "test": "jest --passWithNoTests --coverage && jest-coverage-badges",
     "test-server": "ws",
     "build": "npm run compile && npm run webpack && npm run test",
-    "run": "start.bat"
+    "run": "start.bat",
+    "run-dev":"npm run build && npm run run"
   },
   "author": "Naka",
   "license": "GNU General Public License v3.0",

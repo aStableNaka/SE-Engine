@@ -50,7 +50,7 @@ export class BlockData extends Storable{
 
 	// Storable definitions
 	toStorageObject(){
-		return { baseClass:this.baseClass, data:this.data };
+		return { blockId:this.baseClass.blockId, data:this.data };
 	}
 }
 
