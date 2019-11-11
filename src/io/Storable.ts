@@ -22,49 +22,77 @@ export class Storable{
 
 	}
 
-	/** @virtual compress the data */
-	compress(data:any):void{
+	/**
+	 * @virtual
+	 * Compress the Storable.data whenever it's requested as a string
+	 * @param data 
+	 */
+	compress(data:any):any{
 		return data;
 	}
 
-	/** @virtual decompress the data */
+	/**
+	 * @virtual
+	 * Decompress the input data and assign the values to their appropriate places
+	 * @param data 
+	 */
 	decompress(data:any):void{
-		return data;
+		return;
 	}
 
 	// Converts this object into a json string
-	toString():string{
+	toString(compress:boolean=false):string{
 		let obj = this.toStorageObject();
+
+		/* if the property value is an array */
+		function processArray(data:any[]){
+			return data.map((element)=>{
+				return deepDough(element);
+			})
+		}
+		
+		/* if the property value is an object */
+		function processObject(data:any, compress:boolean=false):any{
+			let out = data;
+			Object.keys(data).map((key)=>{
+				if(!data[key]){ return; }
+				if(data[key].toStorageObject){
+					out[key] = deepDough(data.toStorageObject());
+				}else{
+					out[key] = deepDough(data[key]);
+				}
+			})
+			if(compress && data.compress){
+				return data.compress(out);
+			}
+			
+			return out;
+		}
+
+		/* recursive data processing */
 		function deepDough(data:any):any{
 			/* If for any reason, the property value is undefined */
 			if(!data){
 				return data;
 			}
-
-			if(typeof(data)=='object'){
-				Object.keys(data).map((key)=>{
-					data[key] = deepDough(data[key]);
-				});
+			
+			/* if the property value is an array */
+			if(Array.isArray(data)){
+				return processArray(data);
 			}
 
 			/* if the property value is an object */
-			if(data.toStorageObject){
-				return data.toStorageObject();
+			if(typeof(data)=='object'){
+				return processObject(data, compress);
 			}
-
-			/* if the property value is an array */
-			else if(Array.isArray(data)){
-				return data.map(deepDough);
-			}
-
 			return data;
 		}
 
-		Object.keys(obj).map((key)=>{
-			obj[key] = deepDough(obj[key]);
-		});
-		
-		return JSON.stringify( this.compress( obj ) )
+		obj = processObject(obj);
+		if(compress){
+			obj = this.compress(obj);
+		}
+		return JSON.stringify( obj )
 	};
 
 	

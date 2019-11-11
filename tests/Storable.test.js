@@ -9,5 +9,12 @@ const region = new Region(16, world);
 
 test('[ Storable ] There should be no information loss in conversion toString', ()=>{
 	let data = JSON.parse(region.toString());
-	expect(data.layers[0].contents[0][0].blockId).toBe('base:BlockEmpty');
+	console.log(data.layers[0].contents[0][0]);
+	expect(data.layers[0].contents[0][0].baseClass.blockId).toBe('base:BlockEmpty');
+})
+
+test('[ Storable ] Make sure compression works', ()=>{
+	let data = JSON.parse(region.toString(true));
+	console.log(data);
+	expect(data.layers[0].contents[0][0]).toBe(0);
 })
