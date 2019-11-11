@@ -1,7 +1,7 @@
 {
   "name": "summersend",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "App.js",
   "directories": {
     "lib": "lib"
   },
@@ -18,8 +18,12 @@
   "license": "GNU General Public License v3.0",
   "description": "",
   "dependencies": {
+    "@types/react": "^16.9.11",
+    "@types/react-dom": "^16.9.4",
     "@types/three": "^0.103.2",
     "jest-coverage-badges": "^1.1.2",
+    "react": "^16.11.0",
+    "react-dom": "^16.11.0",
     "simplex-noise": "^2.4.0",
     "three": "^0.104.0"
   },

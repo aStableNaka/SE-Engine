@@ -1,11 +1,9 @@
 import { MapObject } from '../MapObject';
 import { Storable } from '../../io/Storable';
+import { baseClass } from '../../utils/Classes';
 import * as Space from '../../utils/Spaces';
 import * as Regions from '../region/Region';
 import { BlockRegistry } from './BlockRegistry';
-
-
-export type baseClass = Function & { module:string, blockId:string };
 
 /**
  * Blocks are *small* representations of objects which form the environment
@@ -32,7 +30,7 @@ export class Block extends Storable{
 	}
 	
 	static toStorageObject(){
-		return { type:this.name };
+		return { type:this.name, blockId:this.blockId };
 	}
 
 	// Storable definitions
@@ -55,3 +53,8 @@ export class BlockData extends Storable{
 		return { baseClass:this.baseClass, data:this.data };
 	}
 }
+
+/**
+ * Each block should know which vertecies it represents
+ * within a region mesh. This is for doing culling
+ */

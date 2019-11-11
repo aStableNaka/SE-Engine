@@ -1,10 +1,11 @@
-import { Block } from "./Block";
-import {RegistryComponent} from "../../utils/Registry";
-import {baseClass} from "../../utils/Classes";
+import { Flavor } from "./Flavor";
+import { RegistryComponent } from "../../utils/Registry";
+import { baseClass } from "../../utils/Classes";
+
 /**
  * The block registry is used to assign block to their typeName
  */
-export class BlockRegistry{
+export class FlavorRegistry{
 	blocks:any = {};
 	name:string;
 	constructor( name:string="anonymous" ){
@@ -12,7 +13,7 @@ export class BlockRegistry{
 	}
 
 	get logTag():string{
-		return `[ BlockRegistry:${this.name} ]`;
+		return `[ FlavorRegistry:${this.name} ]`;
 	}
 
 	/**
@@ -20,8 +21,8 @@ export class BlockRegistry{
 	 * @param baseClass {baseClass} 
 	 * @param forceRegister force the registry to override the old block
 	 */
-	register( baseClass: baseClass, forceRegister:boolean=false ){
-		let blockID:string = baseClass.blockId;
+	register( baseClass: Flavor, forceRegister:boolean=false ){
+		let blockID:string = baseClass.flavorId;
 
 		if( this.blocks[blockID] ){
 			// If a block has already been registered and forceRegister is false
@@ -39,7 +40,7 @@ export class BlockRegistry{
 		
 	}
 
-	get( blockID:string ):baseClass{
+	get( blockID:string ):Flavor{
 		if( this.blocks[blockID] ){
 			return this.blocks[blockID];
 		}else{
@@ -48,7 +49,7 @@ export class BlockRegistry{
 				return name.split(':')[1]==blockID;
 			})
 			if(!searchResults[0]){
-				throw new Error( `${this.logTag} block "${blockID}" has not been registered.` );
+				throw new Error( `${this.logTag} flavor "${blockID}" has not been registered.` );
 			}
 			return this.blocks[searchResults[0]];
 		}

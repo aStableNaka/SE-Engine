@@ -1,0 +1,1 @@
+export type baseClass = Function & { module:string, blockId:string };
