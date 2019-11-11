@@ -1,1 +1,1 @@
-export type baseClass = Function & { module:string, blockId:string };
+export type baseClass = Function & { module:string, blockId:string, constructor:Function };

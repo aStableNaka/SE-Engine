@@ -39,7 +39,7 @@ export class BlockRegistry{
 		
 	}
 
-	get( blockID:string ):baseClass{
+	get( blockID:string ):RegistryComponent{
 		if( this.blocks[blockID] ){
 			return this.blocks[blockID];
 		}else{
