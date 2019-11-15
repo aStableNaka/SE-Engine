@@ -13,12 +13,12 @@ export class Storable{
 	}
 	
 	/** @virtual */
-	toStorageObject():any{
+	public toStorageObject():any{
 		return {};
 	}
 
 	/** @virtual */
-	fromString():void{
+	public fromString():void{
 
 	}
 
@@ -27,7 +27,7 @@ export class Storable{
 	 * Compress the Storable.data whenever it's requested as a string
 	 * @param data 
 	 */
-	compress(data:any):any{
+	public compress(data:any):any{
 		return data;
 	}
 
@@ -36,30 +36,37 @@ export class Storable{
 	 * Decompress the input data and assign the values to their appropriate places
 	 * @param data 
 	 */
-	decompress(data:any):void{
+	public decompress(data:any):void{
 		return;
 	}
 
-	// Converts this object into a json string
-	toString(compress:boolean=false):string{
-		let obj = this.toStorageObject();
-
-		/* if the property value is an array */
-		function processArray(data:any[]){
-			return data.map((element)=>{
-				return deepDough(element);
-			})
+	/* recursive data property value processing */
+	private deepDough( data:any, compress:boolean=false ):any{
+		/* If for any reason, the property value is undefined */
+		if(!data){
+			return data;
 		}
 		
+		/* if the property value is an array */
+		if(Array.isArray(data)){
+			return this.processArray(data, compress);
+		}
+
 		/* if the property value is an object */
-		function processObject(data:any, compress:boolean=false):any{
-			let out = data;
+		if(typeof(data)=='object'){
+			return this.processObject(data, compress);
+		}
+		return data;
+	}
+
+	private processObject( data:any, compress:boolean=false ):any{
+		let out = data;
 			Object.keys(data).map((key)=>{
 				if(!data[key]){ return; }
 				if(data[key].toStorageObject){
-					out[key] = deepDough(data.toStorageObject());
+					out[key] = this.deepDough(data.toStorageObject(), compress);
 				}else{
-					out[key] = deepDough(data[key]);
+					out[key] = this.deepDough(data[key], compress);
 				}
 			})
 			if(compress && data.compress){
@@ -67,43 +74,33 @@ export class Storable{
 			}
 			
 			return out;
-		}
+	}
 
-		/* recursive data processing */
-		function deepDough(data:any):any{
-			/* If for any reason, the property value is undefined */
-			if(!data){
-				return data;
-			}
-			
-			/* if the property value is an array */
-			if(Array.isArray(data)){
-				return processArray(data);
-			}
+	/* processing property values that are arrays */
+	private processArray(data:any[], compress:boolean=false):any{
+		return data.map((element)=>{
+			return this.deepDough(element, compress);
+		})
+	}
 
-			/* if the property value is an object */
-			if(typeof(data)=='object'){
-				return processObject(data, compress);
-			}
-			return data;
-		}
-
-		obj = processObject(obj);
+	// Converts this object into a json string
+	public toString(compress:boolean=false):string{
+		let obj = this.toStorageObject();
+		obj = this.processObject(obj, compress);
 		if(compress){
 			obj = this.compress(obj);
 		}
 		return JSON.stringify( obj )
 	};
 
-	
 
-	// Converts storable to a buffer object
-	toBuffer():Buffer{
+	// Converts serializable to a storable form
+	public serialize():Buffer{
 		return new Buffer(0);
 	};
 
-	// Transfers buffer data from a storable object
-	fromBuffer( buffer:Buffer ):void{
+	// Converts serialized data into a workable form
+	public deserialize( buffer:Buffer ):void{
 
 	};
 }
