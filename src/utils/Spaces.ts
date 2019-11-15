@@ -46,3 +46,28 @@ export class Space<T> extends Array<T>{
 		this.depth = depth;
 	}
 }
+
+export type gridType<T> = T[][];
+
+/**
+ * Row major
+ */
+export class Grid<T>{
+	contents:gridType<T>;
+	constructor( size:number, fill:(x:number,y:number) => T ){
+		this.contents = CreateGrid(size, fill);
+	}
+
+	getRow( row:number ){
+		return this.contents[row];
+	}
+
+	get( row:number, column:number ) : T {
+		return this.getRow(row)[column];
+	}
+
+	map<t>(callback:(value:T[],index:number,array:T[][])=>t[], thisValue?:any){
+		return this.contents.map(callback, thisValue||this);
+	}
+	
+}

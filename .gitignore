@@ -16,7 +16,6 @@ coverage/coverage*
 coverage/lcov*/
 coverage/clover*
 lcov.info
-*.config.js
 /assets
 /other
 *.exe
@@ -31,3 +30,4 @@ runtime/
 *.glb
 *.exr
 *.json
+!tsconfig.json

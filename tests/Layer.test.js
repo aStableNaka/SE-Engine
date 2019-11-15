@@ -1,12 +1,61 @@
 
 const Layer = require( '../out/environment/Layer' ).Layer;
+const layer1 = new Layer(16, 0);
+let compressedData = "";
 
 test('[ Layer:Storable ] Make sure compression works', ()=>{
-	let data = JSON.parse(region.toString(true));
-	expect(data.layers[0].contents[0][0]).toBe(0);
+	compressedData = JSON.parse(layer1.toString(true));
+	expect(compressedData.grid.contents[0][0]).toBe(0);
 })
 
 
 test('[ Layer:Storable ] Make sure decompression works', ()=>{
-	expect(1).toBe(2);
+	compressedData = {
+		"compressed": true,
+		"map": [
+			["fc91e747a0a2ccf82f15e5a8d140fedb", {
+				"blockData": {
+					"type": "BlockData",
+					"baseClass": {
+						"blockId": "base:BlockEmpty"
+					}
+				},
+				"index": 0
+			}],
+			["fc91e747a0a2ccf82f15e5a8d140feab", {
+				"blockData": {
+					"type": "BlockData",
+					"baseClass": {
+						"blockId": "base:BlockNull"
+					}
+				},
+				"index": 1
+			}]
+		],
+		"grid":{
+			"contents": [
+				[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+			],
+		},
+		"location": 0
+	}
+	let layer2 = new Layer(16, 0);
+	layer2.decompress(compressedData);
+	console.log(layer2.grid.contents[0][0]);
+	expect(layer2.grid.contents[0][0].baseClass.blockId).toBe("base:BlockNull");
 })

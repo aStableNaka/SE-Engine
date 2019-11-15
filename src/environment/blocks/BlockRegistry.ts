@@ -1,6 +1,30 @@
 import { Block } from "./Block";
-import {RegistryComponent} from "../../utils/Registry";
-import {baseClass} from "../../utils/Classes";
+import { baseClass } from "../../utils/Classes";
+
+
+export type blockBaseClass = baseClass & {blockId:string, createBlockData:Function, recallBlockData:Function};
+
+export class BlockRegistryComponent{
+	baseClass:blockBaseClass;
+	forceRegister:boolean;
+	identities:baseClass[];
+
+	constructor( baseClass:any, forceRegister:boolean ){
+		this.baseClass = baseClass;
+		this.forceRegister = forceRegister;
+		this.identities = [];
+	}
+
+	replaceIdentity( newbaseClass:any ){
+		this.addIdentity( this.baseClass );
+		this.baseClass = newbaseClass;
+	}
+
+	addIdentity( baseClass:any ){
+		this.identities.push( baseClass );
+	}
+}
+
 /**
  * The block registry is used to assign block to their typeName
  */
@@ -17,10 +41,10 @@ export class BlockRegistry{
 
 	/**
 	 * Register a block inside the block registry
-	 * @param baseClass {baseClass} 
+	 * @param baseClass {blockBaseClass} 
 	 * @param forceRegister force the registry to override the old block
 	 */
-	register( baseClass: baseClass, forceRegister:boolean=false ){
+	register( baseClass: blockBaseClass, forceRegister:boolean=false ){
 		let blockID:string = baseClass.blockId;
 
 		if( this.blocks[blockID] ){
@@ -35,22 +59,26 @@ export class BlockRegistry{
 			return;
 		}
 		console.log(`${this.logTag} ${blockID} has been registered.`);
-		this.blocks[blockID] = new RegistryComponent( baseClass, forceRegister );
+		this.blocks[blockID] = new BlockRegistryComponent( baseClass, forceRegister );
 		
 	}
 
-	get( blockID:string ):RegistryComponent{
-		if( this.blocks[blockID] ){
-			return this.blocks[blockID];
+	get( blockId:string ):BlockRegistryComponent{
+		if( this.blocks[blockId] ){
+			return this.blocks[blockId];
 		}else{
 			// Check again in case blockID is in shorthand, return the first result or throw if a block is not available
 			let searchResults = Object.keys( this.blocks ).filter( ( name )=>{
-				return name.split(':')[1]==blockID;
+				return name.split(':')[1]==blockId;
 			})
 			if(!searchResults[0]){
-				throw new Error( `${this.logTag} block "${blockID}" has not been registered.` );
+				throw new Error( `${this.logTag} block "${blockId}" has not been registered.` );
 			}
 			return this.blocks[searchResults[0]];
 		}
+	}
+
+	getBlockClass( blockId:string ):blockBaseClass{
+		return this.get(blockId).baseClass;
 	}
 }

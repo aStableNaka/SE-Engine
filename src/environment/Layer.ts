@@ -1,50 +1,56 @@
-import { CreateGrid } from "../utils/Spaces";
+import { CreateGrid, Grid } from "../utils/Spaces";
 import { BlockEmpty } from "./blocks/base/BlockEmpty";
 import { baseRegistry } from './blocks/Blocks';
-import { Block, BlockData } from "./blocks/Block";
-import { Storable } from "../io/Storable";
+import { BlockData, Block } from "./blocks/Block";
+import { Storable } from "../io/Serializable";
 import { quickHash } from "../utils/QuickHash";
 
 const defaultBlock = new BlockData(BlockEmpty);
 
-type compressedData = { compressed:boolean, contents:number[][], map:[string, any][], location:number };
-type storageData = { contents:BlockData[][], location:number }
-type compressedStorageData = { contents:number[][], location:number }
+type compressedData = { compressed:boolean, grid:Grid<number>, map:[string, any][], location:number };
+type storageData = { grid:Grid<BlockData>, location:number }
+
 
 export class Layer extends Storable{
-	contents:BlockData[][];
+	grid:Grid<BlockData>;
 	location:number;
+	size: number;
 	constructor( size:number, location:number ){
 		super();
 		this.location = location;
-		this.contents = CreateGrid( size, ( x, y )=>{
-			return defaultBlock;
-		});
+		this.size = size;
+		this.grid = new Grid<BlockData>(size, ()=>{return defaultBlock;});
 	}
 
+	/**
+	 * Column major
+	 * @param x 
+	 * @param y 
+	 */
 	getBlock( x :number, y :number ):BlockData{
-		return this.contents[x][y];
+		return this.grid.get(y,x);
 	}
 
 	/**
 	 * Compress the Storable.data whenever it's requested as a string
 	 * @converts
-	 * 	{
-	 * 		contents: BlockData[][]
-	 * 	}
+	 * {
+	 * 	contents: BlockData[][]
+	 * }
 	 * 
 	 * @to
-	 * 	{
-	 * 		map: [ id:string, value:{ index:number, blockData:BlockData }][],
-	 * 		contents: number[][] // Each number corresponds to index in the map
-	 * 	}
+	 * {
+	 *	map: [ id:string, value:{ index:number, blockData:BlockData }][],
+	 *	contents: number[][]
+	 * }
+	 * @note Each number corresponds to index in the map
 	 * @param data 
 	 */
 	compress( data:storageData ):compressedData{
 		let dictionary = new Map<string,any>();
-		let out : compressedData = { compressed:true, map:[], contents:[[0]], location:data.location }
-		
-		out.contents = data.contents.map( (rowArr:BlockData[])=>{
+		const bdDefault = new BlockData(Block);
+		let out : compressedData = { compressed:true, map:[], grid:new Grid<number>(this.size, ()=>{return 0;}), location:data.location }
+		let contents = data.grid.map( (rowArr)=>{
 			return rowArr.map((bd:BlockData)=>{
 				let key:string = quickHash(JSON.stringify(bd));
 				if(!dictionary.has(key)){
@@ -54,7 +60,8 @@ export class Layer extends Storable{
 				let entry = dictionary.get(key);
 				return entry.index;
 			})
-		} )
+		});
+		out.grid = new Grid<number>(this.size, (row, col)=>{ return contents[row][col]; })
 
 		out.map = [...dictionary.entries()];
 		return out;
@@ -62,23 +69,23 @@ export class Layer extends Storable{
 
 	/**
 	 * Undos the compression process
-	 * @param data 
+	 * @param data assumes data has been parsed back into an object
 	 */
 	decompress( data:compressedData ){
 		let dictionary = new Map<string,BlockData>();
 		data.map.map(([key, value])=>{
-			let blockData = baseRegistry.get(value.blockData.baseClass.blockId).baseClass.constructor( value.blockData )
+			let blockId = value.blockData.baseClass.blockId;
+			let blockClass = baseRegistry.getBlockClass(blockId);
+			let blockData = blockClass.recallBlockData( value.blockData );
 			dictionary.set(`_${value.index}`, blockData);
 		});
-		this.contents = data.contents.map((row)=>{
-			return row.map((index)=>{
-				return dictionary.get(`_${index}`) || BlockEmpty.createBlockData();
-			})
-		});
+		this.grid = new Grid<BlockData>(this.size, (row, column)=>{
+			return dictionary.get( `_${data.grid.contents[row][column]}` ) || BlockEmpty.createBlockData();
+		})
 		this.location = data.location;
 	}
 
 	toStorageObject():storageData{
-		return {contents:this.contents, location:this.location}
+		return {grid:this.grid, location:this.location};
 	}
 }

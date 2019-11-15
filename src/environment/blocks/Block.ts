@@ -1,6 +1,6 @@
 import { MapObject } from '../MapObject';
-import { Storable } from '../../io/Storable';
-import { baseClass } from '../../utils/Classes';
+import { Storable } from '../../io/Serializable';
+import { baseClass as BlockBaseClass } from '../../utils/Classes';
 import * as Space from '../../utils/Spaces';
 import * as Regions from '../region/Region';
 import { BlockRegistry } from './BlockRegistry';
@@ -28,6 +28,18 @@ export class Block extends Storable{
 	static createBlockData(data?:any):BlockData{
 		return new BlockData(this, data);
 	}
+
+	/**
+	 * Creates new BlockData but recalls old BlockData
+	 * 
+	 * Called by the BlockBaseClass, typically retrived from a
+	 * BlockRegistry
+	 * @param blockData 
+	 */
+	static recallBlockData(blockData:BlockData){
+		let recalledBD:BlockData = this.createBlockData();
+		recalledBD.data = blockData.data;
+	}
 	
 	static toStorageObject(){
 		return { type:this.name, blockId:this.blockId };
@@ -42,7 +54,7 @@ export class Block extends Storable{
 export class BlockData extends Storable{
 	baseClass: any;
 	data: any;
-	constructor( baseClass:baseClass, data?:any ){
+	constructor( baseClass:BlockBaseClass, data?:any ){
 		super();
 		this.baseClass = baseClass;
 		this.data = data;
