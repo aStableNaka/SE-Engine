@@ -2,12 +2,13 @@ import { CreateGrid, Grid } from "../utils/Spaces";
 import { BlockEmpty } from "./blocks/base/BlockEmpty";
 import { baseRegistry } from './blocks/Blocks';
 import { BlockData, Block } from "./blocks/Block";
-import { Storable } from "../io/Serializable";
+import { Storable } from "../io/Storable";
 import { quickHash } from "../utils/QuickHash";
 
 const defaultBlock = new BlockData(BlockEmpty);
 
-type compressedData = { compressed:boolean, grid:Grid<number>, map:[string, any][], location:number };
+type compressedGrid<T> = {contents:T[][]}
+type compressedData = { compressed:boolean, grid:compressedGrid<number>, map:[string, any][], location:number };
 type storageData = { grid:Grid<BlockData>, location:number }
 
 
@@ -74,14 +75,19 @@ export class Layer extends Storable{
 	decompress( data:compressedData ){
 		let dictionary = new Map<string,BlockData>();
 		data.map.map(([key, value])=>{
+			console.log(key, value);
 			let blockId = value.blockData.baseClass.blockId;
 			let blockClass = baseRegistry.getBlockClass(blockId);
 			let blockData = blockClass.recallBlockData( value.blockData );
+			console.log(blockData);
 			dictionary.set(`_${value.index}`, blockData);
 		});
-		this.grid = new Grid<BlockData>(this.size, (row, column)=>{
-			return dictionary.get( `_${data.grid.contents[row][column]}` ) || BlockEmpty.createBlockData();
+		console.log('BWHJAKBSJKHD KWAJ',dictionary.get("_1"));
+		let dataGrid = new Grid(this.size, (row, col)=>{
+			return dictionary.get( `_${data.grid.contents[row][col]}` ) || BlockEmpty.createBlockData();
 		})
+		console.log(dataGrid.get(0,0));
+		this.grid.assign(dataGrid);
 		this.location = data.location;
 	}
 

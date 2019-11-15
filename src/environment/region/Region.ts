@@ -7,7 +7,7 @@ import { Dictionary } from '../../utils/Dictionary';
 import { World } from '../World';
 import { Layer } from '../Layer';
 import { Block, BlockData } from '../blocks/Block';
-import { Storable } from '../../io/Serializable';
+import { Storable } from '../../io/Storable';
 
 /**
  * How blocks are represented in regions

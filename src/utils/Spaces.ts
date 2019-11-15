@@ -48,14 +48,31 @@ export class Space<T> extends Array<T>{
 }
 
 export type gridType<T> = T[][];
-
+export type gridMapContentsCallback<T> = (value:any, row:number,col:number,self:Grid<T>)=>(any | any[][] | undefined);
 /**
  * Row major
  */
 export class Grid<T>{
 	contents:gridType<T>;
+	size:number;
+
+
 	constructor( size:number, fill:(x:number,y:number) => T ){
 		this.contents = CreateGrid(size, fill);
+		this.size = size;
+	}
+
+	/**
+	 * Checks if a coordinate pair exists within this grid
+	 * @param row 
+	 * @param col 
+	 */
+	inRange( row:number, col:number ):boolean{
+		let c = [
+			(x:number):boolean=>{return x<this.size;},
+			(x:number):boolean=>{return 0<=x;},
+		]
+		return c.map( (cf)=>{ return cf(row) && cf(col); } ).length == 2;
 	}
 
 	getRow( row:number ){
@@ -66,8 +83,68 @@ export class Grid<T>{
 		return this.getRow(row)[column];
 	}
 
-	map<t>(callback:(value:T[],index:number,array:T[][])=>t[], thisValue?:any){
-		return this.contents.map(callback, thisValue||this);
+	set( value:T, row:number, col:number ){
+		if(!this.inRange(row,col)){
+
+		}
+		this.contents[row][col] = value;
+	}
+
+	/**
+	 * Maps a function to every row of the grid
+	 * @param callback 
+	 * @param thisArg 
+	 */
+	map<t>(callback:(value:T[],index:number,array:T[][])=>t[], thisArg?:any){
+		return this.contents.map(callback, thisArg||this);
+	}
+
+	/**
+	 * Maps a function to every element of the grid
+	 * @param callback 
+	 * @param thisArg 
+	 */
+	public mapContents(callback:gridMapContentsCallback<T>, thisArg?:any):any{
+		let self = this;
+		return this.contents.map((vRow, row)=>{
+			return vRow.map((value, col)=>{
+				return callback( value, row, col, self );
+			}, thisArg||self);
+		},thisArg||self);
+	}
+
+	private assignSizeError( gSourceSize:number ):Error{
+		return new Error(`[ Grid ] cannot assign grid size ${gSourceSize} to grid size ${this.size}, invalid sizes.`)
+	}
+
+	/**
+	 * Assign the contents of a different grid to this grid
+	 * @param grid 
+	 */
+	public assign(grid:Grid<T>|T[][]):Grid<T>{
+		
+		// If grid is a grid
+		if(grid instanceof Grid){
+			if(grid.size != this.size){
+				throw this.assignSizeError( grid.size );
+			}
+			this.mapContents((val, row, col, self)=>{
+				self.set( grid.get(row,col), row, col );
+			});
+			return this;
+		}
+		
+		// If grid is a nested array
+		else{
+			let arraySize = Math.sqrt(grid.length * grid[0].length);
+			if( arraySize != this.size){
+				throw this.assignSizeError( arraySize );
+			}
+			this.mapContents((val, row, col, self)=>{
+				self.set( grid[row][col], row, col );
+			});
+			return this;	
+		}
 	}
 	
 }

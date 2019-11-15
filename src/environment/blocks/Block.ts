@@ -1,5 +1,5 @@
 import { MapObject } from '../MapObject';
-import { Storable } from '../../io/Serializable';
+import { Storable } from '../../io/Storable';
 import { baseClass as BlockBaseClass } from '../../utils/Classes';
 import * as Space from '../../utils/Spaces';
 import * as Regions from '../region/Region';
@@ -36,9 +36,10 @@ export class Block extends Storable{
 	 * BlockRegistry
 	 * @param blockData 
 	 */
-	static recallBlockData(blockData:BlockData){
+	static recallBlockData(blockData:BlockData):BlockData{
 		let recalledBD:BlockData = this.createBlockData();
 		recalledBD.data = blockData.data;
+		return recalledBD;
 	}
 	
 	static toStorageObject(){
