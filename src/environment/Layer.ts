@@ -28,7 +28,7 @@ export class Layer extends Storable{
 	 * @param x 
 	 * @param y 
 	 */
-	getBlock( x :number, y :number ):BlockData{
+	public getBlock( x :number, y :number ):BlockData{
 		return this.grid.get(y,x);
 	}
 
@@ -47,7 +47,7 @@ export class Layer extends Storable{
 	 * @note Each number corresponds to index in the map
 	 * @param data 
 	 */
-	compress( data:storageData ):compressedData{
+	public compress( data:storageData ):compressedData{
 		let dictionary = new Map<string,any>();
 		const bdDefault = new BlockData(Block);
 		let out : compressedData = { compressed:true, map:[], grid:new Grid<number>(this.size, ()=>{return 0;}), location:data.location }
@@ -72,26 +72,26 @@ export class Layer extends Storable{
 	 * Undos the compression process
 	 * @param data assumes data has been parsed back into an object
 	 */
-	decompress( data:compressedData ){
+	public decompress( data:compressedData ):void{
 		let dictionary = new Map<string,BlockData>();
 		data.map.map(([key, value])=>{
-			console.log(key, value);
+			//console.log(key, value);
 			let blockId = value.blockData.baseClass.blockId;
 			let blockClass = baseRegistry.getBlockClass(blockId);
 			let blockData = blockClass.recallBlockData( value.blockData );
-			console.log(blockData);
+			//console.log(blockData);
 			dictionary.set(`_${value.index}`, blockData);
 		});
-		console.log('BWHJAKBSJKHD KWAJ',dictionary.get("_1"));
+		//console.log('BWHJAKBSJKHD KWAJ',dictionary.get("_1"));
 		let dataGrid = new Grid(this.size, (row, col)=>{
 			return dictionary.get( `_${data.grid.contents[row][col]}` ) || BlockEmpty.createBlockData();
 		})
-		console.log(dataGrid.get(0,0));
+		//console.log(dataGrid.get(0,0));
 		this.grid.assign(dataGrid);
 		this.location = data.location;
 	}
 
-	toStorageObject():storageData{
+	public toStorageObject():storageData{
 		return {grid:this.grid, location:this.location};
 	}
 }

@@ -70,7 +70,7 @@ export class BlockRegistry{
 			// Check again in case blockID is in shorthand, return the first result or throw if a block is not available
 			let searchResults = Object.keys( this.blocks ).filter( ( name )=>{
 				return name.split(':')[1]==blockId;
-			})
+			});
 			if(!searchResults[0]){
 				throw new Error( `${this.logTag} block "${blockId}" has not been registered.` );
 			}

@@ -11,6 +11,7 @@ import { BlockRegistry } from './BlockRegistry';
 export class Block extends Storable{
 	// These two must be defined for every different block type
 	static module:string = "base";
+	
 	/**
 	 * Create a new block instance. Unique
 	 * static blocks share a single instance,
