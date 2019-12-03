@@ -1,15 +1,19 @@
 import React, { CSSProperties } from 'react';
 import {FrostedFlakes} from "./FrostedFlakes";
-import { World } from '../environment/World';
+import {World} from "../environment/World";
+import { SimonsWorld } from '../environment/SimonsWorld';
 
 export type GPVProps = {
-	world:World
+	//world:World
 }
 
+/**
+ * This specific game scene container is made for SimonsWorld
+ */
 export class GameSceneContainer extends React.Component<GPVProps>{
 	mount: HTMLDivElement | null | undefined;
 	gameScene: FrostedFlakes | undefined;
-	world: World;
+	world!: World;
 	style:CSSProperties = {
 		position: 'absolute',
 		top: '0px',
@@ -18,7 +22,6 @@ export class GameSceneContainer extends React.Component<GPVProps>{
 
 	constructor(props:GPVProps){
 		super(props);
-		this.world = props.world;
 	}
 
 	resizeViewport(){
@@ -29,6 +32,9 @@ export class GameSceneContainer extends React.Component<GPVProps>{
 	componentDidMount() {
 		if(this.mount!=undefined){
 			this.gameScene = new FrostedFlakes( this.mount );
+			this.world = new SimonsWorld(this.gameScene);
+			this.world.tick();
+			this.world.render();
 		}
 	}
 
