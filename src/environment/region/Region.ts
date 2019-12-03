@@ -40,28 +40,48 @@ export class RegionEventEmitter extends EventEmitter{
 export class Region extends Storable{
 	meshGroup: RegionMesh;
 	dictionary: Dictionary = new Dictionary();
-	lightGrid: Grid<number>;
+	lightGrid!: Grid<number>;
 	layers: Layer[] = [];
 	entities: any[] = [];
 	actorBlocks: MapObject[] = [];
 	eventEmitter:RegionEventEmitter = new RegionEventEmitter();
 	world:World;
 	size: number;
+	requiresUpdate:boolean=true;
+	requiresMeshUpdate:boolean=true;
+	updateQueued:boolean = true;
 
 	/**
 	 * produces a region of size x size x height
 	 * @param size sidelength of the region
-	 * @param parent the world that this region inhabits
+	 * @param world the world that this region inhabits
 	 */
-	constructor( size:number, parent:World ){
+	constructor( size:number, world:World ){
 		super();
 		this.size = size;
-		this.world = World;
+		this.world = world;
 		this.meshGroup = new RegionMesh( this );
 		
+		this.generateTerrain();
+	}
+
+	meshUpdate(){}
+
+	update(){
+		this.updateQueued = false;
+	}
+
+	generateTerrain(){
 		// Generate the terrain
-		this.layers.push( new Layer(size, 0) );
-		this.lightGrid = new Grid<number>(size, ()=>{return 0;});
+		this.layers.push( new Layer(this.size, 0) );
+		this.lightGrid = new Grid<number>(this.size, ()=>{return 0;});
+		this.requestUpdate();
+	}
+
+	requestUpdate(){
+		if(!this.updateQueued){
+			this.world.queueUpdate(this);
+		}
 	}
 
 	getBlock( x:number, y:number, z:number ):BlockData{
