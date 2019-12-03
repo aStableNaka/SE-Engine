@@ -1,6 +1,10 @@
 {
   "files.exclude": {
     "package-lock.json": true,
-    "node_modules": true
+    "node_modules": true,
+    "src\\Main.js": true,
+    "src\\index.js": true,
+    "src\\rendering\\GameSceneContainer.js": true,
+    "src\\environment\\World.js": true
   }
 }
