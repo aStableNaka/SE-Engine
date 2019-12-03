@@ -47,13 +47,12 @@ export class RegistryHub{
 	 * let blockGroundClass = regHub.get("base:block:BlockGround"); 
 	 */
 	get(fullKey:string):any{
-		let [namespace, name, key] = fullKey.split(":");
+		let [namespace, name, key, discriminator] = fullKey.split(":");
 		if(!this.namespaces[namespace]) throw new Error(`[ RegistryHub ] could not find namespace "${namespace}"`);
 		if(!this.namespaces[namespace][name]) throw new Error(`[ RegistryHub ] could not find registry "${namespace}:${name}"`);
 		let reg = this.namespaces[namespace][name].registry;
-		if(!key){
-			return reg;
-		}
+		if(!key) return reg;
+		if(discriminator) key += `:${discriminator}`;
 		return reg.get(key);
 	}
 }

@@ -2,12 +2,14 @@ import { RegionMesh } from '../../rendering/region/RegionMesh';
 import { MapObject } from '../MapObject';
 import { CreateGrid, Position, Grid } from '../../utils/Spaces';
 import {EventEmitter} from 'events';
-import { PositionalAudio } from 'three';
+import { PositionalAudio, Vector4, Matrix4 } from 'three';
 import { Dictionary } from '../../utils/Dictionary';
 import { World } from '../World';
 import { Layer } from '../Layer';
 import { Block, BlockData } from '../blocks/Block';
 import { Storable } from '../../io/Storable';
+import { regHub } from '../../registry/RegistryHub';
+import * as THREE from "three";
 
 /**
  * How blocks are represented in regions
@@ -50,6 +52,7 @@ export class Region extends Storable{
 	requiresUpdate:boolean=true;
 	requiresMeshUpdate:boolean=true;
 	updateQueued:boolean = true;
+	modelData:any = {};
 
 	/**
 	 * produces a region of size x size x height
@@ -61,7 +64,7 @@ export class Region extends Storable{
 		this.size = size;
 		this.world = world;
 		this.meshGroup = new RegionMesh( this );
-		
+		this.world.ff.add(this.meshGroup);
 		this.generateTerrain();
 	}
 
@@ -88,11 +91,43 @@ export class Region extends Storable{
 		return this.layers[z].getBlock(x,y);
 	}
 
+	clearMeshGroup(){
+		while(this.meshGroup.children.length){
+			this.meshGroup.remove(this.meshGroup.children[0]);
+		}
+	}
+
+	/**
+	 * Get the local transformation of a position
+	 * @param pos 
+	 */
+	getLocalTransform(pos:THREE.Vector3):THREE.Matrix4{
+		return new THREE.Matrix4().makeTranslation(pos.x||0,pos.y||0,pos.z||0);
+	}
+
 	/**
 	 * Builds the mesh and adds it to the world's scene
+	 * Ideally, this will be optimized with rust.
+	 * @optimize
 	 */
 	constructMesh():void{
+		this.modelData = {};
+		this.clearMeshGroup();
+		this.layers.map((layer)=>{
+			return layer.generateModelData( this.modelData );
+		});
 
+		// Use the modelData to construct the appropriate meshes
+		// and append them to this.meshGroup
+		Object.keys(this.modelData).map((modelKey)=>{
+			let modelMesh = regHub.get(modelKey);
+			let positions = this.modelData[modelKey];
+			let mesh = new THREE.InstancedMesh( modelMesh.geometry, modelMesh.material, positions.length );
+			positions.map(( vec3:THREE.Vector3, i:number )=>{
+				mesh.setMatrixAt( i, this.getLocalTransform(vec3) );
+			});
+			this.meshGroup.add(mesh);
+		}, this);
 	}
 
 	/**

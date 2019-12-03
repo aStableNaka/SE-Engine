@@ -27,11 +27,7 @@ export class SimonsWorld extends World{
 	 * Rendering will do a few things:
 	 * 	1 ) Update the camera position
 	 */
-	render(  ){
-		let self = this;
-		window.requestAnimationFrame(()=>{
-			self.render();
-		});
-		self.ff.render();
+	render(){
+		this.defaultRender();
 	}
 }

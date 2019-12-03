@@ -29,8 +29,16 @@ export class World extends Storable{
 	/**
 	 * Rendering will do a few things:
 	 * 	1 ) Update the camera position
+	 * @abstract
 	 */
 	render(  ){
+		this.defaultRender();
+	}
+
+	/**
+	 * The default rendering cycle
+	 */
+	defaultRender(){
 		let self = this;
 		window.requestAnimationFrame(()=>{
 			self.render();

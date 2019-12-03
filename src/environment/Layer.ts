@@ -4,6 +4,7 @@ import { regHub } from '../registry/RegistryHub';
 import { BlockData, Block } from "./blocks/Block";
 import { Storable } from "../io/Storable";
 import { quickHash } from "../utils/QuickHash";
+import {Vector2, Vector3} from "three";
 
 const defaultBlock = new BlockData(BlockEmpty);
 
@@ -30,6 +31,30 @@ export class Layer extends Storable{
 	 */
 	public getBlock( x :number, y :number ):BlockData{
 		return this.grid.get(y,x);
+	}
+
+	/**
+	 * Will modify modelData. This modelData will be used
+	 * to construct the region mesh.
+	 * @example
+	 * modelData = {
+	 * 	"base:model:Simple:0":[vector3],
+	 * 	"base:model:Simple:1":[vector3,vector3]
+	 * }
+	 */
+	public generateModelData( modelData:any ){
+		let self = this;
+		this.grid.mapContents( (blockData:BlockData, yPos, xPos)=>{
+			let blockClass = blockData.baseClass;
+			// Some blocks have no model.
+			if(blockClass.noModel){return;}
+			// If the model is not already included within modelData
+			if(!modelData[blockClass.model]){
+				modelData[blockClass.model] = [];
+			}
+
+			modelData[blockClass.model].push( new Vector3(xPos, yPos, self.location));
+		});
 	}
 
 	/**
