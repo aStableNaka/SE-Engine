@@ -18,8 +18,11 @@ export class SimonsWorld extends World{
 	constructor( ff:FrostedFlakes ){
 		super( ff );
 		let self = this;
-		this.regions = new Grid<Region>(8,(x,y)=>{
-			return new SimonsRegion( self );
+		this.regions = new Grid<Region>(8,(y,x)=>{
+			let region = new SimonsRegion( self );
+			region.meshGroup.position.set(x*16,0,y*16);
+			region.constructMesh();
+			return region;
 		});
 	}
 

@@ -19,6 +19,7 @@ export class ResourceLoader extends EventEmitter{
 	}
 
 	load( onLoadedCallback?:resourceLoaderOnLoadedCallback ):ResourceLoader{
+		console.log(`[ResourceLoader] ${this.resourcePath} starting load`);
 		if( onLoadedCallback ) this.onLoaded( onLoadedCallback );
 		let self = this;
 		this.resources.map( (resource)=>{

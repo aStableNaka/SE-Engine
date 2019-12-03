@@ -2,6 +2,7 @@ import React, { CSSProperties } from 'react';
 import {FrostedFlakes} from "./FrostedFlakes";
 import {World} from "../environment/World";
 import { SimonsWorld } from '../environment/SimonsWorld';
+import {regHub} from "../registry/RegistryHub";
 
 export type GPVProps = {
 	//world:World
@@ -30,12 +31,14 @@ export class GameSceneContainer extends React.Component<GPVProps>{
 	}
 
 	componentDidMount() {
-		if(this.mount!=undefined){
-			this.gameScene = new FrostedFlakes( this.mount );
-			this.world = new SimonsWorld(this.gameScene);
-			this.world.tick();
-			this.world.render();
-		}
+		regHub.load((()=>{
+			if(this.mount!=undefined){
+				this.gameScene = new FrostedFlakes( this.mount );
+				this.world = new SimonsWorld(this.gameScene);
+				this.world.tick();
+				this.world.render();
+			}
+		}).bind(this));
 	}
 
 	render():React.ReactNode{

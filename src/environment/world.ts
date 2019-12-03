@@ -19,7 +19,9 @@ export class World extends Storable{
 
 	constructor( ff:FrostedFlakes ){
 		super();
+		console.log(`[World] initialized`);
 		this.ff = ff;
+		console.log(this);
 	}
 
 	queueUpdate( region:Region ){

@@ -28,7 +28,7 @@ export class BlockRegistryComponent{
 /**
  * The block registry is used to assign block to their typeName
  */
-export class BlockRegistry{
+export class BlockRegistry implements Registry{
 	blocks:any = {};
 	name:string;
 	constructor( name:string="anonymous" ){
@@ -102,5 +102,15 @@ export class BlockRegistry{
 	 */
 	createBlockData( blockId:string, metadata:any={} ):BlockData{
 		return this.getBlockClass(blockId).createBlockData( metadata );
+	}
+
+	/**
+	 * BlockRegistry does not do any async loading
+	 * therefore it is ready as soon as it's added
+	 * to the registry hub.
+	 * @param ready 
+	 */
+	checkReady(ready:()=>void){
+		ready();
 	}
 }

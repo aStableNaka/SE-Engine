@@ -102,7 +102,7 @@ export class Region extends Storable{
 	 * @param pos 
 	 */
 	getLocalTransform(pos:THREE.Vector3):THREE.Matrix4{
-		return new THREE.Matrix4().makeTranslation(pos.x||0,pos.y||0,pos.z||0);
+		return new THREE.Matrix4().makeTranslation(pos.x||0,pos.z||0,pos.y||0);
 	}
 
 	/**
@@ -120,7 +120,7 @@ export class Region extends Storable{
 		// Use the modelData to construct the appropriate meshes
 		// and append them to this.meshGroup
 		Object.keys(this.modelData).map((modelKey)=>{
-			let modelMesh = regHub.get(modelKey);
+			let modelMesh = regHub.get(modelKey).mesh;
 			let positions = this.modelData[modelKey];
 			let mesh = new THREE.InstancedMesh( modelMesh.geometry, modelMesh.material, positions.length );
 			positions.map(( vec3:THREE.Vector3, i:number )=>{

@@ -1,6 +1,9 @@
+import { EventEmitter } from "events";
+
 export interface Registry{
-	register( entity:any, forceRegister:boolean ):string;
+	register( entity:any, forceRegister?:boolean ):string;
 	get( key:string ):any;
+	checkReady( ready:()=>void ):void;
 }
 
 /**
@@ -20,9 +23,13 @@ class RegistryRegistryComponent{
 		return this.registry.get(id);
 	}
 }
-export class RegistryHub{
+export class RegistryHub extends EventEmitter{
 	namespaces:any = {};
-	constructor(){}
+	registries:Registry[] = [];
+	readyCount:number = 0;
+	constructor(){
+		super();
+	}
 
 	/**
 	 * 
@@ -33,11 +40,30 @@ export class RegistryHub{
 	 * regHub.register( "base", "block", blockBaseRegistry );
 	 */
 	add(namespace:string,name:string,registry:Registry){
+		let self = this;
 		if(!this.namespaces[namespace]){
 			this.namespaces[namespace] = {}
 		}
 		this.namespaces[namespace][name] = new RegistryRegistryComponent(namespace, name, registry);
+		this.registries.push(registry);
 		console.log(`[ RegistryHub ] Registered ${namespace}:${name}:*`);
+	}
+
+	load(onReady:()=>void){
+		this.onReady(onReady);
+		this.registries.map((reg)=>{
+			reg.checkReady((()=>{
+				this.incrimentReady();
+			}).bind(this));
+		}, this)
+	}
+
+	incrimentReady(){
+		this.readyCount++;
+		if(this.readyCount==this.registries.length){
+			console.log(`[RegistryHub] Loading complete, ready.`);
+			this.emit("ready", this);
+		}
 	}
 
 	/**
@@ -54,5 +80,13 @@ export class RegistryHub{
 		if(!key) return reg;
 		if(discriminator) key += `:${discriminator}`;
 		return reg.get(key);
+	}
+
+	/**
+	 * Add a method to be invoked when all registries are ready
+	 * @param callback 
+	 */
+	onReady(callback:()=>void){
+		this.addListener("ready", callback);
 	}
 }

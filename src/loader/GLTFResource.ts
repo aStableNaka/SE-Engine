@@ -1,5 +1,5 @@
 import { Resource, resourceOnLoadedCallback } from "./Resource";
-import THREE from "three";
+import * as THREE from "three";
 import { GLTFLoader, GLTF } from "../utils/THREE/jsm/loaders/GLTFLoader"
 
 const gltfLoader = new GLTFLoader();
@@ -9,7 +9,7 @@ export class GLTFResource extends Resource{
 	}
 
 	doLoading( ){
-		//console.info(`[ GLTFResource ] loading ${ fullResourcePath }`);
+		console.info(`[ GLTFResource ] loading ${ this.fullResourcePath }`);
 		let self = this;
 		gltfLoader.load(
 			this.fullResourcePath,
@@ -21,6 +21,7 @@ export class GLTFResource extends Resource{
 
 	gltfOnLoaded( gltf: GLTF ){
 		console.info( `[ GLTFResource ] resouce loaded ${ this.resourcePath }` );
+		console.log(gltf);
 		this.emit("loaded", gltf);
 	}
 
