@@ -3,7 +3,10 @@ import { Storable } from '../../io/Storable';
 import { baseClass as BlockBaseClass } from '../../utils/Classes';
 import * as Space from '../../utils/Spaces';
 import * as Regions from '../region/Region';
-import { BlockRegistry } from './BlockRegistry';
+import { BlockRegistry } from '../../registry/BlockRegistry';
+import * as THREE from 'three';
+
+export type Geometry = THREE.Geometry | THREE.BufferGeometry | THREE.InstancedBufferGeometry;
 
 /**
  * Blocks are *small* representations of objects which form the environment
@@ -11,6 +14,8 @@ import { BlockRegistry } from './BlockRegistry';
 export class Block extends Storable{
 	// These two must be defined for every different block type
 	static module:string = "base";
+	static material:string = "base:mat:none";
+	static model: string = "base:mat:none";
 	
 	/**
 	 * Create a new block instance. Unique
@@ -47,12 +52,21 @@ export class Block extends Storable{
 		return { type:this.name, blockId:this.blockId };
 	}
 
+	constructGeometry( blockData:BlockData ):Geometry{
+		throw new Error("[ Block ] Abstract class [Object Block] has no constructable geometry.");
+		return new THREE.Geometry();
+	}
+
 	// Storable definitions
 	toStorageObject(){
 		return { className:this.constructor.name };
 	}
 }
 
+/**
+ * @property baseClass - the base class of the block
+ * @property data - other data for the block
+ */
 export class BlockData extends Storable{
 	baseClass: any;
 	data: any;

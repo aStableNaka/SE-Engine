@@ -1,6 +1,6 @@
 import { CreateGrid, Grid } from "../utils/Spaces";
 import { BlockEmpty } from "./blocks/base/BlockEmpty";
-import { baseRegistry } from './blocks/Blocks';
+import { regHub } from '../registry/RegistryHub';
 import { BlockData, Block } from "./blocks/Block";
 import { Storable } from "../io/Storable";
 import { quickHash } from "../utils/QuickHash";
@@ -16,11 +16,11 @@ export class Layer extends Storable{
 	grid:Grid<BlockData>;
 	location:number;
 	size: number;
-	constructor( size:number, location:number ){
+	constructor( size:number, location:number, generation:(x:number,y:number)=>BlockData=()=>{return defaultBlock} ){
 		super();
 		this.location = location;
 		this.size = size;
-		this.grid = new Grid<BlockData>(size, ()=>{return defaultBlock;});
+		this.grid = new Grid<BlockData>(size, generation);
 	}
 
 	/**
@@ -77,7 +77,7 @@ export class Layer extends Storable{
 		data.map.map(([key, value])=>{
 			//console.log(key, value);
 			let blockId = value.blockData.baseClass.blockId;
-			let blockClass = baseRegistry.getBlockClass(blockId);
+			let blockClass = regHub.get("base:block").getBlockClass(blockId);
 			let blockData = blockClass.recallBlockData( value.blockData );
 			//console.log(blockData);
 			dictionary.set(`_${value.index}`, blockData);
