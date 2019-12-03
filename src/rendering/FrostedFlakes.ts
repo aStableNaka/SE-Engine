@@ -14,20 +14,25 @@ export class FrostedFlakes extends THREE.Scene{
 
 	container:HTMLElement|null = null;
 	renderer:THREE.WebGLRenderer = new THREE.WebGLRenderer();
-	camera:THREE.Camera|null=null;
+	camera:THREE.Camera;
 	
 	constructor( container:HTMLElement|null ){
 		super();
-		const camera = new THREE.PerspectiveCamera(
+		this.camera = new THREE.PerspectiveCamera(
 			this.viewAngle,
 			this.aspect,
 			this.near,
 			this.far
 		);
-		this.add(camera);
+		this.add(this.camera);
 		this.renderer.setSize( this.width, this.height );
 		if( !container ){ container = document.body; }
 		this.container = container;
 		container.appendChild( this.renderer.domElement );
+		this.add( new THREE.AmbientLight( 0xffffff, 100 ))
+	}
+
+	render(){
+		this.renderer.render(this,this.camera);
 	}
 }
