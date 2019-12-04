@@ -5,6 +5,9 @@ import { Grid } from "../utils/Spaces";
 import { Region } from "./region/Region";
 import {SimonsRegion} from "./region/SimonsRegion";
 
+const worldWidth = 32; // chunks
+const chunkSize = 16;
+
 /**
  * Simons world is a world where each region
  * has 4 or more layers. The layers follow this mapping:
@@ -18,9 +21,9 @@ export class SimonsWorld extends World{
 	constructor( ff:FrostedFlakes ){
 		super( ff );
 		let self = this;
-		this.regions = new Grid<Region>(8,(y,x)=>{
+		this.regions = new Grid<Region>(worldWidth,(y,x)=>{
 			let region = new SimonsRegion( self );
-			region.meshGroup.position.set(x*16,0,y*16);
+			region.meshGroup.position.set(x*chunkSize,0,y*chunkSize);
 			region.constructMesh();
 			return region;
 		});

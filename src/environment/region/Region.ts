@@ -120,12 +120,9 @@ export class Region extends Storable{
 		// Use the modelData to construct the appropriate meshes
 		// and append them to this.meshGroup
 		Object.keys(this.modelData).map((modelKey)=>{
-			let modelMesh = regHub.get(modelKey).mesh;
+			let model = regHub.get(modelKey);
 			let positions = this.modelData[modelKey];
-			let mesh = new THREE.InstancedMesh( modelMesh.geometry, modelMesh.material, positions.length );
-			positions.map(( vec3:THREE.Vector3, i:number )=>{
-				mesh.setMatrixAt( i, this.getLocalTransform(vec3) );
-			});
+			let mesh = model.construct(positions);
 			this.meshGroup.add(mesh);
 		}, this);
 	}

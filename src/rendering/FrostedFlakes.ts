@@ -7,7 +7,7 @@ import {OrbitControls} from "../utils/THREE/jsm/controls/OrbitControls";
 export class FrostedFlakes extends THREE.Scene{
 	width:number = window.innerWidth;
 	height:number = window.innerHeight;
-	viewAngle:number = 90;
+	viewAngle:number = 45;
 	near:number = 0.1;
 	far:number = 10000;
 	aspect:number = this.width/this.height;
@@ -27,7 +27,8 @@ export class FrostedFlakes extends THREE.Scene{
 			this.near,
 			this.far
 		);
-		this.camera.position.set(0,0,3);
+		this.camera.position.set(0,3,0);
+		this.camera.lookAt(new THREE.Vector3(3,0,3));
 		this.background = new THREE.Color(0xff66ff);
 		this.add(this.camera);
 		this.renderer.setSize( this.width, this.height );
@@ -36,7 +37,7 @@ export class FrostedFlakes extends THREE.Scene{
 		container.appendChild( this.renderer.domElement );
 
 		// Debugging
-		this.add( new THREE.AmbientLight( 0xffffff, 100 ))
+		this.add( new THREE.AmbientLight( 0xffffff, 2 ))
 		this.orbitControlls = new OrbitControls(this.camera, this.container);
 		this.referenceMesh = new THREE.Mesh(new THREE.CylinderBufferGeometry(1, 1, 4, 8), new THREE.MeshLambertMaterial({color:0x0}));
 		this.add(this.referenceMesh)

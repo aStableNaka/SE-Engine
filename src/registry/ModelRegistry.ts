@@ -10,6 +10,7 @@ import { Resource } from "../loader/Resource";
 import { Geometry } from "../environment/blocks/Block";
 import * as THREE from "three";
 
+
 /**
  * This is for basic models that are composed of a single mesh
  */
@@ -19,7 +20,8 @@ export class Model{
 	resourcePath:string;
 	registry!: ModelRegistry;
 	mesh!:THREE.Mesh;
-	constructor(name:string,resourcePath:string, registry:ModelRegistry){
+	gltf!:GLTF;
+	constructor(name:string,resourcePath:string){
 		this.name = name;
 		this.resourcePath = resourcePath;
 	}
@@ -47,12 +49,74 @@ export class Model{
 		return new THREE.Float32BufferAttribute(bufferAttribute.array, bufferAttribute.itemSize, bufferAttribute.normalized);
 	}
 
-	onModelLoaded( data:GLTF, resource:Resource ){
+	defaultOnModelLoaded( data:GLTF,resource:Resource ){
+		this.gltf = data;
 		this.mesh = <THREE.Mesh>data.scene.children.filter((obj3d)=>{ return obj3d.type=="Mesh";})[0];
 		if(!this.mesh) throw new Error(`[Model] Mesh could not be found within scene of ${this.resourcePath} ${data}`);
-		this.convertToFloar32Attribute( <THREE.BufferGeometry>this.mesh.geometry );
+	}
+
+	onModelLoaded( data:GLTF, resource:Resource ){
+		this.defaultOnModelLoaded( data, resource );
+	}
+
+	/**
+	 * Get the local transformation of a position
+	 * @param pos 
+	 */
+	getLocalTransform(pos:THREE.Vector3):THREE.Matrix4{
+		return new THREE.Matrix4().makeTranslation(pos.x||0,pos.z||0,pos.y||0);
+	}
+
+	/**
+	 * This must be overwritten by every mesh type.
+	 * @param positions 
+	 */
+	construct( positions:THREE.Vector3[] ):THREE.Object3D{
+		throw new Error("[Model] mesh cannot be constructed. No constuction definitions found.");
 	}
 }
+
+export class UniformModel extends Model{
+	constructor(name:string, resourcePath:string){
+		super(name, resourcePath);
+	}
+
+	onModelLoaded( data:GLTF, resource:Resource ){
+		this.defaultOnModelLoaded( data, resource );
+		this.convertToFloar32Attribute( <THREE.BufferGeometry>this.mesh.geometry );
+	}
+
+	/**
+	 * @override
+	 */
+	construct( positions:THREE.Vector3[] ):THREE.Object3D{
+		let mesh = new THREE.InstancedMesh( this.mesh.geometry,this.mesh.material,positions.length );
+		positions.map(( vec3:THREE.Vector3, i:number )=>{
+			mesh.setMatrixAt(i, this.getLocalTransform(vec3));
+		}, this);
+
+		// This is for the culling issues
+		mesh.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(0,0,0), 11.3137);
+		mesh.geometry.boundingSphere.center = new THREE.Vector3(8,0.5,8);
+		return mesh;
+	}
+}
+
+export class UniformModelScaled extends UniformModel{
+	scale:number;
+	constructor(name:string, resourcePath:string, scale:number=1){
+		super(name, resourcePath);
+		this.scale = scale;
+	}
+
+	onModelLoaded( data:GLTF, resource:Resource ){
+		this.defaultOnModelLoaded( data, resource );
+		this.mesh.geometry.scale(0.5,0.5,0.5);
+		this.convertToFloar32Attribute( <THREE.BufferGeometry>this.mesh.geometry );
+	}
+
+}
+
 export class ModelRegistry implements Registry{
 	entries:Map<string,Model> = new Map<string,Model>();
 	loader:ResourceLoader;
