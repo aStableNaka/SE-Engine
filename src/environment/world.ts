@@ -3,6 +3,7 @@ import {Player} from "./entity/Player";
 import {Storable} from "../io/Storable";
 import { Region } from "./region/Region";
 import { Grid } from "../utils/Spaces";
+import { object } from "prop-types";
 
 export class World extends Storable{
 	player:Player | null = null;
@@ -10,12 +11,17 @@ export class World extends Storable{
 	regions!: Grid<Region>
 	regionUpdateQueue:Region[] = [];
 
+	worldSize = 4;
+	chunkSize = 16;
+
 	tickLoggingLength:number = 10;
 	tickSkip = this.tickLoggingLength*2;
 	tickTime:number = 0;
 	tickCount:number = 0;
 	desiredTPS:number = 20;
 	tickDeltas:number[] = new Array<number>(this.tickLoggingLength).fill(1000/this.desiredTPS);
+
+	meshUpdates=6000;
 
 	constructor( ff:FrostedFlakes ){
 		super();
@@ -103,6 +109,24 @@ export class World extends Storable{
 				let reg = this.regionUpdateQueue.pop();
 				if(!reg) return;
 				reg.update(  )
+			}
+			if(this.meshUpdates && false){
+				this.meshUpdates--;
+				this.ff.children.map((child)=>{
+					child.traverse((o3d)=>{
+						if(o3d.type=="Mesh"){
+							let im = (<THREE.Mesh>o3d);
+							let bg = <THREE.BufferGeometry>im.geometry
+							if(bg.attributes){
+								if( bg.attributes.position && bg.attributes.normals && bg.attributes.uv ){
+									(<THREE.BufferAttribute>bg.attributes.position).needsUpdate = true;
+									(<THREE.BufferAttribute>bg.attributes.normals).needsUpdate = true;
+									(<THREE.BufferAttribute>bg.attributes.uv).needsUpdate = true;
+								}
+							}
+						}
+					})
+				})
 			}
 		}
 		

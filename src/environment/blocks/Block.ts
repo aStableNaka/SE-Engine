@@ -61,9 +61,19 @@ export class Block extends Storable{
 	toStorageObject(){
 		return { className:this.constructor.name };
 	}
+
+	/**
+	 * Retrieves model key based on blockData (if used);
+	 * @param blockData 
+	 */
+	static getModelKey( blockData:BlockData ){
+		return this.model;
+	}
 }
 
 /**
+ * BlockData is a lightweight representation
+ * of a block within the world.
  * @property baseClass - the base class of the block
  * @property data - other data for the block
  */
@@ -77,8 +87,12 @@ export class BlockData extends Storable{
 	}
 
 	// Storable definitions
-	toStorageObject(){
+	toStorageObject():{blockId:string,data:any}{
 		return { blockId:this.baseClass.blockId, data:this.data };
+	}
+
+	getModelKey():string{
+		return this.baseClass.getModelKey( this );
 	}
 }
 

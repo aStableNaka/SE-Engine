@@ -46,14 +46,15 @@ export class Layer extends Storable{
 		let self = this;
 		this.grid.mapContents( (blockData:BlockData, yPos, xPos)=>{
 			let blockClass = blockData.baseClass;
+			let modelKey = blockData.getModelKey();
 			// Some blocks have no model.
 			if(blockClass.noModel){return;}
 			// If the model is not already included within modelData
-			if(!modelData[blockClass.model]){
-				modelData[blockClass.model] = [];
+			if(!modelData[modelKey]){
+				modelData[modelKey] = [];
 			}
 
-			modelData[blockClass.model].push( new Vector3(xPos, yPos, self.location));
+			modelData[modelKey].push( new Vector3(xPos, yPos, self.location));
 		});
 	}
 

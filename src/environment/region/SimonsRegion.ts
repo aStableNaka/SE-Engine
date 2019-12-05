@@ -3,11 +3,9 @@ import { World } from "../World";
 import { Layer } from "../Layer";
 import {regHub} from "../../registry/RegistryHub";
 
-const regionSize = 16;
-
 export class SimonsRegion extends Region{	
 	constructor(world:World){
-		super( regionSize, world );
+		super( world );
 	}
 
 	/**
@@ -15,7 +13,7 @@ export class SimonsRegion extends Region{
 	 */
 	private generateFloorLayer():Layer{
 		let blockRegistry = regHub.get("base:block");
-		return new Layer( regionSize, 0, (x,y)=>{
+		return new Layer( this.world.chunkSize, 0, (x,y)=>{
 			return blockRegistry.createBlockData("base:BlockGround");
 		});
 	}

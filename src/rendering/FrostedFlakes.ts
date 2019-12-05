@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {OrbitControls} from "../utils/THREE/jsm/controls/OrbitControls";
+import {OrbitControls} from "../controls/Orbit";
 /**
  * Basic boilerplate for a simple
  * threejs scene setup
@@ -29,16 +29,24 @@ export class FrostedFlakes extends THREE.Scene{
 		);
 		this.camera.position.set(0,3,0);
 		this.camera.lookAt(new THREE.Vector3(3,0,3));
-		this.background = new THREE.Color(0xff66ff);
+		this.background = new THREE.Color(0x000000);
 		this.add(this.camera);
 		this.renderer.setSize( this.width, this.height );
 		if( !container ){ container = document.body; }
 		this.container = container;
 		container.appendChild( this.renderer.domElement );
+		// controls
+		this.orbitControlls = new OrbitControls(this.camera, this.container);
+		this.orbitControlls.keys = {
+			LEFT: 65, //left arrow
+			UP: 87, // up arrow
+			RIGHT: 68, // right arrow
+			BOTTOM: 83 // down arrow
+		}
 
 		// Debugging
-		this.add( new THREE.AmbientLight( 0xffffff, 2 ))
-		this.orbitControlls = new OrbitControls(this.camera, this.container);
+		this.add( new THREE.AmbientLight( 0xffffff,1 ))
+		
 		this.referenceMesh = new THREE.Mesh(new THREE.CylinderBufferGeometry(1, 1, 4, 8), new THREE.MeshLambertMaterial({color:0x0}));
 		this.add(this.referenceMesh)
 	}

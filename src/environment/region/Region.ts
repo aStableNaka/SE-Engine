@@ -59,9 +59,9 @@ export class Region extends Storable{
 	 * @param size sidelength of the region
 	 * @param world the world that this region inhabits
 	 */
-	constructor( size:number, world:World ){
+	constructor( world:World ){
 		super();
-		this.size = size;
+		this.size = world.chunkSize;
 		this.world = world;
 		this.meshGroup = new RegionMesh( this );
 		this.world.ff.add(this.meshGroup);
@@ -119,10 +119,19 @@ export class Region extends Storable{
 
 		// Use the modelData to construct the appropriate meshes
 		// and append them to this.meshGroup
-		Object.keys(this.modelData).map((modelKey)=>{
-			let model = regHub.get(modelKey);
+		console.log(this.modelData);
+		Object.keys(this.modelData).map((modelKey,i)=>{
+			let [namespace,regName,modelName,discriminator] = [...modelKey.split(":"),"0"];
+			let model = regHub.get(`${namespace}:${regName}:${modelName}`);
 			let positions = this.modelData[modelKey];
-			let mesh = model.construct(positions);
+			let mesh = <THREE.InstancedMesh>model.construct( positions, parseInt( discriminator ) );
+			
+			//mesh.matrixWorldNeedsUpdate=true;
+			//mesh.instanceMatrix.needsUpdate=true;
+			//mesh.instanceMatrix.needsUpdate=true;
+	
+			//mesh.instanceMatrix.
+			//mesh.translateY(i*0.2);
 			this.meshGroup.add(mesh);
 		}, this);
 	}
