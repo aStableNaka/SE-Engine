@@ -31,7 +31,7 @@ export class Block extends Storable{
 		return  `${this.module}:${this.name}`
 	}
 
-	static createBlockData(data?:any):BlockData{
+	static createBlockData(data?:any, pos?:THREE.Vector3):BlockData{
 		return new BlockData(this, data);
 	}
 

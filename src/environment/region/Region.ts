@@ -40,6 +40,7 @@ export class RegionEventEmitter extends EventEmitter{
  * coordinate ( region(x,y)->grid(x,y) ) has direct LOS ( line of sight ) with the sky
  */
 export class Region extends Storable{
+	location: THREE.Vector2;
 	meshGroup: RegionMesh;
 	dictionary: Dictionary = new Dictionary();
 	lightGrid!: Grid<number>;
@@ -54,18 +55,37 @@ export class Region extends Storable{
 	updateQueued:boolean = true;
 	modelData:any = {};
 
+	modified:boolean=false;
+
+	/**
+	 * Keeps track of how many times this region gets
+	 * added and removed from the scene
+	 */
+	renderLoads:number = 0;
+	renderUnloads:number = 0;
+
 	/**
 	 * produces a region of size x size x height
 	 * @param size sidelength of the region
 	 * @param world the world that this region inhabits
 	 */
-	constructor( world:World ){
+	constructor( world:World, location:THREE.Vector2 ){
 		super();
+		this.location = location;
 		this.size = world.chunkSize;
 		this.world = world;
 		this.meshGroup = new RegionMesh( this );
-		this.world.ff.add(this.meshGroup);
 		this.generateTerrain();
+	}
+
+	addToWorld(){
+		this.world.ff.add(this.meshGroup);
+		this.renderLoads++;
+	}
+
+	removeFromWorld(){
+		this.world.ff.remove(this.meshGroup);
+		this.renderUnloads++;
 	}
 
 	meshUpdate(){}
@@ -119,7 +139,7 @@ export class Region extends Storable{
 
 		// Use the modelData to construct the appropriate meshes
 		// and append them to this.meshGroup
-		console.log(this.modelData);
+		//console.log(this.modelData);
 		Object.keys(this.modelData).map((modelKey,i)=>{
 			let [namespace,regName,modelName,discriminator] = [...modelKey.split(":"),"0"];
 			let model = regHub.get(`${namespace}:${regName}:${modelName}`);
@@ -161,7 +181,7 @@ export class Region extends Storable{
 	/** Storable overloads begin*/
 
 	toStorageObject(){
-		return { layers:this.layers, entities:this.entities, dictionary:this.dictionary, lightGrid:this.lightGrid }
+		return { layers:this.layers, entities:this.entities, dictionary:this.dictionary, lightGrid:this.lightGrid, renderLoads:this.renderLoads, renderUnloads:this.renderUnloads }
 	}
 
 	/** Storable overloads end */

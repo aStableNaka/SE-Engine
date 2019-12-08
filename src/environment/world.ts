@@ -4,9 +4,10 @@ import {Storable} from "../io/Storable";
 import { Region } from "./region/Region";
 import { Grid } from "../utils/Spaces";
 import { object } from "prop-types";
+import { TickScheduler } from "./TickScheduler"; 
 
 export class World extends Storable{
-	player:Player | null = null;
+	
 	ff: FrostedFlakes;
 	regions!: Grid<Region>
 	regionUpdateQueue:Region[] = [];
@@ -20,6 +21,7 @@ export class World extends Storable{
 	tickCount:number = 0;
 	desiredTPS:number = 20;
 	tickDeltas:number[] = new Array<number>(this.tickLoggingLength).fill(1000/this.desiredTPS);
+	tickScheduler:TickScheduler;
 
 	meshUpdates=6000;
 
@@ -28,6 +30,16 @@ export class World extends Storable{
 		console.log(`[World] initialized`);
 		this.ff = ff;
 		console.log(this);
+
+		this.tickScheduler = new TickScheduler( this );
+
+	}
+
+	/**
+	 * Converts ms to ticks
+	 */
+	msToTicks( ms:number ):number{
+		return 1000/this.desiredTPS*ms;
 	}
 
 	queueUpdate( region:Region ){
@@ -42,6 +54,8 @@ export class World extends Storable{
 	render(  ){
 		this.defaultRender();
 	}
+
+	update(){}
 
 	/**
 	 * The default rendering cycle
@@ -86,11 +100,12 @@ export class World extends Storable{
 	}
 
 	queueNextTick(){
-		let nextDelay = this.getNextTickDelay();
+		let nextDelay = this.getNextTickDelay()-3;
 		let tps = this.getTPS();
-		document.title = tps.toFixed(2) + " - - - " + new Date().getTime() + " - - - " + 1000/tps+" / "+1000/this.desiredTPS;
+		document.title = tps.toFixed(2) + " - - - " + this.tickCount + " - - - " + 1000/tps+" / "+1000/this.desiredTPS;
 		let self = this;
 		this.updateTickTimes();
+		this.tickScheduler.tick( this.tickCount );
 		setTimeout(()=>{
 			self.tick();
 		}, nextDelay);
@@ -105,12 +120,13 @@ export class World extends Storable{
 		if(this.tickSkip){
 			this.tickSkip--;
 		}else{
+			this.update();
 			while(this.regionUpdateQueue.length){
 				let reg = this.regionUpdateQueue.pop();
 				if(!reg) return;
 				reg.update(  )
 			}
-			if(this.meshUpdates && false){
+			/*if(this.meshUpdates && false){
 				this.meshUpdates--;
 				this.ff.children.map((child)=>{
 					child.traverse((o3d)=>{
@@ -127,7 +143,7 @@ export class World extends Storable{
 						}
 					})
 				})
-			}
+			}*/
 		}
 		
 		this.queueNextTick();

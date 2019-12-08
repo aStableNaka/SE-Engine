@@ -16,6 +16,7 @@ import { Region } from '../../environment/region/Region';
  */
 export class RegionMesh extends THREE.Group{
 	region:Region;
+	worldLocation!:THREE.Vector2; // This will be assigned by the world.
 	constructor( region:Region ){
 		super();
 		this.region = region;

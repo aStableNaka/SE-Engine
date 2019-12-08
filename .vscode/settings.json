@@ -5,6 +5,13 @@
     "src\\Main.js": true,
     "src\\index.js": true,
     "src\\rendering\\GameSceneContainer.js": true,
-    "src\\environment\\World.js": true
+    "src\\environment\\World.js": true,
+    "src\\registry\\Models.js": true,
+    "src\\registry\\ModelRegistry.js": true,
+    "src\\registry\\ModelTypes.js": true,
+    "src\\registry\\RegistryHub.js": true,
+    "src\\registry\\Registry.js": true,
+    "src\\registry\\Blocks.js": true,
+    "src\\registry\\BlockRegistry.js": true
   }
 }

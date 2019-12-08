@@ -1,4 +1,5 @@
 import { Block, Geometry, BlockData } from "../Block";
+import * as THREE from "three";
 
 export class BlockGroundData extends BlockData{
 	constructor( variant:number ){
@@ -14,8 +15,9 @@ export class BlockGround extends Block{
 		super();
 	}
 
-	static createBlockData( variant?:number ):BlockData{
-		if(!variant){variant = Math.floor(Math.random()*4)}
+	static createBlockData( variant?:number|null ):BlockData{
+		if(variant===null || variant===undefined){variant = Math.floor(Math.random()*4)}
+		variant = 0;
 		return new BlockGroundData( variant );
 	}
 

@@ -1,6 +1,7 @@
 import { Camera, MOUSE, Object3D, Vector3 } from 'three';
 
 export class OrbitControls {
+	onPan: (panOffset: Vector3) => void;
 	constructor(object: Camera, domElement?: HTMLElement);
 
 	object: Camera;
@@ -44,7 +45,7 @@ export class OrbitControls {
 
 	enableKeys: boolean;
 	keys: { LEFT: number; UP: number; RIGHT: number; BOTTOM: number; };
-	mouseButtons: { LEFT: MOUSE; MIDDLE: MOUSE; RIGHT: MOUSE; };
+	mouseButtons: { LEFT?: MOUSE; MIDDLE?: MOUSE; RIGHT?: MOUSE; };
 
 	rotateLeft(angle?: number): void;
 

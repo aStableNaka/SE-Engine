@@ -89,6 +89,12 @@ export class Model{
 	}
 }
 
+/**
+ * Uniform models are models that have one single uniform geometry
+ * and may only vary in materials. Uniform models do not
+ * support any sort of animation, but are optimized for rendering
+ * by using instancing.
+ */
 export class UniformModel extends Model{
 	materials:THREE.MeshStandardMaterial[] = [];
 	subdivisions: number;
@@ -201,9 +207,13 @@ export class UniformModelScaled extends UniformModel{
 		this.convertToFloat32Attribute( <THREE.BufferGeometry>this.mesh.geometry );
 		this.generateVariations();
 	}
-
 }
 
+/**
+ * @example
+ * let mr = new ModelRegistry("assets/models");
+ * mr.queue( new UniformModel("cube", "Cube.gltf") )
+ */
 export class ModelRegistry implements Registry{
 	entries:Map<string,Model> = new Map<string,Model>();
 	loader:ResourceLoader;

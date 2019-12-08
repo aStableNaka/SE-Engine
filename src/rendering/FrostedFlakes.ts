@@ -12,7 +12,7 @@ export class FrostedFlakes extends THREE.Scene{
 	far:number = 10000;
 	aspect:number = this.width/this.height;
 
-	referenceMesh:THREE.Mesh;
+	//referenceMesh:THREE.Mesh;
 
 	container:HTMLElement|null = null;
 	renderer:THREE.WebGLRenderer = new THREE.WebGLRenderer();
@@ -37,25 +37,27 @@ export class FrostedFlakes extends THREE.Scene{
 		container.appendChild( this.renderer.domElement );
 		// controls
 		this.orbitControlls = new OrbitControls(this.camera, this.container);
-		this.orbitControlls.keys = {
+		this.orbitControlls.mouseButtons = {
+			MIDDLE: THREE.MOUSE.ROTATE
+		}
+		/*this.orbitControlls.keys = {
 			LEFT: 65, //left arrow
 			UP: 87, // up arrow
 			RIGHT: 68, // right arrow
 			BOTTOM: 83 // down arrow
-		}
+		}*/
 
 		// Debugging
-		this.add( new THREE.AmbientLight( 0xffffff,1 ))
 		
-		this.referenceMesh = new THREE.Mesh(new THREE.CylinderBufferGeometry(1, 1, 4, 8), new THREE.MeshLambertMaterial({color:0x0}));
-		this.add(this.referenceMesh)
+		//this.referenceMesh = new THREE.Mesh(new THREE.CylinderBufferGeometry(1, 1, 4, 8), new THREE.MeshLambertMaterial({color:0x0}));
+		//this.add(this.referenceMesh)
 	}
 
 	render(){
 		//this.camera.rotateZ(0.1);
 		//this.camera.rotateY(0.1);
 		this.orbitControlls.update();
-		this.referenceMesh.rotateY(0.1);
+		//this.referenceMesh.rotateY(0.1);
 		this.renderer.render(this,this.camera);
 	}
 }
