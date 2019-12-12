@@ -4,6 +4,7 @@ export interface Registry{
 	register( entity:any, forceRegister?:boolean ):string;
 	get( key:string ):any;
 	checkReady( ready:()=>void ):void;
+	list:any[];
 }
 
 /**
@@ -27,6 +28,7 @@ export class RegistryHub extends EventEmitter{
 	namespaces:any = {};
 	registries:Registry[] = [];
 	readyCount:number = 0;
+	ready:boolean=false;
 	constructor(){
 		super();
 	}
@@ -46,6 +48,9 @@ export class RegistryHub extends EventEmitter{
 		}
 		this.namespaces[namespace][name] = new RegistryRegistryComponent(namespace, name, registry);
 		this.registries.push(registry);
+		this.onReady(()=>{
+			self.ready = true;
+		})
 		console.log(`[ RegistryHub ] Registered ${namespace}:${name}:*`);
 	}
 
@@ -87,6 +92,10 @@ export class RegistryHub extends EventEmitter{
 	 * @param callback 
 	 */
 	onReady(callback:()=>void){
-		this.addListener("ready", callback);
+		if(this.ready){
+			callback();
+		}else{
+			this.addListener("ready", callback);
+		}
 	}
 }

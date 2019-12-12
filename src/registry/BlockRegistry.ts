@@ -30,6 +30,7 @@ export class BlockRegistryComponent{
  */
 export class BlockRegistry implements Registry{
 	blocks:any = {};
+	list:BlockRegistryComponent[] = [];
 	name:string;
 	constructor( name:string="anonymous" ){
 		this.name = name;
@@ -59,7 +60,10 @@ export class BlockRegistry implements Registry{
 			return "";
 		}
 		console.log(`${this.logTag} ${blockID} has been registered.`);
-		this.blocks[blockID] = new BlockRegistryComponent( baseClass, forceRegister );
+		let rc = new BlockRegistryComponent( baseClass, forceRegister );
+		this.blocks[blockID] = rc;
+		this.list.push(rc);
+		
 		return blockID;
 	}
 

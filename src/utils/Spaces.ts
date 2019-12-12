@@ -72,22 +72,29 @@ export class Grid<T>{
 			(x:number):boolean=>{return x<this.size;},
 			(x:number):boolean=>{return 0<=x;},
 		]
-		return c.map( (cf)=>{ return cf(row) && cf(col); } ).length == 2;
+		return c.filter( (cf)=>{ return cf(row) && cf(col); } ).length == 2;
 	}
 
 	getRow( row:number ){
 		return this.contents[row];
 	}
 
-	get( row:number, column:number ) : T {
-		return this.getRow(row)[column];
+	get( row:number, column:number ) : T|null {
+		if(this.inRange(row, column)){
+			try{
+				return this.getRow(row)[column];
+			}catch(e){
+				console.log(row, column, this);
+			}
+			
+		}
+		return null;
 	}
 
 	set( value:T, row:number, col:number ){
 		if(!this.inRange(row,col)){
-
+			this.contents[row][col] = value;
 		}
-		this.contents[row][col] = value;
 	}
 
 	/**
@@ -129,7 +136,7 @@ export class Grid<T>{
 				throw this.assignSizeError( grid.size );
 			}
 			this.mapContents((val, row, col, self)=>{
-				self.set( grid.get(row,col), row, col );
+				self.set( <T>grid.get(row,col), row, col );
 			});
 			return this;
 		}

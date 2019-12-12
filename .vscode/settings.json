@@ -12,6 +12,15 @@
     "src\\registry\\RegistryHub.js": true,
     "src\\registry\\Registry.js": true,
     "src\\registry\\Blocks.js": true,
-    "src\\registry\\BlockRegistry.js": true
+    "src\\registry\\BlockRegistry.js": true,
+    "src\\environment\\SimonsWorld.js": true,
+    "src\\environment\\TickScheduler.js": true,
+    "src\\environment\\MapObject.js": true,
+    "src\\environment\\Layer.js": true,
+    "src\\environment\\region\\SimonsRegion.js": true,
+    "src\\environment\\region\\Region.js": true,
+    "src\\ui\\inventory\\CheatInventory.js": true,
+    "src\\ui\\inventory\\CheatBlockItem.js": true,
+    "src\\ui\\CheatMenu.js": true
   }
 }

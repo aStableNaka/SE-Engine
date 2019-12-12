@@ -10,6 +10,7 @@ import { Block, BlockData } from '../blocks/Block';
 import { Storable } from '../../io/Storable';
 import { regHub } from '../../registry/RegistryHub';
 import * as THREE from "three";
+import { ModelInstancedMesh } from '../../registry/ModelTypes';
 
 /**
  * How blocks are represented in regions
@@ -34,6 +35,8 @@ export class RegionEventEmitter extends EventEmitter{
 	}
 }
 
+const placeHolderMeshMaterial = new THREE.MeshBasicMaterial({color:0xffffff});
+
 /**
  * @property lightGrid : grid<number>
  * - a grid where each element is the depth (layer-index) in which the block at the local
@@ -55,7 +58,10 @@ export class Region extends Storable{
 	updateQueued:boolean = true;
 	modelData:any = {};
 
+	loaded:boolean=false;
 	modified:boolean=false;
+
+	placeHolderMesh:THREE.Mesh;
 
 	/**
 	 * Keeps track of how many times this region gets
@@ -75,6 +81,8 @@ export class Region extends Storable{
 		this.size = world.chunkSize;
 		this.world = world;
 		this.meshGroup = new RegionMesh( this );
+		this.placeHolderMesh = new THREE.Mesh(new THREE.BoxBufferGeometry(this.world.chunkSize, 1, this.world.chunkSize), placeHolderMeshMaterial);
+		this.placeHolderMesh.name = "placeholder";
 		this.generateTerrain();
 	}
 
@@ -144,7 +152,7 @@ export class Region extends Storable{
 			let [namespace,regName,modelName,discriminator] = [...modelKey.split(":"),"0"];
 			let model = regHub.get(`${namespace}:${regName}:${modelName}`);
 			let positions = this.modelData[modelKey];
-			let mesh = <THREE.InstancedMesh>model.construct( positions, parseInt( discriminator ) );
+			let mesh = <ModelInstancedMesh>model.construct( positions, parseInt( discriminator ) );
 			
 			//mesh.matrixWorldNeedsUpdate=true;
 			//mesh.instanceMatrix.needsUpdate=true;
@@ -154,6 +162,7 @@ export class Region extends Storable{
 			//mesh.translateY(i*0.2);
 			this.meshGroup.add(mesh);
 		}, this);
+		this.meshGroup.remove(this.placeHolderMesh);
 	}
 
 	/**

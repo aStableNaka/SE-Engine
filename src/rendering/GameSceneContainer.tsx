@@ -5,7 +5,7 @@ import { SimonsWorld } from '../environment/SimonsWorld';
 import {regHub} from "../registry/RegistryHub";
 
 export type GPVProps = {
-	//world:World
+	setWorld:(world:SimonsWorld)=>void
 }
 
 /**
@@ -14,7 +14,7 @@ export type GPVProps = {
 export class GameSceneContainer extends React.Component<GPVProps>{
 	mount: HTMLDivElement | null | undefined;
 	gameScene: FrostedFlakes | undefined;
-	world!: World;
+	world!: SimonsWorld;
 	style:CSSProperties = {
 		position: 'absolute',
 		top: '0px',
@@ -37,6 +37,7 @@ export class GameSceneContainer extends React.Component<GPVProps>{
 				this.world = new SimonsWorld(this.gameScene);
 				this.world.tick();
 				this.world.render();
+				this.props.setWorld(this.world);
 			}
 		}).bind(this));
 	}

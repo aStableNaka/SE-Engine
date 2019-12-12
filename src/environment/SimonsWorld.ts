@@ -30,15 +30,16 @@ const sqrthalf = Math.sqrt(1/2);
  * 0 - ground
  */
 export class SimonsWorld extends World{
-	enableDebugHelpers:boolean = false;
+	enableDebugHelpers:boolean = true;
 
-	worldSize=64;
+	worldSize=16;
 	chunkSize=32;
 	worldDomain:THREE.Box2;
 	center: THREE.Vector2;
 	player!: Player;
 
 	loadedRegions:Region[] = [];
+	regionLoadQueue:Region[] = [];
 
 	mouseRayCaster:THREE.Raycaster = new THREE.Raycaster();
 	mousePosition:THREE.Vector2 = new THREE.Vector2(0,0);
@@ -58,6 +59,7 @@ export class SimonsWorld extends World{
 	imrHelper!:THREE.Mesh;
 
 	cursorHelper!:THREE.Mesh;
+	cursorRegion!:Region|null;
 
 	noiseGen1:SimplexNoise = new SimplexNoise.default();
 	mouseIntersects!: THREE.Intersection[];
@@ -66,24 +68,47 @@ export class SimonsWorld extends World{
 		super( ff );
 		let self = this;
 		this.center = new THREE.Vector2(this.chunkSize*this.worldSize/2, this.chunkSize*this.worldSize/2);
-		this.worldDomain = new THREE.Box2( new Vector2(-this.worldSize,-this.worldSize), new Vector2(this.worldSize,this.worldSize) );
+		this.worldDomain = new THREE.Box2( new Vector2(-this.worldSize,-this.worldSize), new Vector2(this.worldSize-1,this.worldSize-1) );
 		this.player = new Player( this );
 		this.setupControls(ff);
 		this.regions = new Grid<Region>(this.worldSize,(y,x)=>{
-			let region = new SimonsRegion( self, new THREE.Vector2(x,y) );
-			region.meshGroup.position.set(x*this.chunkSize,0,y*this.chunkSize);
-			region.meshGroup.worldLocation = new THREE.Vector2(x,y);
-			region.meshGroup.name = `reg_${x}:${y}`;
-			region.constructMesh();
-			return region;
+			return self.instantiateRegion(x,y);
 		});
 		this.setupImrHelper();
 		this.setupMouseControls();
+
+		this.tickScheduler.every(2, ()=>{
+			if(self.regionLoadQueue[0]){
+				let reg = <Region>self.regionLoadQueue.pop();
+				reg.loaded = true;
+				reg.constructMesh();
+			}
+		})
+
 	}
 
+	/**
+	 * Queue a region to be loaded.
+	 * Regions are loaded once every 2 ticks.
+	 * @param region 
+	 */
+	queueRegionLoad(region:Region){
+		this.regionLoadQueue.push(region);
+	}
 
-
-
+	/**
+	 * Create a new instance of a region.
+	 * @param x 
+	 * @param y 
+	 */
+	instantiateRegion(x:number,y:number){
+		let region = new SimonsRegion( this, new THREE.Vector2(x,y) );
+		region.meshGroup.position.set(x*this.chunkSize,0,y*this.chunkSize);
+		region.meshGroup.worldLocation = new THREE.Vector2(x,y);
+		region.meshGroup.name = `reg_${x}:${y}`;
+		//region.constructMesh();
+		return region;
+	}
 
 
 	/**
@@ -148,7 +173,12 @@ export class SimonsWorld extends World{
 			this.cursorHelper.position.y = obj3d.point.y+0.1;
 			this.cursorHelper.position.z = Math.floor(obj3d.point.z+0.5);
 		}
-		
+		this.cursorRegion = this.getRegionAtVec2( new THREE.Vector2(this.cursorHelper.position.x, this.cursorHelper.position.z) );
+	}
+
+	getRegionAtVec2(vec2:THREE.Vector2){
+		let pos = vec2.clone().divideScalar(this.chunkSize).floor();
+		return this.regions.get(pos.x, pos.y);
 	}
 
 	/**
@@ -167,6 +197,12 @@ export class SimonsWorld extends World{
 		mesh.position.set(chp.x, 1, chp.z);
 		this.ff.add(mesh);
 		console.log(this.mouseIntersects);
+		if(this.cursorRegion){
+			this.cursorRegion.meshGroup.children.map((obj3d)=>{
+				let intersection = this.mouseRayCaster.intersectObject(obj3d);
+				console.log(intersection)
+			})
+		}
 	}
 
 
@@ -216,7 +252,7 @@ export class SimonsWorld extends World{
 		ff.orbitControlls.maxPolarAngle=Math.PI/180*45;
 		ff.orbitControlls.minPolarAngle=Math.PI/180*45;
 		ff.orbitControlls.minDistance=5;
-		ff.orbitControlls.maxDistance=60;
+		//ff.orbitControlls.maxDistance=60;
 		ff.orbitControlls.enableDamping = false;
 		ff.orbitControlls.keyPanSpeed=5;
 
@@ -336,7 +372,11 @@ export class SimonsWorld extends World{
 			// or if the world does not contain this region
 			// Do nothing.
 			if(!self.worldDomain.containsPoint(regionLocation)) return;
-			self.regions.get(regionLocation.x,regionLocation.y).addToWorld();
+			let region = <Region>self.regions.get(regionLocation.x,regionLocation.y);
+			if(!region.loaded){
+				self.queueRegionLoad(region);
+			}
+			region.addToWorld();
 		});
 
 		// Remove regions that aren't seen anymore

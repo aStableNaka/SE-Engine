@@ -4,7 +4,7 @@ import { regHub } from '../registry/RegistryHub';
 import { BlockData, Block } from "./blocks/Block";
 import { Storable } from "../io/Storable";
 import { quickHash } from "../utils/QuickHash";
-import {Vector2, Vector3} from "three";
+import {Vector2, Vector3, Vector4} from "three";
 
 const defaultBlock = new BlockData(BlockEmpty);
 
@@ -30,7 +30,15 @@ export class Layer extends Storable{
 	 * @param y 
 	 */
 	public getBlock( x :number, y :number ):BlockData{
-		return this.grid.get(y,x);
+		let data = this.grid.get(y,x);
+		if(!data){
+			throw new Error(`[Layer] Block at ${x},${y} does not exist`);
+		}
+		return <BlockData>this.grid.get(y,x);
+	}
+
+	public setBlock( blockData:BlockData, x:number, y:number ){
+		this.grid.set(blockData,y,x);
 	}
 
 	/**
@@ -46,7 +54,7 @@ export class Layer extends Storable{
 		let self = this;
 		this.grid.mapContents( (blockData:BlockData, yPos, xPos)=>{
 			let blockClass = blockData.baseClass;
-			let modelKey = blockData.getModelKey();
+			let modelKey = blockClass.getModel( blockData, new Vector3(xPos, this.location, yPos) );
 			// Some blocks have no model.
 			if(blockClass.noModel){return;}
 			// If the model is not already included within modelData
@@ -54,7 +62,7 @@ export class Layer extends Storable{
 				modelData[modelKey] = [];
 			}
 
-			modelData[modelKey].push( new Vector3(xPos, yPos, self.location));
+			modelData[modelKey].push( new Vector4(xPos, yPos, self.location, blockData.getRotation()));
 		});
 	}
 

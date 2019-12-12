@@ -8,6 +8,13 @@ import * as THREE from 'three';
 
 export type Geometry = THREE.Geometry | THREE.BufferGeometry | THREE.InstancedBufferGeometry;
 
+export enum Facing{
+	NORTH = 0,
+	WEST = 1,
+	SOUTH = 2,
+	EAST = 3
+}
+
 /**
  * Blocks are *small* representations of objects which form the environment
  */
@@ -33,6 +40,10 @@ export class Block extends Storable{
 
 	static createBlockData(data?:any, pos?:THREE.Vector3):BlockData{
 		return new BlockData(this, data);
+	}
+
+	static getModel( blockData:BlockData, pos:THREE.Vector3 ){
+		return this.model;
 	}
 
 	/**
@@ -84,6 +95,17 @@ export class BlockData extends Storable{
 		super();
 		this.baseClass = baseClass;
 		this.data = data;
+	}
+
+	/**
+	 * By default, look for the rotation property the
+	 * blockData's metadata
+	 */
+	getRotation():number{
+		if(this.data.rotation){
+			return this.data.rotation * Math.PI/2;
+		}
+		return Facing.NORTH;
 	}
 
 	// Storable definitions

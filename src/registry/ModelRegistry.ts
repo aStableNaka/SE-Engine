@@ -10,7 +10,22 @@ import { Resource } from "../loader/Resource";
 import { Geometry } from "../environment/blocks/Block";
 import * as THREE from "three";
 import {BufferGeometryUtils} from "../utils/THREE/jsm/utils/BufferGeometryUtils";
+import { Layer } from "../environment/Layer";
 
+export type ModelOptions = {
+	scale?:number;
+};
+
+export class ModelInstancedMesh extends THREE.InstancedMesh{
+	layerLocation:number = 0;
+	constructor( geometry:THREE.Geometry | THREE.BufferGeometry, material:THREE.Material | THREE.Material[], count:number ){
+		super( geometry, material, count );
+	}
+
+	layerize( layer:Layer ){
+		this.layerLocation = layer.location;
+	}
+}
 
 /**
  * This is for basic models that are composed of a single mesh
@@ -22,9 +37,11 @@ export class Model{
 	registry!: ModelRegistry;
 	mesh!:THREE.Mesh;
 	gltf!:GLTF;
-	constructor(name:string,resourcePath:string){
+	options: ModelOptions;
+	constructor(name:string,resourcePath:string,options?:ModelOptions){
 		this.name = name;
 		this.resourcePath = resourcePath;
+		this.options = options || {};
 	}
 
 	assignRegistry(registry:ModelRegistry){
@@ -42,6 +59,12 @@ export class Model{
 		let g  = this.mesh.geometry.clone();
 		this.convertToFloat32Attribute(<THREE.BufferGeometry>g);
 		return <THREE.BufferGeometry>g;
+	}
+
+	setBoundingSphere( mesh:THREE.Mesh ){
+		mesh.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(0,0,0), 11.3137);
+		mesh.geometry.boundingSphere.center = new THREE.Vector3(32,0.5,32);
+		mesh.frustumCulled = false;
 	}
 
 	/**
@@ -76,15 +99,19 @@ export class Model{
 	 * Get the local transformation of a position
 	 * @param pos 
 	 */
-	getLocalTransform(pos:THREE.Vector3):THREE.Matrix4{
-		return new THREE.Matrix4().makeTranslation(pos.x||0,pos.z||0,pos.y||0);
+	getLocalTransform(pos:THREE.Vector4):THREE.Matrix4{
+		let matrix = new THREE.Matrix4().makeTranslation(pos.x||0,pos.z||0,pos.y||0);
+		if(pos.w){
+			matrix = new THREE.Matrix4().makeRotationZ( pos.w ).multiply( matrix );	
+		}
+		return matrix;
 	}
 
 	/**
 	 * This must be overwritten by every mesh type.
 	 * @param positions 
 	 */
-	construct( positions:THREE.Vector3[], discriminator:number ):THREE.Object3D{
+	construct( positions:THREE.Vector4[], discriminator:number ):THREE.Object3D{
 		throw new Error("[Model] mesh cannot be constructed. No constuction definitions found.");
 	}
 }
@@ -98,8 +125,8 @@ export class Model{
 export class UniformModel extends Model{
 	materials:THREE.MeshStandardMaterial[] = [];
 	subdivisions: number;
-	constructor(name:string, resourcePath:string, textureAtlasSubdivisions:number=1){
-		super(name, resourcePath);
+	constructor(name:string, resourcePath:string, textureAtlasSubdivisions:number=1, options?:ModelOptions){
+		super(name, resourcePath, options);
 		this.subdivisions=textureAtlasSubdivisions;
 	}
 
@@ -131,6 +158,10 @@ export class UniformModel extends Model{
 
 	onModelLoaded( data:GLTF, resource:Resource ){
 		this.defaultOnModelLoaded( data, resource );
+		console.log(data);
+		if(this.options.scale){
+			this.mesh.geometry.scale(0.5,0.5,0.5);
+		}
 		this.convertToFloat32Attribute( <THREE.BufferGeometry>this.mesh.geometry );
 		this.generateVariations();
 	}
@@ -143,21 +174,17 @@ export class UniformModel extends Model{
 	 * @param positions 
 	 * @param discriminator 
 	 */
-	construct_instanced( positions:THREE.Vector3[], discriminator:number=0 ):THREE.Object3D{
+	construct_instanced( positions:THREE.Vector4[], discriminator:number=0 ):THREE.Object3D{
 		/**
 		 * @note when using InstancedMesh, the reference geometry has to be cloned.
 		 */
 		let clonedGeom = this.cloneGeometry();
-		let mesh = new THREE.InstancedMesh( clonedGeom, this.materials[discriminator] || this.mesh.material,positions.length );
-		positions.map(( vec3:THREE.Vector3, i:number )=>{
-			mesh.setMatrixAt(i, this.getLocalTransform(vec3));
+		let mesh = new ModelInstancedMesh( clonedGeom, this.materials[discriminator] || this.mesh.material,positions.length );
+		positions.map(( vec4:THREE.Vector4, i:number )=>{
+			mesh.setMatrixAt(i, this.getLocalTransform(vec4));
 		}, this);
-		// Something is wrong with the mesh i don't understand lol
-		// This is for the culling issues
-		mesh.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(0,0,0), 11.3137);
-		mesh.geometry.boundingSphere.center = new THREE.Vector3(32,0.5,32);
 		mesh.name = `${this.name}:${discriminator}`;
-		mesh.frustumCulled = false;
+		this.setBoundingSphere( mesh );
 
 		mesh.instanceMatrix.needsUpdate = true;
 		return mesh;
@@ -169,43 +196,114 @@ export class UniformModel extends Model{
 	 * @param positions 
 	 * @param discriminator 
 	 */
-	construct_merged( positions:THREE.Vector3[], discriminator:number=0 ):THREE.Object3D{
-		let geoms = positions.map(( vec3:THREE.Vector3, i:number )=>{
+	construct_merged( positions:THREE.Vector4[], discriminator:number=0 ):THREE.Object3D{
+		let attrPositionArray:number[] = [];
+		let attrNormalArray:number[] = [];
+		let attrUvArray:number[] = [];
+		let attrIndexArray:number[] = [];
+
+		let baseGeometry = <THREE.BufferGeometry>this.mesh.geometry.clone();
+
+		positions.map((vec4:THREE.Vector4, i:number)=>{
+			let geom = baseGeometry.clone();
+
+			geom.applyMatrix(this.getLocalTransform(vec4));
+
+			let posArr = <Float32Array>geom.attributes.position.array;
+			let normalArr = <Float32Array>geom.attributes.normal.array;
+			let uvArr = <Float32Array>geom.attributes.uv.array;
+			let index = <Uint16Array>geom.index.array;
+			
+			attrPositionArray.push(...posArr);
+			attrNormalArray.push(...normalArr);
+			attrUvArray.push(...uvArr);
+			attrIndexArray.push(...index);
+		});
+
+		let positionF32A = new Float32Array( attrPositionArray );
+		let normalF32A = new Float32Array( attrNormalArray );
+		let uvF32A = new Float32Array( attrUvArray );
+		let positionUi16A = new Float32Array( attrPositionArray );
+
+		let positionAttribute = new THREE.Float32BufferAttribute(positionF32A, baseGeometry.attributes.position.itemSize);
+		let normalAttribute = new THREE.Float32BufferAttribute(normalF32A, baseGeometry.attributes.normal.itemSize);
+		let uvAttribute = new THREE.Float32BufferAttribute(uvF32A, baseGeometry.attributes.uv.itemSize);
+		let indexAttribute = new THREE.Uint16BufferAttribute(positionUi16A, baseGeometry.attributes.position.itemSize);
+
+		let mergedGeometry = baseGeometry.clone();
+		mergedGeometry.attributes.position = positionAttribute;
+		mergedGeometry.attributes.normal = normalAttribute;
+		mergedGeometry.attributes.uv = uvAttribute;
+		mergedGeometry.index = indexAttribute;
+
+		let mesh = new THREE.Mesh( mergedGeometry, this.materials[discriminator]||this.mesh.material );
+		mesh.updateMatrix();
+		mesh.name =  this.name;
+		
+		throw new Error("[UniformModel.construct_merged] does not work.");
+
+		return mesh;
+		/*
+		throw new Error("[UniformModel] Please do not use UniformModel.construct_merged");
+		let geoms = positions.map(( vec4:THREE.Vector4, i:number )=>{
 			let geom = <THREE.BufferGeometry>this.mesh.geometry.clone();
 			this.convertToFloat32Attribute(geom);
-			geom.applyMatrix( this.getLocalTransform(vec3) );
+			geom.applyMatrix( this.getLocalTransform(vec4) );
 			return geom;
 		}, this);
 		let mergedGeom = BufferGeometryUtils.mergeBufferGeometries(geoms);
 		let mesh = new THREE.Mesh(mergedGeom,this.materials[discriminator]||this.mesh.material);
 		mesh.updateMatrix();
-		// Something is wrong with the mesh i don't understand lol
-		// This is for the culling issues
-		mesh.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(0,0,0), 11.3137);
-		mesh.geometry.boundingSphere.center = new THREE.Vector3(8,0.5,8);
+
 		mesh.name = `${this.name}:${discriminator}`;
-		mesh.frustumCulled = false;
+		this.setBoundingSphere( mesh );
 		return mesh;
+		*/
 	}
 
-	construct( positions:THREE.Vector3[], discriminator:number=0 ):THREE.Object3D{
+	construct( positions:THREE.Vector4[], discriminator:number=0 ):THREE.Object3D{
 		return this.construct_instanced(positions,discriminator);
 	}
 }
 
-export class UniformModelScaled extends UniformModel{
-	scale:number;
-	constructor(name:string, resourcePath:string, scale:number=1, textureAtlasSubdivisions:number=1 ){
-		super(name, resourcePath);
-		this.scale = scale;
-		this.subdivisions = textureAtlasSubdivisions;
+/**
+ * RailedModels are models which have textures meant for
+ * animation that follow a rail structure.
+ * see conveyorbelt.
+ * 
+ * Mainly used for models with static geometry, but complex
+ * textures with texture animations.
+ * 
+ * Each x-interval 
+ */
+export class RailedModel extends UniformModel{
+	constructor( name:string, resourcePath:string, options?:ModelOptions ){
+		super(name, resourcePath, 1, options);
 	}
 
-	onModelLoaded( data:GLTF, resource:Resource ){
-		this.defaultOnModelLoaded( data, resource );
-		this.mesh.geometry.scale(0.5,0.5,0.5);
-		this.convertToFloat32Attribute( <THREE.BufferGeometry>this.mesh.geometry );
-		this.generateVariations();
+	/**
+	 * Create a mesh using instancing. For some reason, this creates
+	 * a bug where every instanced mesh is exactly the same.
+	 * I don't really understand it.
+	 * @override
+	 * @param positions 
+	 * @param discriminator 
+	 */
+	construct_instanced( positions:THREE.Vector4[], discriminator:number=0 ):THREE.Object3D{
+		/**
+		 * @note when using InstancedMesh, the reference geometry has to be cloned.
+		 */
+		let clonedGeom = this.cloneGeometry();
+		let mesh = new THREE.InstancedMesh( clonedGeom, this.materials[0] || this.mesh.material,positions.length );
+		positions.map(( vec4:THREE.Vector4, i:number )=>{
+			mesh.setMatrixAt(i, this.getLocalTransform(vec4));
+		}, this);
+
+		mesh.name = `${this.name}:${discriminator}`;
+		this.setBoundingSphere( mesh );
+
+		mesh.instanceMatrix.needsUpdate = true;
+		return mesh;
 	}
 }
 
@@ -217,7 +315,7 @@ export class UniformModelScaled extends UniformModel{
 export class ModelRegistry implements Registry{
 	entries:Map<string,Model> = new Map<string,Model>();
 	loader:ResourceLoader;
-
+	list:Model[] = [];
 	constructor(resourcePath:string){
 		this.loader = new ResourceLoader(resourcePath);
 	}
@@ -229,6 +327,7 @@ export class ModelRegistry implements Registry{
 		model.assignRegistry(this);
 		this.loader.queue(model.resource);
 		this.entries.set(model.name,model);
+		this.list.push(model);
 		return model.name;
 	}
 
