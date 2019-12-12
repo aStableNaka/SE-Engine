@@ -23,7 +23,7 @@ export class Layer extends Storable{
 		this.size = size;
 		this.grid = new Grid<BlockData>(size, generation);
 	}
-
+	
 	/**
 	 * Column major
 	 * @param x 
@@ -60,6 +60,12 @@ export class Layer extends Storable{
 			// If the model is not already included within modelData
 			if(!modelData[modelKey]){
 				modelData[modelKey] = [];
+			}
+			// remove modelKey discriminator;
+			let baseModelKey = modelKey.split(":").filter((s:string,i:number)=>{return i<4}).join(":");
+			let model = regHub.get(baseModelKey);
+			if(model.usesInstancing){
+				blockData.assignMatrixIndex( modelData.length )
 			}
 
 			modelData[modelKey].push( new Vector4(xPos, yPos, self.location, blockData.getRotation()));

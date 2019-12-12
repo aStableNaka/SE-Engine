@@ -91,10 +91,15 @@ export class Block extends Storable{
 export class BlockData extends Storable{
 	baseClass: any;
 	data: any;
+	matrixIndex:number = 0
 	constructor( baseClass:BlockBaseClass, data?:any ){
 		super();
 		this.baseClass = baseClass;
 		this.data = data;
+	}
+
+	assignMatrixIndex( n:number ){
+		this.matrixIndex = n;
 	}
 
 	/**

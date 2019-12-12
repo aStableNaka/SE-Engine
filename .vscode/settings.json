@@ -21,6 +21,10 @@
     "src\\environment\\region\\Region.js": true,
     "src\\ui\\inventory\\CheatInventory.js": true,
     "src\\ui\\inventory\\CheatBlockItem.js": true,
-    "src\\ui\\CheatMenu.js": true
+    "src\\ui\\CheatMenu.js": true,
+    "src\\models\\Model.js": true,
+    "src\\models\\ModelTypes.js": true,
+    "src\\models\\RailedModel.js": true,
+    "src\\models\\UniformModel.js": true
   }
 }

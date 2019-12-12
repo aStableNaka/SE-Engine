@@ -1,5 +1,5 @@
 import {ModelRegistry} from "./ModelRegistry";
-import * as ModelType from "./ModelTypes";
+import * as ModelType from "../models/ModelTypes";
 export const baseModelRegistry = new ModelRegistry("assets/GLTF");
 
 /**

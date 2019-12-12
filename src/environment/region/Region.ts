@@ -10,7 +10,7 @@ import { Block, BlockData } from '../blocks/Block';
 import { Storable } from '../../io/Storable';
 import { regHub } from '../../registry/RegistryHub';
 import * as THREE from "three";
-import { ModelInstancedMesh } from '../../registry/ModelTypes';
+import { ModelInstancedMesh } from '../../models/Model';
 
 /**
  * How blocks are represented in regions
