@@ -26,5 +26,6 @@
     "src\\models\\ModelTypes.js": true,
     "src\\models\\RailedModel.js": true,
     "src\\models\\UniformModel.js": true
-  }
+  },
+  "files.eol": "\r\n"
 }
