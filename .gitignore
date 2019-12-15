@@ -39,3 +39,4 @@ pkg/
 wasm-pack.log
 /src/**/*.js
 progress/*
+/.vscode
