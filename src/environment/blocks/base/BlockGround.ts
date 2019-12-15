@@ -1,4 +1,4 @@
-import { Block, Geometry, BlockData } from "../Block";
+import { BlockFactory, Geometry, BlockData } from "../Block";
 import * as THREE from "three";
 
 export class BlockGroundData extends BlockData{
@@ -8,7 +8,7 @@ export class BlockGroundData extends BlockData{
 	}
 }
 
-export class BlockGround extends Block{
+export class BlockGround extends BlockFactory{
 	static model:string = "base:model:Cube";
 	static noModel = false;
 	constructor(){

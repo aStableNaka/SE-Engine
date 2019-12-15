@@ -1,10 +1,10 @@
-import {Block, BlockData, Facing} from "../Block";
+import {BlockFactory, BlockData, Facing} from "../Block";
 
 export type BlockConveyorMetadata = {
 	rotation:Facing
 }
 
-export class BlockConveyorBelt extends Block{
+export class BlockConveyorBelt extends BlockFactory{
 	static speed:2; // Throughput per second
 	static model:"base:model:ConveyorInline";
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import {regHub} from "../../registry/RegistryHub";
 import { CheatBlockItem } from './CheatBlockItem';
-import { Block } from '../../environment/blocks/Block';
+import { BlockFactory } from '../../environment/blocks/Block';
 import { BlockRegistryComponent } from '../../registry/BlockRegistry';
 
 const CheatInventoryStyle:React.CSSProperties = {

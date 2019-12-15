@@ -8,7 +8,7 @@ import { Vector3 } from "three";
 export class Entity{
 	position: THREE.Vector2;
 	meshGroup: THREE.Group = new THREE.Group();
-	meshMissing: THREE.Mesh = new THREE.Mesh(new THREE.BoxGeometry(1,2), new THREE.MeshLambertMaterial({color:0xff00ff}));
+	meshMissing: THREE.Mesh = new THREE.Mesh(new THREE.BoxGeometry(0.30902348578,1,0.30902348578), new THREE.MeshLambertMaterial({color:0xff00ff}));
 	world:World;
 	/**
 	 * In units per second

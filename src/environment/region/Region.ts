@@ -6,11 +6,11 @@ import { PositionalAudio, Vector4, Matrix4 } from 'three';
 import { Dictionary } from '../../utils/Dictionary';
 import { World } from '../World';
 import { Layer } from '../Layer';
-import { Block, BlockData } from '../blocks/Block';
+import { BlockFactory, BlockData } from '../blocks/Block';
 import { Storable } from '../../io/Storable';
 import { regHub } from '../../registry/RegistryHub';
 import * as THREE from "three";
-import { ModelInstancedMesh } from '../../models/Model';
+import { ModelInstancedMesh, ModelDataEntry } from '../../models/Model';
 
 /**
  * How blocks are represented in regions
@@ -100,11 +100,20 @@ export class Region extends Storable{
 
 	update(){
 		this.updateQueued = false;
+		(<ModelDataEntry[]>Object.values(this.modelData)).map((modelDataEntry:ModelDataEntry)=>{
+			if(modelDataEntry.needsUpdate){
+				let constructedMesh = this.meshGroup.children.find((o3d)=>o3d.name==modelDataEntry.modelKey);
+				if(constructedMesh){
+					this.meshGroup.remove(constructedMesh);
+				}
+				this.constructModelMesh( modelDataEntry );
+			}
+		}, this);
 	}
 
 	generateTerrain(){
 		// Generate the terrain
-		this.layers.push( new Layer(this.size, 0) );
+		this.layers.push( new Layer(this, 0) );
 		this.lightGrid = new Grid<number>(this.size, ()=>{return 0;});
 		this.requestUpdate();
 	}
@@ -115,8 +124,27 @@ export class Region extends Storable{
 		}
 	}
 
-	getBlock( x:number, y:number, z:number ):BlockData{
+	/*
+		Region manipulation
+	*/
+
+	getBlock( x:number, y:number, z:number ):BlockData|null{
 		return this.layers[z].getBlock(x,y);
+	}
+
+	/**
+	 * Set the block data at location x,y,z
+	 * @param blockData 
+	 * @param x 
+	 * @param y 
+	 * @param z layer index
+	 */
+	setBlock(blockData:BlockData, x:number, y:number, z:number){
+		let layer = this.layers[z];
+		if(!layer) throw new Error(`[Region] layer ${z} does not exist`);
+		layer.setBlock(blockData, x, y);
+		// The layer tells the region which mesh models
+		// need updating.
 	}
 
 	clearMeshGroup(){
@@ -148,21 +176,24 @@ export class Region extends Storable{
 		// Use the modelData to construct the appropriate meshes
 		// and append them to this.meshGroup
 		//console.log(this.modelData);
-		Object.keys(this.modelData).map((modelKey,i)=>{
-			let [namespace,regName,modelName,discriminator] = [...modelKey.split(":"),"0"];
-			let model = regHub.get(`${namespace}:${regName}:${modelName}`);
-			let positions = this.modelData[modelKey];
-			let mesh = <ModelInstancedMesh>model.construct( positions, parseInt( discriminator ) );
-			
-			//mesh.matrixWorldNeedsUpdate=true;
-			//mesh.instanceMatrix.needsUpdate=true;
-			//mesh.instanceMatrix.needsUpdate=true;
-	
-			//mesh.instanceMatrix.
-			//mesh.translateY(i*0.2);
-			this.meshGroup.add(mesh);
+		(<ModelDataEntry[]>Object.values(this.modelData)).map((modelDataEntry)=>{
+			this.constructModelMesh(modelDataEntry);
 		}, this);
 		this.meshGroup.remove(this.placeHolderMesh);
+	}
+
+	/**
+	 * Constructs the mesh for a single model type
+	 * @param modelDataEntry 
+	 */
+	constructModelMesh( modelDataEntry:ModelDataEntry ){
+		let modelKey = modelDataEntry.modelKey;
+		let [namespace,regName,modelName,discriminator] = [...modelKey.split(":"),"0"];
+		let model = regHub.get(`${namespace}:${regName}:${modelName}`);
+		let positions = this.modelData[modelKey].contents;
+		let mesh = <ModelInstancedMesh>model.construct( positions, parseInt( discriminator ) );
+		mesh.name = modelKey;
+		this.meshGroup.add(mesh); 
 	}
 
 	/**

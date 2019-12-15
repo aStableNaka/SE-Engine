@@ -1,4 +1,4 @@
-import { Block, BlockData } from "../environment/blocks/Block";
+import { BlockFactory, BlockData } from "../environment/blocks/Block";
 import { baseClass } from "../utils/Classes";
 import {Registry} from "./Registry";
 

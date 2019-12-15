@@ -5,6 +5,8 @@ import { Region } from "./region/Region";
 import { Grid } from "../utils/Spaces";
 import { object } from "prop-types";
 import { TickScheduler } from "./TickScheduler"; 
+import { BlockData } from "./blocks/Block";
+import { Vector2 } from "three";
 
 export class World extends Storable{
 	
@@ -109,6 +111,27 @@ export class World extends Storable{
 		setTimeout(()=>{
 			self.tick();
 		}, nextDelay);
+	}
+
+	getRegionAtVec2(vec2:THREE.Vector2){
+		let pos = vec2.clone().divideScalar(this.chunkSize).floor();
+		return this.regions.get(pos.x, pos.y);
+	}
+
+	
+	/*
+		Map manipulation
+	*/
+
+	setBlock( blockData:BlockData, x:number, y:number, z:number ){
+		let region = this.getRegionAtVec2(new Vector2(x,y));
+		if(!region) throw new Error(`[SimonsWorld] Attempted to set block out of bounds ${x},${y},${z}`);
+		this.regionUpdateQueue.push(region);
+		
+		// World space to region space conversion
+		x = x%this.chunkSize;
+		y = y%this.chunkSize;
+		region.setBlock(blockData,x,y,z);
 	}
 
 	/**

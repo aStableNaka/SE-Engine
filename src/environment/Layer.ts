@@ -1,10 +1,12 @@
 import { CreateGrid, Grid } from "../utils/Spaces";
 import { BlockEmpty } from "./blocks/base/BlockEmpty";
 import { regHub } from '../registry/RegistryHub';
-import { BlockData, Block } from "./blocks/Block";
+import { BlockData, BlockFactory } from "./blocks/Block";
 import { Storable } from "../io/Storable";
 import { quickHash } from "../utils/QuickHash";
 import {Vector2, Vector3, Vector4} from "three";
+import { Region } from "./region/Region";
+import { ModelDataEntry } from "../models/Model";
 
 const defaultBlock = new BlockData(BlockEmpty);
 
@@ -17,11 +19,16 @@ export class Layer extends Storable{
 	grid:Grid<BlockData>;
 	location:number;
 	size: number;
-	constructor( size:number, location:number, generation:(x:number,y:number)=>BlockData=()=>{return defaultBlock} ){
+	region: Region;
+
+	modelUpdateQueue:string[] = [];
+
+	constructor( region:Region, location:number, generation:(x:number,y:number)=>BlockData=()=>{return defaultBlock} ){
 		super();
 		this.location = location;
-		this.size = size;
-		this.grid = new Grid<BlockData>(size, generation);
+		this.region = region;
+		this.size = region.world.chunkSize;
+		this.grid = new Grid<BlockData>(this.size, generation);
 	}
 	
 	/**
@@ -29,16 +36,58 @@ export class Layer extends Storable{
 	 * @param x 
 	 * @param y 
 	 */
-	public getBlock( x :number, y :number ):BlockData{
+	public getBlock( x :number, y :number ):BlockData|null{
 		let data = this.grid.get(y,x);
-		if(!data){
-			throw new Error(`[Layer] Block at ${x},${y} does not exist`);
-		}
 		return <BlockData>this.grid.get(y,x);
 	}
 
+	/**
+	 * 
+	 * @param blockData 
+	 * @param x 
+	 * @param y 
+	 */
 	public setBlock( blockData:BlockData, x:number, y:number ){
+		// Ensures the block being replaced gets removed visually
+		let occupyingBlock = this.getBlock(x,y);
+		if(occupyingBlock){
+			let modelKey = occupyingBlock.getModelKey();
+			let modelDataEntry = this.region.modelData[modelKey];
+			if(modelDataEntry){
+				modelDataEntry.contents = modelDataEntry.filter((v4:Vector4)=>{
+					return v4.x!=x && v4.y!=y;
+				})
+				modelDataEntry.needsUpdate = true;
+			}
+		}
+
+
 		this.grid.set(blockData,y,x);
+		this.addToModelData( this.region.modelData, blockData, x, y );
+	}
+
+	public addToModelData( modelData:any, blockData:BlockData, xPos:number, yPos:number ){
+		let blockClass = blockData.baseClass;
+		let modelKey = <string>blockClass.getModel( blockData, new Vector3(xPos, this.location, yPos) );
+		// Some blocks have no model.
+		if(blockClass.noModel){return;}
+		// If the model is not already included within modelData
+		if(!modelData[modelKey]){
+			modelData[modelKey] = new ModelDataEntry(modelKey);
+		}
+
+		// This helps the block identify itself
+		// within the game world.
+
+		// remove modelKey discriminator;
+		let baseModelKey = blockData.getBaseModelKey();
+		let model = regHub.get(baseModelKey);
+		if(model.options.usesInstancing){
+			blockData.assignMatrixIndex( modelData[modelKey].length-1 );
+		}
+		
+		modelData[modelKey].push( new Vector4(xPos, yPos, this.location, blockData.getRotation()));
+		modelData[modelKey].needsUpdate = true;
 	}
 
 	/**
@@ -53,23 +102,8 @@ export class Layer extends Storable{
 	public generateModelData( modelData:any ){
 		let self = this;
 		this.grid.mapContents( (blockData:BlockData, yPos, xPos)=>{
-			let blockClass = blockData.baseClass;
-			let modelKey = blockClass.getModel( blockData, new Vector3(xPos, this.location, yPos) );
-			// Some blocks have no model.
-			if(blockClass.noModel){return;}
-			// If the model is not already included within modelData
-			if(!modelData[modelKey]){
-				modelData[modelKey] = [];
-			}
-			// remove modelKey discriminator;
-			let baseModelKey = modelKey.split(":").filter((s:string,i:number)=>{return i<4}).join(":");
-			let model = regHub.get(baseModelKey);
-			if(model.usesInstancing){
-				blockData.assignMatrixIndex( modelData.length )
-			}
-
-			modelData[modelKey].push( new Vector4(xPos, yPos, self.location, blockData.getRotation()));
-		});
+			this.addToModelData(modelData, blockData, xPos, yPos);
+		}, this);
 	}
 
 	/**
@@ -89,7 +123,7 @@ export class Layer extends Storable{
 	 */
 	public compress( data:storageData ):compressedData{
 		let dictionary = new Map<string,any>();
-		const bdDefault = new BlockData(Block);
+		const bdDefault = new BlockData(BlockFactory);
 		let out : compressedData = { compressed:true, map:[], grid:new Grid<number>(this.size, ()=>{return 0;}), location:data.location }
 		let contents = data.grid.map( (rowArr)=>{
 			return rowArr.map((bd:BlockData)=>{

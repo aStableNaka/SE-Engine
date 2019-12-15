@@ -1,6 +1,6 @@
-import { Block } from "../Block";
+import { BlockFactory } from "../Block";
 
-export class BlockEmpty extends Block{
+export class BlockEmpty extends BlockFactory{
 	constructor(){
 		super();
 	}

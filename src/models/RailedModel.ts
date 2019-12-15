@@ -1,6 +1,6 @@
 import { UniformModel } from "./UniformModel";
 import { ModelOptions } from "./Model";
-import THREE from "three";
+import * as THREE from "three";
 
 /**
  * RailedModels are models which have textures meant for

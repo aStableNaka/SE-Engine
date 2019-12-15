@@ -16,9 +16,9 @@ export enum Facing{
 }
 
 /**
- * Blocks are *small* representations of objects which form the environment
+ * BlockFactories produce BlockDatas
  */
-export class Block extends Storable{
+export class BlockFactory extends Storable{
 	// These two must be defined for every different block type
 	static module:string = "base";
 	static material:string = "base:mat:none";
@@ -91,7 +91,7 @@ export class Block extends Storable{
 export class BlockData extends Storable{
 	baseClass: any;
 	data: any;
-	matrixIndex:number = 0
+	matrixIndex:number = 0;
 	constructor( baseClass:BlockBaseClass, data?:any ){
 		super();
 		this.baseClass = baseClass;
@@ -120,6 +120,10 @@ export class BlockData extends Storable{
 
 	getModelKey():string{
 		return this.baseClass.getModelKey( this );
+	}
+
+	getBaseModelKey():string{
+		return this.getModelKey().split(":").filter((s,i)=>{return i<3}).join(":");
 	}
 }
 

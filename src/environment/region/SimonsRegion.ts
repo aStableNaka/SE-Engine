@@ -19,7 +19,7 @@ export class SimonsRegion extends Region{
 	private generateFloorLayer():Layer{
 		let blockRegistry = <BlockRegistry>regHub.get("base:block");
 		let self =this;
-		return new Layer( this.world.chunkSize, 0, (x,y)=>{
+		return new Layer( this, 0, (x,y)=>{
 			let localLocation = self.location.clone().multiplyScalar(self.world.chunkSize).add(new THREE.Vector2(x,y)).divideScalar(100);
 			let noiseOutput = (self.world.noiseGen1.noise2D(localLocation.x,localLocation.y)+1)/2;
 			let variant = 0;

@@ -10,6 +10,7 @@ import { Vector2, Vector3 } from "three";
 import {KeyboardControlManager} from "../controls/Keyboard";
 import { any, object } from "prop-types";
 import * as SimplexNoise from "simplex-noise";
+import { BlockData } from "./blocks/Block";
 
 /**
  * @checkpoint
@@ -174,11 +175,6 @@ export class SimonsWorld extends World{
 			this.cursorHelper.position.z = Math.floor(obj3d.point.z+0.5);
 		}
 		this.cursorRegion = this.getRegionAtVec2( new THREE.Vector2(this.cursorHelper.position.x, this.cursorHelper.position.z) );
-	}
-
-	getRegionAtVec2(vec2:THREE.Vector2){
-		let pos = vec2.clone().divideScalar(this.chunkSize).floor();
-		return this.regions.get(pos.x, pos.y);
 	}
 
 	/**
@@ -349,9 +345,6 @@ export class SimonsWorld extends World{
 			self.player.movementDelta.y -= speed;
 		}, true);
 	}
-
-
-
 
 
 

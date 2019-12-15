@@ -1,6 +1,6 @@
 import { Model, ModelOptions, ModelInstancedMesh } from "./Model";
 
-import THREE from "three";
+import * as THREE from "three";
 
 import { GLTF } from "../utils/THREE/jsm/loaders/GLTFLoader";
 

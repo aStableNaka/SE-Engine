@@ -30,6 +30,10 @@ export class ItemData extends Storable{
 		this.data = data;
 	}
 
+	equals(itemData:ItemData){
+		return this.baseClass === itemData.baseClass && this.data == itemData.data;
+	}
+
 	toStorageObject(){
 		return {baseClass:this.baseClass.itemId, data:this.data }
 	}

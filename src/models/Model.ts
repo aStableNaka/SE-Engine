@@ -4,10 +4,30 @@ import { Resource } from "../loader/Resource";
 import * as THREE from "three";
 import { Layer } from "../environment/Layer";
 import { ModelRegistry } from "../registry/ModelRegistry";
+import { Vector4 } from "three";
 
 export type ModelOptions = {
 	scale?:number;
+	usesInstancing?:boolean;
 };
+
+export class ModelDataEntry{
+	needsUpdate:boolean = true;
+	contents:Vector4[] = [];
+	modelKey:string;
+	constructor(modelKey:string){
+		this.modelKey = modelKey;
+	}
+
+	push( v4:Vector4 ){
+		this.contents.push(v4);
+		this.needsUpdate = true;
+	}
+
+	map(callback:(v4:Vector4,index?:number,array?:Vector4[])=>any, thisArg?:any){
+		return this.contents.map(callback,thisArg);
+	}
+}
 
 export class ModelInstancedMesh extends THREE.InstancedMesh{
 	layerLocation:number = 0;
