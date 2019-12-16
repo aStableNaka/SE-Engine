@@ -7,12 +7,12 @@ export type KbHandlerContainer = { hold: boolean, callback: KbHandlerCallback }
  * Generate KeyInputData with modifiers
  */
 export const KIDModGen = {
-	altShift:(keyCode:number)=>({ keyCode: keyCode, altKey: true, shiftKey: true, ctrlKey: false }),
-	alt:(keyCode:number)=>({ keyCode: keyCode, altKey: true, shiftKey: false, ctrlKey: false }),
-	ctrlAltShift:(keyCode:number)=>({ keyCode: keyCode,altKey: true, shiftKey: true, ctrlKey: true }),
-	ctrlAlt:(keyCode:number)=>({ keyCode: keyCode, altKey: true, shiftKey: false, ctrlKey: true }),
-	ctrl:(keyCode:number)=>({ keyCode: keyCode, altKey: false, shiftKey: false, ctrlKey: true }),
-	shift:(keyCode:number)=>({ keyCode: keyCode, altKey: false, shiftKey: true, ctrlKey:false }),
+	altShift:(keyCode:number) => ({ keyCode: keyCode, altKey: true, shiftKey: true, ctrlKey: false }),
+	alt:(keyCode:number) => ({ keyCode: keyCode, altKey: true, shiftKey: false, ctrlKey: false }),
+	ctrlAltShift:(keyCode:number) => ({ keyCode: keyCode,altKey: true, shiftKey: true, ctrlKey: true }),
+	ctrlAlt:(keyCode:number) => ({ keyCode: keyCode, altKey: true, shiftKey: false, ctrlKey: true }),
+	ctrl:(keyCode:number) => ({ keyCode: keyCode, altKey: false, shiftKey: false, ctrlKey: true }),
+	shift:(keyCode:number) => ({ keyCode: keyCode, altKey: false, shiftKey: true, ctrlKey:false }),
 }
 /**
  * @example
@@ -20,13 +20,15 @@ export const KIDModGen = {
  * keyboardManager.addListener(65, ()=>{console.log("A is being held"), true}) // a
  */
 export class KeyboardControlManager{
-	private keysDown:any={};
-	private handlers:Map<KeyCode, KbHandlerContainer>= new Map<KeyCode, KbHandlerContainer>();
-	public target:HTMLElement;
-	private shift:boolean = false;
-	private alt:boolean = false;
-	private ctrl:boolean = false;
-	constructor( target:HTMLElement ){
+	private keysDown: any={};
+	private handlers: Map<KeyCode, KbHandlerContainer>= new Map<KeyCode, KbHandlerContainer>();
+	
+	public target: HTMLElement;
+	public shift: boolean = false;
+	public alt: boolean = false;
+	public ctrl: boolean = false;
+	
+	constructor( target: HTMLElement ){
 		this.target = target;
 		target.addEventListener("keydown",this.handleKeyDown.bind(this));
 		target.addEventListener("keyup",this.handleKeyUp.bind(this));
@@ -38,30 +40,30 @@ export class KeyboardControlManager{
 	 * "alt:keyCode:shift:ctrl",
 	 * "true:65:true:false" == "Alt+W+Shift" 
 	 */
-	getKeyCode( event:KeyboardEvent|KeyInputData){
+	getKeyCode( event: KeyboardEvent|KeyInputData){
 		return event.keyCode;
 	}
 
-	addListener( input:KeyCode, callback:KbHandlerCallback, hold:boolean=false ){
-		this.handlers.set( input, {hold:hold,callback:callback} );
+	addListener( input: KeyCode, callback: KbHandlerCallback, hold: boolean = false ){
+		this.handlers.set( input, {hold: hold, callback: callback} );
 	}
 
-	handleKeyDown( event:KeyboardEvent ){
+	handleKeyDown( event: KeyboardEvent ){
 		let keyCode = event.keyCode;
 		this.shift = event.shiftKey;
 		this.alt = event.altKey;
 		this.ctrl = event.ctrlKey;
-		if(this.handlers.has(event.keyCode)){
+		if(this.handlers.has( event.keyCode )){
 			let kbhc = (<KbHandlerContainer>this.handlers.get(keyCode));
-			if(kbhc.hold){
-				this.keysDown[event.keyCode] = event;
+			if( kbhc.hold ){
+				this.keysDown[ event.keyCode ] = event;
 			}else{
 				kbhc.callback(event, this);
 			}
 		}
 	}
 
-	handleKeyUp( event:KeyboardEvent ){
+	handleKeyUp( event: KeyboardEvent ){
 		let keyCode = event.keyCode;
 		this.shift = event.shiftKey;
 		this.alt = event.altKey;
