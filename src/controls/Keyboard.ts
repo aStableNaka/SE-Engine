@@ -20,13 +20,14 @@ export const KIDModGen = {
  * keyboardManager.addListener(65, ()=>{console.log("A is being held"), true}) // a
  */
 export class KeyboardControlManager{
-	private keysDown: any={};
-	private handlers: Map<KeyCode, KbHandlerContainer>= new Map<KeyCode, KbHandlerContainer>();
-	
 	public target: HTMLElement;
 	public shift: boolean = false;
 	public alt: boolean = false;
 	public ctrl: boolean = false;
+
+
+	private keysDown: any={};
+	private handlers: Map<KeyCode, KbHandlerContainer>= new Map<KeyCode, KbHandlerContainer>();
 	
 	constructor( target: HTMLElement ){
 		this.target = target;
@@ -40,15 +41,15 @@ export class KeyboardControlManager{
 	 * "alt:keyCode:shift:ctrl",
 	 * "true:65:true:false" == "Alt+W+Shift" 
 	 */
-	getKeyCode( event: KeyboardEvent|KeyInputData){
+	getKeyCode( event: KeyboardEvent|KeyInputData): KeyCode{
 		return event.keyCode;
 	}
 
-	addListener( input: KeyCode, callback: KbHandlerCallback, hold: boolean = false ){
+	addListener( input: KeyCode, callback: KbHandlerCallback, hold: boolean = false ): void{
 		this.handlers.set( input, {hold: hold, callback: callback} );
 	}
 
-	handleKeyDown( event: KeyboardEvent ){
+	handleKeyDown( event: KeyboardEvent ): void{
 		let keyCode = event.keyCode;
 		this.shift = event.shiftKey;
 		this.alt = event.altKey;
@@ -63,7 +64,7 @@ export class KeyboardControlManager{
 		}
 	}
 
-	handleKeyUp( event: KeyboardEvent ){
+	handleKeyUp( event: KeyboardEvent ): void{
 		let keyCode = event.keyCode;
 		this.shift = event.shiftKey;
 		this.alt = event.altKey;
@@ -76,7 +77,7 @@ export class KeyboardControlManager{
 		}
 	}
 
-	tick(){
+	tick(): void{
 		this.handlers.forEach(( kbhc, keyCode )=>{
 			if(this.keysDown[keyCode] && kbhc.hold ){
 				kbhc.callback( this.keysDown[keyCode], this );
