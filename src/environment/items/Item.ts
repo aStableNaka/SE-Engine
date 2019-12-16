@@ -40,6 +40,10 @@ export class ItemData extends Storable{
 		this.amount = amount;
 	}
 
+	/**
+	 * Compares two itemDatas
+	 * @param itemData 
+	 */
 	equals(itemData:ItemData){
 		return this.baseClass === itemData.baseClass && this.data == itemData.data;
 	}
