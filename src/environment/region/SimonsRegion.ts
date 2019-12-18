@@ -26,7 +26,7 @@ export class SimonsRegion extends Region{
 			if(noiseOutput>0.9){
 				variant+= Math.floor( Math.random()*3 );
 			}
-			let groundBD = blockRegistry.createBlockData("base:BlockGround", null);
+			let groundBD = blockRegistry.createBlockData( "base:BlockGround" );
 			return groundBD;
 		});
 	}

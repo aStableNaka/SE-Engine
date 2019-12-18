@@ -22,15 +22,15 @@ export class UniformModel extends GLTFModel{
 
 	generateVariations(){
 		// This will set up texture variations
-		let mat = (<THREE.MeshStandardMaterial>this.mesh.material);
+		const mat = (<THREE.MeshStandardMaterial>this.mesh.material);
 		if(mat.map){
 			// Set textures to nearest neighbor filter for pixel-correctness.
 			mat.map.magFilter=THREE.NearestFilter;
 		}
-		let scale = 1/this.subdivisions
+		const scale = 1/this.subdivisions
 		for( let y = 0; y < this.subdivisions; y++ ){
 			for( let x = 0; x < this.subdivisions; x++ ){
-				let material = mat.clone();
+				const material = mat.clone();
 				if(material.map){
 					material.side = THREE.DoubleSide;
 					material.map = material.map.clone();
@@ -68,8 +68,8 @@ export class UniformModel extends GLTFModel{
 		/**
 		 * @note when using InstancedMesh, the reference geometry has to be cloned.
 		 */
-		let clonedGeom = this.cloneGeometry();
-		let mesh = new ModelInstancedMesh( clonedGeom, this.materials[discriminator] || this.mesh.material,positions.length );
+		const clonedGeom = this.cloneGeometry();
+		const mesh = new ModelInstancedMesh( clonedGeom, this.materials[discriminator] || this.mesh.material,positions.length );
 		positions.map(( vec4:THREE.Vector4, i:number )=>{
 			mesh.setMatrixAt(i, this.getLocalTransform(vec4));
 		}, this);
@@ -87,22 +87,22 @@ export class UniformModel extends GLTFModel{
 	 * @param discriminator 
 	 */
 	construct_merged( positions:THREE.Vector4[], discriminator:number=0 ):THREE.Object3D{
-		let attrPositionArray:number[] = [];
-		let attrNormalArray:number[] = [];
-		let attrUvArray:number[] = [];
-		let attrIndexArray:number[] = [];
+		const attrPositionArray:number[] = [];
+		const attrNormalArray:number[] = [];
+		const attrUvArray:number[] = [];
+		const attrIndexArray:number[] = [];
 
-		let baseGeometry = <THREE.BufferGeometry>this.mesh.geometry.clone();
+		const baseGeometry = <THREE.BufferGeometry>this.mesh.geometry.clone();
 
 		positions.map((vec4:THREE.Vector4, i:number)=>{
-			let geom = baseGeometry.clone();
+			const geom = baseGeometry.clone();
 
 			geom.applyMatrix(this.getLocalTransform(vec4));
 
-			let posArr = <Float32Array>geom.attributes.position.array;
-			let normalArr = <Float32Array>geom.attributes.normal.array;
-			let uvArr = <Float32Array>geom.attributes.uv.array;
-			let index = <Uint16Array>geom.index.array;
+			const posArr = <Float32Array>geom.attributes.position.array;
+			const normalArr = <Float32Array>geom.attributes.normal.array;
+			const uvArr = <Float32Array>geom.attributes.uv.array;
+			const index = <Uint16Array>geom.index.array;
 			
 			attrPositionArray.push(...posArr);
 			attrNormalArray.push(...normalArr);
@@ -110,23 +110,23 @@ export class UniformModel extends GLTFModel{
 			attrIndexArray.push(...index);
 		});
 
-		let positionF32A = new Float32Array( attrPositionArray );
-		let normalF32A = new Float32Array( attrNormalArray );
-		let uvF32A = new Float32Array( attrUvArray );
-		let positionUi16A = new Float32Array( attrPositionArray );
+		const positionF32A = new Float32Array( attrPositionArray );
+		const normalF32A = new Float32Array( attrNormalArray );
+		const uvF32A = new Float32Array( attrUvArray );
+		const positionUi16A = new Float32Array( attrPositionArray );
 
-		let positionAttribute = new THREE.Float32BufferAttribute(positionF32A, baseGeometry.attributes.position.itemSize);
-		let normalAttribute = new THREE.Float32BufferAttribute(normalF32A, baseGeometry.attributes.normal.itemSize);
-		let uvAttribute = new THREE.Float32BufferAttribute(uvF32A, baseGeometry.attributes.uv.itemSize);
-		let indexAttribute = new THREE.Uint16BufferAttribute(positionUi16A, baseGeometry.attributes.position.itemSize);
+		const positionAttribute = new THREE.Float32BufferAttribute(positionF32A, baseGeometry.attributes.position.itemSize);
+		const normalAttribute = new THREE.Float32BufferAttribute(normalF32A, baseGeometry.attributes.normal.itemSize);
+		const uvAttribute = new THREE.Float32BufferAttribute(uvF32A, baseGeometry.attributes.uv.itemSize);
+		const indexAttribute = new THREE.Uint16BufferAttribute(positionUi16A, baseGeometry.attributes.position.itemSize);
 
-		let mergedGeometry = baseGeometry.clone();
+		const mergedGeometry = baseGeometry.clone();
 		mergedGeometry.attributes.position = positionAttribute;
 		mergedGeometry.attributes.normal = normalAttribute;
 		mergedGeometry.attributes.uv = uvAttribute;
 		mergedGeometry.index = indexAttribute;
 
-		let mesh = new THREE.Mesh( mergedGeometry, this.materials[discriminator]||this.mesh.material );
+		const mesh = new THREE.Mesh( mergedGeometry, this.materials[discriminator]||this.mesh.material );
 		mesh.updateMatrix();
 		mesh.name =  this.name;
 		

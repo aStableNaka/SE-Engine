@@ -11,7 +11,12 @@ export type ModelOptions = {
 	usesInstancing?:boolean;
 };
 
-export class ModelDataEntry{
+/**
+ * Contains positions and z-rotation for every
+ * instance of a model. This is used to build
+ * an instancedMesh or a MeshGroup
+ */
+export class ModelInstanceData{
 	needsUpdate:boolean = true;
 	contents:Vector4[] = [];
 	modelKey:string;
@@ -19,12 +24,12 @@ export class ModelDataEntry{
 		this.modelKey = modelKey;
 	}
 
-	push( v4:Vector4 ){
+	public push( v4:Vector4 ){
 		this.contents.push(v4);
 		this.needsUpdate = true;
 	}
 
-	map(callback:(v4:Vector4,index?:number,array?:Vector4[])=>any, thisArg?:any){
+	public map(callback:(v4:Vector4,index?:number,array?:Vector4[])=>any, thisArg?:any){
 		return this.contents.map(callback,thisArg);
 	}
 }

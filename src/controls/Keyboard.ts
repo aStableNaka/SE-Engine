@@ -36,16 +36,6 @@ export class KeyboardControlManager{
 	}
 
 	/**
-	 * @param event
-	 * @example
-	 * "alt:keyCode:shift:ctrl",
-	 * "true:65:true:false" == "Alt+W+Shift" 
-	 */
-	private getKeyCode( event: KeyboardEvent|KeyInputData): KeyCode{
-		return event.keyCode;
-	}
-
-	/**
 	 * Add a keyboard listener.
 	 * @param input 
 	 * @param callback 
@@ -53,6 +43,27 @@ export class KeyboardControlManager{
 	 */
 	public addListener( input: KeyCode, callback: KbHandlerCallback, hold: boolean = false ): void{
 		this.handlers.set( input, {hold: hold, callback: callback} );
+	}
+
+	/**
+	 * 
+	 */
+	public tick(): void{
+		this.handlers.forEach(( kbhc, keyCode )=>{
+			if(this.keysDown[keyCode] && kbhc.hold ){
+				kbhc.callback( this.keysDown[keyCode], this );
+			}
+		})
+	}
+
+	/**
+	 * @param event
+	 * @example
+	 * "alt:keyCode:shift:ctrl",
+	 * "true:65:true:false" == "Alt+W+Shift" 
+	 */
+	private getKeyCode( event: KeyboardEvent|KeyInputData): KeyCode{
+		return event.keyCode;
 	}
 
 	private handleKeyDown( event: KeyboardEvent ): void{
@@ -81,16 +92,5 @@ export class KeyboardControlManager{
 				this.keysDown[event.keyCode] = false;
 			}
 		}
-	}
-
-	/**
-	 * 
-	 */
-	public tick(): void{
-		this.handlers.forEach(( kbhc, keyCode )=>{
-			if(this.keysDown[keyCode] && kbhc.hold ){
-				kbhc.callback( this.keysDown[keyCode], this );
-			}
-		})
 	}
 }

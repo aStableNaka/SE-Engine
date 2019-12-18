@@ -13,6 +13,11 @@ function regF( model:Model ){
 	baseModelRegistry.register(model);
 }
 
+// No model
 regF(new ModelType.NoModel("None"));
+
+// Uniform Models, Models that vary in textures but are static. Textures are generated.
 regF(new ModelType.UniformModel("Cube", "SIMPLE/cube.gltf", 16, lazyBlenderOptions));
+
+// Railed Models, Models that have animated textures.
 regF(new ModelType.RailedModel("ConveyorInline", "CONVEYOR/ConveyorInline.gltf", lazyBlenderOptions));

@@ -10,7 +10,7 @@ import { BlockFactory, BlockData } from '../blocks/Block';
 import { Storable } from '../../io/Storable';
 import { regHub } from '../../registry/RegistryHub';
 import * as THREE from "three";
-import { ModelInstancedMesh, ModelDataEntry } from '../../models/Model';
+import { ModelInstancedMesh, ModelInstanceData } from '../../models/Model';
 
 /**
  * How blocks are represented in regions
@@ -100,13 +100,13 @@ export class Region extends Storable{
 
 	update(){
 		this.updateQueued = false;
-		(<ModelDataEntry[]>Object.values(this.modelData)).map((modelDataEntry:ModelDataEntry)=>{
-			if(modelDataEntry.needsUpdate){
-				let constructedMesh = this.meshGroup.children.find((o3d)=>o3d.name==modelDataEntry.modelKey);
+		(<ModelInstanceData[]>Object.values(this.modelData)).map((modelInstanceData:ModelInstanceData)=>{
+			if(modelInstanceData.needsUpdate){
+				let constructedMesh = this.meshGroup.children.find((o3d)=>o3d.name==modelInstanceData.modelKey);
 				if(constructedMesh){
 					this.meshGroup.remove(constructedMesh);
 				}
-				this.constructModelMesh( modelDataEntry );
+				this.constructModelMesh( modelInstanceData );
 			}
 		}, this);
 	}
@@ -176,18 +176,18 @@ export class Region extends Storable{
 		// Use the modelData to construct the appropriate meshes
 		// and append them to this.meshGroup
 		//console.log(this.modelData);
-		(<ModelDataEntry[]>Object.values(this.modelData)).map((modelDataEntry)=>{
-			this.constructModelMesh(modelDataEntry);
+		(<ModelInstanceData[]>Object.values(this.modelData)).map((modelInstanceData)=>{
+			this.constructModelMesh(modelInstanceData);
 		}, this);
 		this.meshGroup.remove(this.placeHolderMesh);
 	}
 
 	/**
 	 * Constructs the mesh for a single model type
-	 * @param modelDataEntry 
+	 * @param modelInstanceData 
 	 */
-	constructModelMesh( modelDataEntry:ModelDataEntry ){
-		let modelKey = modelDataEntry.modelKey;
+	constructModelMesh( modelInstanceData:ModelInstanceData ){
+		let modelKey = modelInstanceData.modelKey;
 		let [namespace,regName,modelName,discriminator] = [...modelKey.split(":"),"0"];
 		let model = regHub.get(`${namespace}:${regName}:${modelName}`);
 		let positions = this.modelData[modelKey].contents;

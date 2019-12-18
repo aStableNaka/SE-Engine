@@ -6,7 +6,7 @@ import { Storable } from "../io/Storable";
 import { quickHash } from "../utils/QuickHash";
 import {Vector2, Vector3, Vector4} from "three";
 import { Region } from "./region/Region";
-import { ModelDataEntry } from "../models/Model";
+import { ModelInstanceData } from "../models/Model";
 
 const defaultBlock = new BlockData(BlockEmpty);
 
@@ -49,15 +49,15 @@ export class Layer extends Storable{
 	 */
 	public setBlock( blockData:BlockData, x:number, y:number ){
 		// Ensures the block being replaced gets removed visually
-		let occupyingBlock = this.getBlock(x,y);
+		const occupyingBlock = this.getBlock(x,y);
 		if(occupyingBlock){
-			let modelKey = occupyingBlock.getModelKey();
-			let modelDataEntry = this.region.modelData[modelKey];
-			if(modelDataEntry){
-				modelDataEntry.contents = modelDataEntry.filter((v4:Vector4)=>{
+			const modelKey = occupyingBlock.getModelKey();
+			const modelInstanceData = this.region.modelData[modelKey];
+			if(modelInstanceData){
+				modelInstanceData.contents = modelInstanceData.filter((v4:Vector4)=>{
 					return v4.x!=x && v4.y!=y;
 				})
-				modelDataEntry.needsUpdate = true;
+				modelInstanceData.needsUpdate = true;
 			}
 		}
 
@@ -67,21 +67,21 @@ export class Layer extends Storable{
 	}
 
 	public addToModelData( modelData:any, blockData:BlockData, xPos:number, yPos:number ){
-		let blockClass = blockData.baseClass;
-		let modelKey = <string>blockClass.getModel( blockData, new Vector3(xPos, this.location, yPos) );
+		const blockClass = blockData.baseClass;
+		const modelKey = <string>blockClass.getModel( blockData, new Vector3(xPos, this.location, yPos) );
 		// Some blocks have no model.
 		if(blockClass.noModel){return;}
 		// If the model is not already included within modelData
 		if(!modelData[modelKey]){
-			modelData[modelKey] = new ModelDataEntry(modelKey);
+			modelData[modelKey] = new ModelInstanceData(modelKey);
 		}
 
 		// This helps the block identify itself
 		// within the game world.
 
 		// remove modelKey discriminator;
-		let baseModelKey = blockData.getBaseModelKey();
-		let model = regHub.get(baseModelKey);
+		const baseModelKey = blockData.getBaseModelKey();
+		const model = regHub.get(baseModelKey);
 		if(model.options.usesInstancing){
 			blockData.assignMatrixIndex( modelData[modelKey].length-1 );
 		}
@@ -100,7 +100,7 @@ export class Layer extends Storable{
 	 * }
 	 */
 	public generateModelData( modelData:any ){
-		let self = this;
+		const self = this;
 		this.grid.mapContents( (blockData:BlockData, yPos, xPos)=>{
 			this.addToModelData(modelData, blockData, xPos, yPos);
 		}, this);
@@ -122,17 +122,22 @@ export class Layer extends Storable{
 	 * @param data 
 	 */
 	public compress( data:storageData ):compressedData{
-		let dictionary = new Map<string,any>();
+		const dictionary = new Map<string,any>();
 		const bdDefault = new BlockData(BlockFactory);
-		let out : compressedData = { compressed:true, map:[], grid:new Grid<number>(this.size, ()=>{return 0;}), location:data.location }
-		let contents = data.grid.map( (rowArr)=>{
+		const out : compressedData = {
+			compressed:true,
+			map:[],
+			grid:new Grid<number>( this.size, ()=>{return 0;} ),
+			location:data.location
+		}
+		const contents = data.grid.map( (rowArr)=>{
 			return rowArr.map((bd:BlockData)=>{
-				let key:string = quickHash(JSON.stringify(bd));
+				const key:string = quickHash(JSON.stringify(bd));
 				if(!dictionary.has(key)){
 					console.log(`[ [Layer.compress] registered ${key} ]`);
 					dictionary.set(key, {blockData:bd, index:dictionary.size});
 				}
-				let entry = dictionary.get(key);
+				const entry = dictionary.get(key);
 				return entry.index;
 			})
 		});
@@ -147,17 +152,17 @@ export class Layer extends Storable{
 	 * @param data assumes data has been parsed back into an object
 	 */
 	public decompress( data:compressedData ):void{
-		let dictionary = new Map<string,BlockData>();
+		const dictionary = new Map<string,BlockData>();
 		data.map.map(([key, value])=>{
 			//console.log(key, value);
-			let blockId = value.blockData.baseClass.blockId;
-			let blockClass = regHub.get("base:block").getBlockClass(blockId);
-			let blockData = blockClass.recallBlockData( value.blockData );
+			const blockId = value.blockData.baseClass.blockId;
+			const blockClass = regHub.get("base:block").getBlockClass(blockId);
+			const blockData = blockClass.recallBlockData( value.blockData );
 			//console.log(blockData);
 			dictionary.set(`_${value.index}`, blockData);
 		});
 		//console.log('BWHJAKBSJKHD KWAJ',dictionary.get("_1"));
-		let dataGrid = new Grid(this.size, (row, col)=>{
+		const dataGrid = new Grid(this.size, (row, col)=>{
 			return dictionary.get( `_${data.grid.contents[row][col]}` ) || BlockEmpty.createBlockData();
 		})
 		//console.log(dataGrid.get(0,0));
