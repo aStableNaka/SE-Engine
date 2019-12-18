@@ -25,7 +25,9 @@
     "src\\models\\Model.js": true,
     "src\\models\\ModelTypes.js": true,
     "src\\models\\RailedModel.js": true,
-    "src\\models\\UniformModel.js": true
+    "src\\models\\UniformModel.js": true,
+    "src\\models\\NoModel.js": true,
+    "src\\models\\GLTFModel.js": true
   },
   "files.eol": "\r\n"
 }

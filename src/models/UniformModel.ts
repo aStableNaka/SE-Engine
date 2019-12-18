@@ -1,5 +1,5 @@
-import { Model, ModelOptions, ModelInstancedMesh } from "./Model";
-
+import { ModelOptions, ModelInstancedMesh } from "./Model";
+import { GLTFModel } from "./GLTFModel";
 import * as THREE from "three";
 
 import { GLTF } from "../utils/THREE/jsm/loaders/GLTFLoader";
@@ -12,7 +12,7 @@ import { Resource } from "../loader/Resource";
  * support any sort of animation, but are optimized for rendering
  * by using instancing.
  */
-export class UniformModel extends Model{
+export class UniformModel extends GLTFModel{
 	materials:THREE.MeshStandardMaterial[] = [];
 	subdivisions: number;
 	constructor(name:string, resourcePath:string, textureAtlasSubdivisions:number=1, options?:ModelOptions){
@@ -46,11 +46,11 @@ export class UniformModel extends Model{
 		console.log(`[UniformModel] ${this.materials.length} material variations generated for "${this.resourcePath}"`);
 	}
 
-	onModelLoaded( data:GLTF, resource:Resource ){
-		this.defaultOnModelLoaded( data, resource );
-		console.log(data);
+	handleModelLoaded( data:GLTF, resource:Resource ){
+		this.defaultHandleModelLoaded( data, resource );
 		if(this.options.scale){
-			this.mesh.geometry.scale(0.5,0.5,0.5);
+			console.log(`[Model:${this.name}] rescaling ${this.options.scale}`);
+			this.mesh.geometry.scale(this.options.scale,this.options.scale,this.options.scale);
 		}
 		this.convertToFloat32Attribute( <THREE.BufferGeometry>this.mesh.geometry );
 		this.generateVariations();

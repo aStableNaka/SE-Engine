@@ -31,7 +31,6 @@ export class ModelRegistry implements Registry{
 			throw new Error(`[ModelRegistry] could not register model ${model.name}. Model already registered.`);
 		}
 		model.assignRegistry(this);
-		this.loader.queue(model.resource);
 		this.entries.set(model.name,model);
 		this.list.push(model);
 		return model.name;

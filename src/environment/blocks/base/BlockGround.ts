@@ -16,8 +16,7 @@ export class BlockGround extends BlockFactory{
 	}
 
 	static createBlockData( variant?:number|null ):BlockData{
-		if(variant===null || variant===undefined){variant = Math.floor(Math.random()*4)}
-		variant = 0;
+		if(variant===null || variant===undefined){variant = Math.floor(Math.random()*16)}
 		return new BlockGroundData( variant );
 	}
 
