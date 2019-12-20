@@ -11,6 +11,9 @@ import {KeyboardControlManager} from "../controls/Keyboard";
 import { any, object } from "prop-types";
 import * as SimplexNoise from "simplex-noise";
 import { BlockData } from "./blocks/Block";
+import { regHub } from "../registry/RegistryHub";
+import { BlockRegistry } from "../registry/BlockRegistry";
+import { Model } from "../models/Model";
 
 /**
  * @checkpoint
@@ -35,6 +38,7 @@ export class SimonsWorld extends World{
 
 	worldSize=16;
 	chunkSize=32;
+	viewAngle:number = 35;
 	worldDomain:THREE.Box2;
 	center: THREE.Vector2;
 	player!: Player;
@@ -59,6 +63,8 @@ export class SimonsWorld extends World{
 	immediateRegions!: Grid<SimonsRegion>;
 	imrHelper!:THREE.Mesh;
 
+	mouseEvent!:MouseEvent;
+	cursorModel!:Model;
 	cursorHelper!:THREE.Mesh;
 	cursorRegion!:Region|null;
 
@@ -128,7 +134,8 @@ export class SimonsWorld extends World{
 			imrMaterialSettings.transparent = false;
 		}
 		this.imrHelper = new THREE.Mesh( new THREE.BoxGeometry(this.imr*2*this.chunkSize,1,this.imr*2*this.chunkSize, this.imr*2, 1, this.imr*2), new THREE.MeshBasicMaterial(imrMaterialSettings) );
-		this.cursorHelper = new THREE.Mesh( new THREE.BoxGeometry(1,1,1), new THREE.MeshBasicMaterial({color:0xff33ff, wireframe:false}) );
+		this.cursorModel = (<Model>regHub.get("base:model:ConveyorInline"));
+		this.cursorHelper = this.cursorModel.mesh.clone();
 		this.imrHelper.name = "IMRHelper&ci";
 		this.cursorHelper.name = "CursorHelper";
 		this.ff.add(this.imrHelper);
@@ -154,6 +161,12 @@ export class SimonsWorld extends World{
 	}
 
 	updateMouse( event:MouseEvent ){
+		this.mouseEvent = event;
+		this.projectMouse();
+	}
+
+	projectMouse(){
+		const event = this.mouseEvent;
 		this.mousePosition.x = ( event.clientX / window.innerWidth ) * 2 - 1;
 		this.mousePosition.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 		this.updateRayCaster();
@@ -171,7 +184,7 @@ export class SimonsWorld extends World{
 		if(filt[0]){
 			let obj3d = filt[0];
 			this.cursorHelper.position.x = Math.floor(obj3d.point.x+0.5);
-			this.cursorHelper.position.y = obj3d.point.y+0.1;
+			this.cursorHelper.position.y = obj3d.point.y+0.5+(this.cursorModel.options.zOffset||0);
 			this.cursorHelper.position.z = Math.floor(obj3d.point.z+0.5);
 		}
 		this.cursorRegion = this.getRegionAtVec2( new THREE.Vector2(this.cursorHelper.position.x, this.cursorHelper.position.z) );
@@ -182,21 +195,22 @@ export class SimonsWorld extends World{
 	 */
 	debugBlockPlace(){
 		if(this.enableDebugHelpers){
-			console.log(this,this.mouseIntersects);
+			//console.log(this,this.mouseIntersects);
 		}
 	}
 
 	handleMouseClick(){
 		this.debugBlockPlace();
-		let mesh = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), new THREE.MeshBasicMaterial({color:0x00ff00}));
 		let chp = this.cursorHelper.position;
-		mesh.position.set(chp.x, 1, chp.z);
-		this.ff.add(mesh);
-		console.log(this.mouseIntersects);
+		let blockRegistry:BlockRegistry = regHub.get( "base:block" );
+		let block = blockRegistry.createBlockData( "base:BlockConveyorBelt" );
+		this.setBlock( block, chp.x, chp.z, 1 );
+		block.blockDidMount( { position:new Vector3( chp.x, chp.z, 1 ) }); // REQUIRED
+		//console.log(this.mouseIntersects);
 		if(this.cursorRegion){
 			this.cursorRegion.meshGroup.children.map((obj3d)=>{
 				let intersection = this.mouseRayCaster.intersectObject(obj3d);
-				console.log(intersection)
+				//console.log(intersection)
 			})
 		}
 	}
@@ -245,8 +259,8 @@ export class SimonsWorld extends World{
 
 	setupOrbitControls(ff:FrostedFlakes){
 		// Set up the orbit controls
-		ff.orbitControlls.maxPolarAngle=Math.PI/180*45;
-		ff.orbitControlls.minPolarAngle=Math.PI/180*45;
+		ff.orbitControlls.maxPolarAngle=Math.PI/180*this.viewAngle;
+		ff.orbitControlls.minPolarAngle=Math.PI/180*this.viewAngle;
 		ff.orbitControlls.minDistance=5;
 		//ff.orbitControlls.maxDistance=60;
 		ff.orbitControlls.enableDamping = false;
@@ -364,8 +378,9 @@ export class SimonsWorld extends World{
 			// If the point is inside the intersection
 			// or if the world does not contain this region
 			// Do nothing.
-			if(!self.worldDomain.containsPoint(regionLocation)) return;
+			if(!self.worldDomain.containsPoint(regionLocation)) return; // this does nothing
 			let region = <Region>self.regions.get(regionLocation.x,regionLocation.y);
+			if(!region){ return; };
 			if(!region.loaded){
 				self.queueRegionLoad(region);
 			}
@@ -414,6 +429,9 @@ export class SimonsWorld extends World{
 		this.ff.orbitControlls.pan( md.x, md.y );
 		this.player.movementDelta.x = 0;
 		this.player.movementDelta.y = 0;
+		if(this.mouseEvent){
+			this.projectMouse();
+		}
 	}
 
 	/**

@@ -20,4 +20,4 @@ regF(new ModelType.NoModel("None"));
 regF(new ModelType.UniformModel("Cube", "SIMPLE/cube.gltf", 16, lazyBlenderOptions));
 
 // Railed Models, Models that have animated textures.
-regF(new ModelType.RailedModel("ConveyorInline", "CONVEYOR/ConveyorInline.gltf", lazyBlenderOptions));
+regF(new ModelType.RailedModel("ConveyorInline", "CONVEYOR/ConveyorInline.gltf", {scale:0.5,zOffset:0}));

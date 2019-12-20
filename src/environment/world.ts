@@ -69,7 +69,11 @@ export class World extends Storable{
 		window.requestAnimationFrame(()=>{
 			self.render();
 		});
-		self.ff.render();
+		try{
+			self.ff.render();
+		}catch(e){
+			return;
+		}
 	}
 
 	updateTickTimes(): void {
@@ -125,15 +129,15 @@ export class World extends Storable{
 		Map manipulation
 	*/
 
-	setBlock( blockData:BlockData, x:number, y:number, z:number ): void {
+	setBlock( blockData:BlockData, x:number, y:number, layerZ:number ): void {
 		let region = this.getRegionAtVec2(new Vector2(x,y));
-		if(!region) throw new Error(`[SimonsWorld] Attempted to set block out of bounds ${x},${y},${z}`);
+		if(!region) throw new Error(`[SimonsWorld] Attempted to set block out of bounds ${x},${y},${layerZ}`);
 		this.regionUpdateQueue.push(region);
 		
 		// World space to region space conversion
 		x = x%this.chunkSize;
 		y = y%this.chunkSize;
-		region.setBlock(blockData,x,y,z);
+		region.setBlock(blockData,x,y,layerZ);
 	}
 
 	/**

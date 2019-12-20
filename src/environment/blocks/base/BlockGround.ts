@@ -21,13 +21,15 @@ export class BlockGround extends BlockFactory{
 	 * Creates BlockData with a variant
 	 */
 	static createBlockData( variant?:number|null ):BlockData{
-		if(variant===null || variant===undefined){variant = Math.floor(Math.random()*16)}
+		if(variant==null || variant==undefined){
+			variant = Math.floor(Math.random()*16);
+		}
 		return new BlockGroundData( variant );
 	}
 
 	static getModelKey( blockData:BlockGroundData ):string{
-		if(blockData.data == 0){
-			return `${this.model}:0`;
+		if(blockData.data < 2){
+			return `${this.model}:${blockData.data}`;
 		}
 		return "base:model:None";
 		//return `${this.model}:${blockData.data||0}`;

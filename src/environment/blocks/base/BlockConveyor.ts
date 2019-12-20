@@ -5,12 +5,29 @@ export type BlockConveyorMetadata = {
 }
 
 export class BlockConveyorBelt extends BlockFactory{
-	static speed:2; // Throughput per second
-	static model:"base:model:ConveyorInline";
+
+	// Important
+	static model = "base:model:ConveyorInline";
+	static noModel = false;
+
+	static speed = 2; // Throughput per second
+	
 
 	static getModel( blockData:BlockData, pos:THREE.Vector3 ){
 		return this.model;
 	}
+
+	static getModelKey( blockData:BlockData ):string{
+		return this.model;
+	}
+
+	/**
+	 * Creates BlockData with a variant
+	 */
+	static createBlockData():BlockData{
+		return new BlockConveyorBeltData();
+	}
+
 
 	constructor(){
 		super();

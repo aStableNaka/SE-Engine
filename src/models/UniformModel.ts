@@ -20,33 +20,43 @@ export class UniformModel extends GLTFModel{
 		this.subdivisions=textureAtlasSubdivisions;
 	}
 
-	generateVariations(){
+	/**
+	 * Process a material: apply filters and map offsets
+	 * @param material 
+	 * @param x 
+	 * @param y 
+	 */
+	private processMaterial( material: THREE.MeshStandardMaterial, x: number, y: number ){
+		const scale = 1/this.subdivisions
+		if(material.map){
+			material.side = THREE.DoubleSide;
+			material.map = material.map.clone();
+			material.map.offset = new THREE.Vector2(x*scale,y*scale);
+			material.map.needsUpdate=true;
+			material.map.minFilter = THREE.NearestFilter;
+			material.map.magFilter = THREE.NearestFilter;
+			this.materials.push(material);	
+		}	
+	}
+
+	private generateVariations(){
 		// This will set up texture variations
 		const mat = (<THREE.MeshStandardMaterial>this.mesh.material);
-		if(mat.map){
-			// Set textures to nearest neighbor filter for pixel-correctness.
-			mat.map.magFilter=THREE.NearestFilter;
-		}
-		const scale = 1/this.subdivisions
 		for( let y = 0; y < this.subdivisions; y++ ){
 			for( let x = 0; x < this.subdivisions; x++ ){
 				const material = mat.clone();
-				if(material.map){
-					material.side = THREE.DoubleSide;
-					material.map = material.map.clone();
-					material.map.offset = new THREE.Vector2(x*scale,y*scale);
-					material.map.needsUpdate=true;
-					material.map.minFilter = THREE.NearestFilter;
-					material.map.magFilter = THREE.NearestFilter;
-					this.materials.push(material);
-				}
+				this.processMaterial( material, x, y );
 			}
 		}
-
 		console.log(`[UniformModel] ${this.materials.length} material variations generated for "${this.resourcePath}"`);
 	}
 
-	handleModelLoaded( data:GLTF, resource:Resource ){
+	/**
+	 * Invoked once this model gets loaded
+	 * @param data 
+	 * @param resource 
+	 */
+	public handleModelLoaded( data:GLTF, resource:Resource ){
 		this.defaultHandleModelLoaded( data, resource );
 		if(this.options.scale){
 			console.log(`[Model:${this.name}] rescaling ${this.options.scale}`);
@@ -57,9 +67,7 @@ export class UniformModel extends GLTFModel{
 	}
 
 	/**
-	 * Create a mesh using instancing. For some reason, this creates
-	 * a bug where every instanced mesh is exactly the same.
-	 * I don't really understand it.
+	 * Create a mesh using instancing.
 	 * @override
 	 * @param positions 
 	 * @param discriminator 
@@ -81,8 +89,8 @@ export class UniformModel extends GLTFModel{
 	}
 
 	/**
-	 * Construct using mesh merging
-	 * @doesnt_work_either_lol
+	 * Construct using mesh merging.
+	 * DO NOT USE. Very slow, and produces glitchy results.
 	 * @param positions 
 	 * @param discriminator 
 	 */

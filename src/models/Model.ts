@@ -9,6 +9,7 @@ import { Vector4 } from "three";
 export type ModelOptions = {
 	scale?:number;
 	usesInstancing?:boolean;
+	zOffset?:number;
 };
 
 /**
@@ -31,6 +32,10 @@ export class ModelInstanceData{
 
 	public map(callback:(v4:Vector4,index?:number,array?:Vector4[])=>any, thisArg?:any){
 		return this.contents.map(callback,thisArg);
+	}
+
+	public filter(callback:(v4:Vector4, index?:number, array?:Vector4[])=>any, thisArg?:any){
+		return this.contents.filter(callback, thisArg);
 	}
 }
 
@@ -68,7 +73,8 @@ export class Model{
 	 * @param pos 
 	 */
 	getLocalTransform(pos:THREE.Vector4):THREE.Matrix4{
-		let matrix = new THREE.Matrix4().makeTranslation(pos.x||0,pos.z||0,pos.y||0);
+		let zOffset = this.options.zOffset || 0;
+		let matrix = new THREE.Matrix4().makeTranslation(pos.x||0,(pos.z||0)+zOffset,pos.y||0);
 		if(pos.w){
 			matrix = new THREE.Matrix4().makeRotationZ( pos.w ).multiply( matrix );	
 		}

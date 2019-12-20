@@ -55,8 +55,9 @@ export class Layer extends Storable{
 			const modelInstanceData = this.region.modelData[modelKey];
 			if(modelInstanceData){
 				modelInstanceData.contents = modelInstanceData.filter((v4:Vector4)=>{
-					return v4.x!=x && v4.y!=y;
+					return !( v4.x==x && v4.y==y );
 				})
+				console.log(modelInstanceData);
 				modelInstanceData.needsUpdate = true;
 			}
 		}
@@ -64,13 +65,17 @@ export class Layer extends Storable{
 
 		this.grid.set(blockData,y,x);
 		this.addToModelData( this.region.modelData, blockData, x, y );
+		console.log(blockData);
 	}
 
 	public addToModelData( modelData:any, blockData:BlockData, xPos:number, yPos:number ){
 		const blockClass = blockData.baseClass;
-		const modelKey = <string>blockClass.getModel( blockData, new Vector3(xPos, this.location, yPos) );
+		const modelKey = <string>blockClass.getModelKey( blockData, new Vector3(xPos, this.location, yPos) );
+
 		// Some blocks have no model.
+		//@important If your block is not showing up, ensure noModel is set to false.
 		if(blockClass.noModel){return;}
+
 		// If the model is not already included within modelData
 		if(!modelData[modelKey]){
 			modelData[modelKey] = new ModelInstanceData(modelKey);

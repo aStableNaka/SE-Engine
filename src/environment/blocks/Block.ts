@@ -5,6 +5,7 @@ import * as Space from '../../utils/Spaces';
 import * as Regions from '../region/Region';
 import { BlockRegistry } from '../../registry/BlockRegistry';
 import * as THREE from 'three';
+import { Vector3 } from 'three';
 
 export type Geometry = THREE.Geometry | THREE.BufferGeometry | THREE.InstancedBufferGeometry;
 
@@ -82,6 +83,10 @@ export class BlockFactory extends Storable{
 	}
 }
 
+export interface blockMountEvent{
+	position:Vector3;
+}
+
 /**
  * BlockData is a lightweight representation
  * of a block within the world.
@@ -124,6 +129,10 @@ export class BlockData extends Storable{
 
 	getBaseModelKey():string{
 		return this.getModelKey().split(":").filter((s,i)=>{return i<3}).join(":");
+	}
+
+	public blockDidMount( bme:blockMountEvent ):void{
+
 	}
 }
 
