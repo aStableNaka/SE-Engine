@@ -10,6 +10,8 @@ export type ModelOptions = {
 	scale?:number;
 	usesInstancing?:boolean;
 	zOffset?:number;
+	blending?:THREE.Blending;
+	depthWrite?:boolean
 };
 
 /**
@@ -73,11 +75,13 @@ export class Model{
 	 * @param pos 
 	 */
 	getLocalTransform(pos:THREE.Vector4):THREE.Matrix4{
-		let zOffset = this.options.zOffset || 0;
-		let matrix = new THREE.Matrix4().makeTranslation(pos.x||0,(pos.z||0)+zOffset,pos.y||0);
-		if(pos.w){
-			matrix = new THREE.Matrix4().makeRotationZ( pos.w ).multiply( matrix );	
-		}
+		const zOffset = this.options.zOffset || 0;
+		const translation = new THREE.Vector3(pos.x||0,(pos.z||0)+zOffset,pos.y||0);
+		//const rotation = new THREE.Matrix4().makeRotationY(  );
+		const rotation = new THREE.Quaternion();
+		rotation.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), pos.w );
+		const scale = new THREE.Vector3(1,1,1);
+		const matrix = new THREE.Matrix4().compose( translation, rotation, scale );
 		return matrix;
 	}
 

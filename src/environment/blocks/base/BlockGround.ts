@@ -1,21 +1,10 @@
 import { BlockFactory, Geometry, BlockData } from "../Block";
+import {BlockVariantData} from "./BlockVariantData";
 import * as THREE from "three";
-
-export class BlockGroundData extends BlockData{
-	/** The texture variant */
-	public data: number;
-	constructor( variant:number ){
-		super( BlockGround );
-		this.data = variant;
-	}
-}
 
 export class BlockGround extends BlockFactory{
 	static model:string = "base:model:Cube";
 	static noModel = false;
-	constructor(){
-		super();
-	}
 
 	/**
 	 * Creates BlockData with a variant
@@ -24,10 +13,10 @@ export class BlockGround extends BlockFactory{
 		if(variant==null || variant==undefined){
 			variant = Math.floor(Math.random()*16);
 		}
-		return new BlockGroundData( variant );
+		return new BlockVariantData( this, variant );
 	}
 
-	static getModelKey( blockData:BlockGroundData ):string{
+	static getModelKey( blockData:BlockVariantData ):string{
 		if(blockData.data < 2){
 			return `${this.model}:${blockData.data}`;
 		}

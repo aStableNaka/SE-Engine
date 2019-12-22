@@ -14,6 +14,7 @@ import { BlockData } from "./blocks/Block";
 import { regHub } from "../registry/RegistryHub";
 import { BlockRegistry } from "../registry/BlockRegistry";
 import { Model } from "../models/Model";
+import {BoundlessGrid} from "../utils/BoundlessGrid";
 
 /**
  * @checkpoint
@@ -78,7 +79,7 @@ export class SimonsWorld extends World{
 		this.worldDomain = new THREE.Box2( new Vector2(-this.worldSize,-this.worldSize), new Vector2(this.worldSize-1,this.worldSize-1) );
 		this.player = new Player( this );
 		this.setupControls(ff);
-		this.regions = new Grid<Region>(this.worldSize,(y,x)=>{
+		this.regions = new BoundlessGrid<Region>(this.worldSize,(y,x)=>{
 			return self.instantiateRegion(x,y);
 		});
 		this.setupImrHelper();
@@ -378,9 +379,9 @@ export class SimonsWorld extends World{
 			// If the point is inside the intersection
 			// or if the world does not contain this region
 			// Do nothing.
-			if(!self.worldDomain.containsPoint(regionLocation)) return; // this does nothing
+			//if(!self.worldDomain.containsPoint(regionLocation)) return; // this does nothing
 			let region = <Region>self.regions.get(regionLocation.x,regionLocation.y);
-			if(!region){ return; };
+			if(!region){ console.log("noRegion"); return; };
 			if(!region.loaded){
 				self.queueRegionLoad(region);
 			}

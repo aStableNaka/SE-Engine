@@ -68,9 +68,9 @@ export class Grid<T>{
 	 * @param col 
 	 */
 	inRange( row:number, col:number ):boolean{
-		let c = [
+		const c = [
 			(x:number):boolean=>{return x<this.size;},
-			(x:number):boolean=>{return 0<=x;},
+			(x:number):boolean=>{return x>=0;},
 		]
 		return c.filter( (cf)=>{ return cf(row) && cf(col); } ).length == 2;
 	}
@@ -92,7 +92,7 @@ export class Grid<T>{
 	}
 
 	set( value:T, row:number, col:number ){
-		if(!this.inRange(row,col)){
+		if(this.inRange(row,col)){
 			this.contents[row][col] = value;
 		}
 	}

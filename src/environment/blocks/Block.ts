@@ -97,6 +97,7 @@ export class BlockData extends Storable{
 	baseClass: any;
 	data: any;
 	matrixIndex:number = 0;
+	position!: THREE.Vector3;
 	constructor( baseClass:BlockBaseClass, data?:any ){
 		super();
 		this.baseClass = baseClass;
@@ -132,7 +133,7 @@ export class BlockData extends Storable{
 	}
 
 	public blockDidMount( bme:blockMountEvent ):void{
-
+		this.position = bme.position;
 	}
 }
 

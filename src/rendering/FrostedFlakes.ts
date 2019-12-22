@@ -37,9 +37,6 @@ export class FrostedFlakes extends THREE.Scene{
 		container.appendChild( this.renderer.domElement );
 		// controls
 		this.orbitControlls = new OrbitControls(this.camera, this.container);
-		this.orbitControlls.mouseButtons = {
-			MIDDLE: THREE.MOUSE.ROTATE
-		}
 		/*this.orbitControlls.keys = {
 			LEFT: 65, //left arrow
 			UP: 87, // up arrow

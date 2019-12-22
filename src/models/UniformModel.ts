@@ -30,6 +30,8 @@ export class UniformModel extends GLTFModel{
 		const scale = 1/this.subdivisions
 		if(material.map){
 			material.side = THREE.DoubleSide;
+			material.depthWrite = typeof(this.options.depthWrite)=="boolean" ? this.options.depthWrite : material.depthWrite;
+			material.blending = this.options.blending || material.blending;
 			material.map = material.map.clone();
 			material.map.offset = new THREE.Vector2(x*scale,y*scale);
 			material.map.needsUpdate=true;
@@ -83,7 +85,6 @@ export class UniformModel extends GLTFModel{
 		}, this);
 		mesh.name = `${this.name}:${discriminator}`;
 		this.setBoundingSphere( mesh );
-
 		mesh.instanceMatrix.needsUpdate = true;
 		return mesh;
 	}

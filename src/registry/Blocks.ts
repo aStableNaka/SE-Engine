@@ -2,6 +2,8 @@ import { BlockRegistry } from "./BlockRegistry";
 import { BlockEmpty } from "../environment/blocks/base/BlockEmpty";
 import { BlockNull } from "../environment/blocks/base/BlockNull";
 import { BlockGround } from "../environment/blocks/base/BlockGround";
+import { BlockFoliage } from "../environment/blocks/base/BlockFoliage";
+
 import { BlockConveyorBelt } from "../environment/blocks/base/BlockConveyor";
 
 /**
@@ -12,4 +14,6 @@ export const baseBlockRegistry = new BlockRegistry();
 baseBlockRegistry.register( BlockEmpty );
 baseBlockRegistry.register( BlockNull );
 baseBlockRegistry.register( BlockGround );
+baseBlockRegistry.register( BlockFoliage )
+
 baseBlockRegistry.register( BlockConveyorBelt );

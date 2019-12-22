@@ -50,7 +50,11 @@ export class SimonsRegion extends Region{
 			
 			// Air
 			if(noiseOutput<0.7){
-				block = blockRegistry.createBlockData( "base:BlockEmpty" );
+				if(Math.random()<0.5){
+					block = blockRegistry.createBlockData( "base:BlockFoliage" );
+				}else{
+					block = blockRegistry.createBlockData( "base:BlockEmpty" );
+				}
 			}
 			return block;
 		} )
