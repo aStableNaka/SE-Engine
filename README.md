@@ -1,5 +1,5 @@
 # Project: SE
-Project SE is my third iteration of a game made to showcase the game-development potential of our current web technologies.
+Project SE is the third iteration of a game that is made to showcase the game-development potential of the current web technologies.
 
 # Progress Video
 [![Video](https://i.imgur.com/QfEYqMK.png)](https://www.youtube.com/watch?v=9WihY6qX-k4 "Click here to watch the progress video")
