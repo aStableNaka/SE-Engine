@@ -2,7 +2,7 @@ import { MapObject } from '../MapObject';
 import { Storable } from '../../io/Storable';
 import { baseClass as BlockBaseClass } from '../../utils/Classes';
 import * as Space from '../../utils/Spaces';
-import * as Regions from '../region/Region';
+import * as Regions from '../world/region/Region';
 import { BlockRegistry } from '../../registry/BlockRegistry';
 import * as THREE from 'three';
 import { Vector3 } from 'three';
@@ -113,8 +113,8 @@ export class BlockData extends Storable{
 	 * blockData's metadata
 	 */
 	getRotation():number{
-		if(this.data.rotation){
-			return this.data.rotation * Math.PI/2;
+		if(this.data && this.data.rotation){
+				return this.data.rotation * Math.PI/2;
 		}
 		return Facing.NORTH;
 	}
@@ -130,6 +130,10 @@ export class BlockData extends Storable{
 
 	getBaseModelKey():string{
 		return this.getModelKey().split(":").filter((s,i)=>{return i<3}).join(":");
+	}
+
+	get blockId(){
+		return this.baseClass.blockId;
 	}
 
 	public blockDidMount( bme:blockMountEvent ):void{

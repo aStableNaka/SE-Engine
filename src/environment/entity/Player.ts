@@ -1,5 +1,5 @@
 import { Entity } from "./Entity";
-import { World } from "../World";
+import { World } from "../world/World";
 import * as THREE from "three";
 
 /**
@@ -16,8 +16,10 @@ export class Player extends Entity{
 	lightRadius:number=10;
 	flickerRadius:number=1;
 	speed: number = 15;
+	camera: THREE.Camera;
 	constructor( world:World ){
 		super( world );
+		this.camera = world.ff.camera;
 		this.light = new THREE.PointLight(0xdf8f5f, 3, this.lightRadius, 0.1);
 		//this.light = new THREE.SpotLight(0xdf8f5f, 1, 10, 10, 1, 0);
 		this.lightInner = new THREE.PointLight(0x2070a0, 2, this.lightRadius-2, 0.1);
@@ -29,8 +31,12 @@ export class Player extends Entity{
 		//this.meshGroup.add( this.lightInner );
 	}
 
-	tick(){
+	update(){
 		//this.light.distance = (Math.sin(this.world.tickCount)+1)/2*this.flickerRadius + this.lightRadius;
 		//this.light.intensity = Math.random()*0.5 + 1.5;
+	}
+
+	render(){
+
 	}
 }

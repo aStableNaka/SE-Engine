@@ -6,7 +6,7 @@
     "lib": "lib"
   },
   "scripts": {
-    "build": "npm run compile && npm run webpack && npm run test",
+    "build": "npm run compile && npm run webpack",
     "build-electron": "npm run compile-electron && npm run electron",
     "electron": "npm run webpack && electron .",
     "compile": "tsc --p ./",

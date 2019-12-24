@@ -1,12 +1,12 @@
-import { CreateGrid, Grid } from "../utils/Spaces";
-import { BlockEmpty } from "./blocks/base/BlockEmpty";
-import { regHub } from '../registry/RegistryHub';
-import { BlockData, BlockFactory } from "./blocks/Block";
-import { Storable } from "../io/Storable";
-import { quickHash } from "../utils/QuickHash";
+import { CreateGrid, Grid } from "../../../utils/Spaces";
+import { BlockEmpty } from "../../blocks/base/BlockEmpty";
+import { regHub } from '../../../registry/RegistryHub';
+import { BlockData, BlockFactory } from "../../blocks/Block";
+import { Storable } from "../../../io/Storable";
+import { quickHash } from "../../../utils/QuickHash";
 import {Vector2, Vector3, Vector4} from "three";
-import { Region } from "./region/Region";
-import { ModelInstanceData } from "../models/Model";
+import { Region } from "./Region";
+import { ModelInstanceData } from "../../../models/Model";
 
 const defaultBlock = new BlockData(BlockEmpty);
 
@@ -50,6 +50,8 @@ export class Layer extends Storable{
 	public setBlock( blockData:BlockData, x:number, y:number ){
 		// Ensures the block being replaced gets removed visually
 		const occupyingBlock = this.getBlock(x,y);
+
+		// Removes occupying block and triggers an update
 		if(occupyingBlock){
 			const modelKey = occupyingBlock.getModelKey();
 			const modelInstanceData = this.region.modelData[modelKey];
@@ -57,7 +59,7 @@ export class Layer extends Storable{
 				modelInstanceData.contents = modelInstanceData.filter((v4:Vector4)=>{
 					return !( v4.x==x && v4.y==y );
 				})
-				console.log(modelInstanceData);
+				//console.log(modelInstanceData);
 				modelInstanceData.needsUpdate = true;
 			}
 		}
@@ -65,7 +67,7 @@ export class Layer extends Storable{
 
 		this.grid.set(blockData,y,x);
 		this.addToModelData( this.region.modelData, blockData, x, y );
-		console.log(blockData);
+		//console.log(blockData);
 	}
 
 	public addToModelData( modelData:any, blockData:BlockData, xPos:number, yPos:number ){
@@ -78,7 +80,7 @@ export class Layer extends Storable{
 
 		// If the model is not already included within modelData
 		if(!modelData[modelKey]){
-			modelData[modelKey] = new ModelInstanceData(modelKey);
+			modelData[modelKey] = new ModelInstanceData(modelKey, this.region.position);
 		}
 
 		// This helps the block identify itself
@@ -92,7 +94,6 @@ export class Layer extends Storable{
 		}
 		
 		modelData[modelKey].push( new Vector4(xPos, yPos, this.location, blockData.getRotation()));
-		modelData[modelKey].needsUpdate = true;
 	}
 
 	/**

@@ -1,12 +1,18 @@
-import { FrostedFlakes } from "../rendering/FrostedFlakes";
-import {Player} from "./entity/Player";
-import {Storable} from "../io/Storable";
+import { FrostedFlakes } from "../../rendering/FrostedFlakes";
+import {Player} from "../entity/Player";
+import {Storable} from "../../io/Storable";
 import { Region } from "./region/Region";
-import { Grid } from "../utils/Spaces";
+import { Grid } from "../../utils/Spaces";
 import { object } from "prop-types";
-import { TickScheduler } from "./TickScheduler"; 
-import { BlockData } from "./blocks/Block";
+import { TickScheduler } from "../TickScheduler"; 
+import { BlockData } from "../blocks/Block";
 import { Vector2 } from "three";
+import { Layer } from "./region/Layer";
+
+function mod( x:number, c:number ){
+	return ( x % c + c ) % c;
+};
+
 
 export class World extends Storable{
 	
@@ -24,17 +30,26 @@ export class World extends Storable{
 	desiredTPS: number = 20;
 	tickDeltas: number[] = new Array<number>(this.tickLoggingLength).fill(1000/this.desiredTPS);
 	tickScheduler: TickScheduler;
+	tickInterval: NodeJS.Timeout;
+	tps: number = 0;
 
-	meshUpdates:number = 6000;
+	fps: number = 0;
+	frameLastTS: number = 0;
+
+	meshUpdates:number = 6000; // unused
+	
+
 
 	constructor( ff:FrostedFlakes ){
 		super();
 		console.log(`[World] initialized`);
 		this.ff = ff;
 		console.log(this);
-
+		const self = this;
 		this.tickScheduler = new TickScheduler( this );
-
+		this.tickInterval = setInterval( ()=>{
+			self.tick();
+		}, 1000/this.desiredTPS);
 	}
 
 	/**
@@ -66,13 +81,19 @@ export class World extends Storable{
 	 */
 	defaultRender(): void {
 		let self = this;
+
+		// FPS recording
+		const date = new Date().getTime();
+		this.fps = Math.round(1000/(date-this.frameLastTS));
+		this.frameLastTS = date;
+
 		window.requestAnimationFrame(()=>{
 			self.render();
 		});
 		try{
 			self.ff.render();
 		}catch(e){
-			return;
+			console.log(e);
 		}
 	}
 
@@ -109,14 +130,14 @@ export class World extends Storable{
 
 	queueNextTick(): void {
 		let nextDelay = this.getNextTickDelay()-3;
-		let tps = this.getTPS();
-		document.title = tps.toFixed(2) + " - - - " + this.tickCount + " - - - " + 1000/tps+" / "+1000/this.desiredTPS;
+		this.tps = this.getTPS()
+		//document.title = tps.toFixed(2) + " - - - " + this.tickCount + " - - - " + 1000/tps+" / "+1000/this.desiredTPS;
 		let self = this;
 		this.updateTickTimes();
 		this.tickScheduler.tick( this.tickCount );
-		setTimeout(()=>{
+		/*setTimeout(()=>{
 			self.tick();
-		}, nextDelay);
+		}, nextDelay);*/
 	}
 
 	getRegionAtVec2(vec2: THREE.Vector2): Region | null {
@@ -129,14 +150,50 @@ export class World extends Storable{
 		Map manipulation
 	*/
 
+	/**
+	 * Get a single block at a particular location
+	 * @param x 
+	 * @param y 
+	 * @param layerZ 
+	 */
+	getBlock( x:number, y:number, layerZ:number):BlockData | null{
+		let region = this.getRegionAtVec2(new Vector2(x,y));
+		x = mod(x, this.chunkSize);
+		y = mod(y, this.chunkSize);
+		if(region){
+			return region.getBlock(x,y,layerZ);
+		}
+		return null;
+	}
+
+	/**
+	 * Get a list of all blocks spanning the z (vertical) axis
+	 * of a particular location
+	 * @param x 
+	 * @param y 
+	 */
+	getBlockColumn( x:number, y:number ):BlockData[]{
+		let region = this.getRegionAtVec2(new Vector2(x,y));
+		x = mod(x, this.chunkSize);
+		y = mod(y, this.chunkSize);
+		if(region){
+			return <BlockData[]> region.layers.map(( layer:Layer, i:number )=>{
+				return ( <Region> region ).getBlock(x,y,i);
+			}).filter( (blockData:BlockData|null)=>{
+				return !!blockData;
+			});
+		}
+		return [];
+	}
+
 	setBlock( blockData:BlockData, x:number, y:number, layerZ:number ): void {
 		let region = this.getRegionAtVec2(new Vector2(x,y));
 		if(!region) throw new Error(`[SimonsWorld] Attempted to set block out of bounds ${x},${y},${layerZ}`);
 		this.regionUpdateQueue.push(region);
 		
 		// World space to region space conversion
-		x = x%this.chunkSize;
-		y = y%this.chunkSize;
+		x = mod(x, this.chunkSize);
+		y = mod(y, this.chunkSize);
 		region.setBlock(blockData,x,y,layerZ);
 	}
 

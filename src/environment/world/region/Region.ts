@@ -1,16 +1,16 @@
-import { RegionMesh } from '../../rendering/region/RegionMesh';
-import { MapObject } from '../MapObject';
-import { CreateGrid, Position, Grid } from '../../utils/Spaces';
+import { RegionMesh } from '../../../rendering/region/RegionMesh';
+import { MapObject } from '../../MapObject';
+import { CreateGrid, Position, Grid } from '../../../utils/Spaces';
 import {EventEmitter} from 'events';
 import { PositionalAudio, Vector4, Matrix4, Vector3 } from 'three';
-import { Dictionary } from '../../utils/Dictionary';
+import { Dictionary } from '../../../utils/Dictionary';
 import { World } from '../World';
-import { Layer } from '../Layer';
-import { BlockFactory, BlockData } from '../blocks/Block';
-import { Storable } from '../../io/Storable';
-import { regHub } from '../../registry/RegistryHub';
+import { Layer } from './Layer';
+import { BlockFactory, BlockData } from '../../blocks/Block';
+import { Storable } from '../../../io/Storable';
+import { regHub } from '../../../registry/RegistryHub';
 import * as THREE from "three";
-import { ModelInstancedMesh, ModelInstanceData, Model } from '../../models/Model';
+import { ModelInstancedMesh, ModelInstanceData, Model } from '../../../models/Model';
 
 /**
  * How blocks are represented in regions
@@ -43,7 +43,7 @@ const placeHolderMeshMaterial = new THREE.MeshBasicMaterial({color:0xffffff});
  * coordinate ( region(x,y)->grid(x,y) ) has direct LOS ( line of sight ) with the sky
  */
 export class Region extends Storable{
-	location: THREE.Vector2;
+	position: THREE.Vector2;
 	meshGroup: RegionMesh;
 	dictionary: Dictionary = new Dictionary();
 	lightGrid!: Grid<number>;
@@ -77,7 +77,7 @@ export class Region extends Storable{
 	 */
 	constructor( world:World, location:THREE.Vector2 ){
 		super();
-		this.location = location;
+		this.position = location;
 		this.size = world.chunkSize;
 		this.world = world;
 		this.meshGroup = new RegionMesh( this );
@@ -104,12 +104,13 @@ export class Region extends Storable{
 	private reconstructModelMeshGroups(): void{
 		(<ModelInstanceData[]>Object.values(this.modelData)).map((modelInstanceData:ModelInstanceData)=>{
 			if(modelInstanceData.needsUpdate){
-				console.log(modelInstanceData, this.modelData);
 				let constructedMesh = this.meshGroup.children.find((o3d)=>o3d.name==modelInstanceData.modelKey);
 				if(constructedMesh){
 					this.meshGroup.remove(constructedMesh);
+					//console.log(constructedMesh);
 				}
 				this.constructModelMesh( modelInstanceData );
+				modelInstanceData.needsUpdate = false;
 			}
 		}, this);
 	}
@@ -129,6 +130,9 @@ export class Region extends Storable{
 		this.requestUpdate();
 	}
 
+	/**
+	* Queues an update for the next tick
+	*/
 	requestUpdate(){
 		if(!this.updateQueued){
 			this.world.queueUpdate(this);
@@ -154,6 +158,7 @@ export class Region extends Storable{
 		let layer = this.layers[z];
 		if(!layer) throw new Error(`[Region] layer ${z} does not exist`);
 		layer.setBlock(blockData, x, y);
+		this.requestUpdate()
 	}
 
 	clearMeshGroup(){
@@ -188,7 +193,7 @@ export class Region extends Storable{
 		(<ModelInstanceData[]>Object.values(this.modelData)).map((modelInstanceData)=>{
 			this.constructModelMesh(modelInstanceData);
 		}, this);
-		this.meshGroup.remove(this.placeHolderMesh);
+		//this.meshGroup.remove(this.placeHolderMesh);
 	}
 
 	/**
@@ -203,7 +208,8 @@ export class Region extends Storable{
 		let object3D = < THREE.Object3D | null >model.construct( positions, parseInt( discriminator ) );
 		if( object3D ){
 			object3D.name = modelKey;
-			this.meshGroup.add(object3D); 
+			this.meshGroup.add(object3D);
+			let self = this;
 		}
 	}
 

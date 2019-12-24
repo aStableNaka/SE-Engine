@@ -1,10 +1,31 @@
 import { EventEmitter } from "events";
 
 export interface Registry{
-	register( entity:any, forceRegister?:boolean ):string;
-	get( key:string ):any;
-	checkReady( ready:()=>void ):void;
+
+	/**
+	 * A cached list of all registered entries
+	 */
 	list:any[];
+
+	/**
+	 * Must check for entry overloads and operate
+	 * to prevent key collisions
+	 * @param entry 
+	 * @param forceRegister 
+	 */
+	register( entry:any, forceRegister?:boolean ):string;
+	
+	/**
+	 * @param key 
+	 */
+	get( key:string ):any;
+	
+	/**
+	 * For registries which use
+	 * async loading
+	 * @param ready 
+	 */
+	checkReady( ready:()=>void ):void;
 }
 
 /**

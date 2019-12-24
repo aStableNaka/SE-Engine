@@ -1,20 +1,24 @@
 import {World} from "./World";
-import { FrostedFlakes } from "../rendering/FrostedFlakes";
+import { FrostedFlakes } from "../../rendering/FrostedFlakes";
 import * as THREE from "three";
-import { Grid } from "../utils/Spaces";
+import { Grid } from "../../utils/Spaces";
 import { Region } from "./region/Region";
 import {SimonsRegion} from "./region/SimonsRegion";
-import { OrbitControls } from "../controls/Orbit";
-import { Player } from "./entity/Player";
+import { OrbitControls } from "../../controls/Orbit";
+import { Player } from "../entity/Player";
 import { Vector2, Vector3 } from "three";
-import {KeyboardControlManager} from "../controls/Keyboard";
+import {KeyboardControlManager} from "../../controls/Keyboard";
 import { any, object } from "prop-types";
 import * as SimplexNoise from "simplex-noise";
-import { BlockData } from "./blocks/Block";
-import { regHub } from "../registry/RegistryHub";
-import { BlockRegistry } from "../registry/BlockRegistry";
-import { Model } from "../models/Model";
-import {BoundlessGrid} from "../utils/BoundlessGrid";
+import { BlockData } from "../blocks/Block";
+import { regHub } from "../../registry/RegistryHub";
+import { BlockRegistry } from "../../registry/BlockRegistry";
+import { Model } from "../../models/Model";
+import {BoundlessGrid} from "../../utils/BoundlessGrid";
+import { ValuesScope, ValuesScopeState } from "../../ui/debug/ValuesScope";
+import { RefObject } from "react";
+import {NOISE_GENERATOR_LABELS} from "../biome/Biome";
+import { BiomeSelector } from "../biome/BiomeSelector";
 
 /**
  * @checkpoint
@@ -25,6 +29,10 @@ import {BoundlessGrid} from "../utils/BoundlessGrid";
 const sin45 = Math.sin(45);
 const cos45 = Math.cos(45);
 const sqrthalf = Math.sqrt(1/2);
+
+export type DebugTools = { 
+	valuesScope: RefObject<ValuesScope> | null | undefined;
+};
 
 /**
  * Simons world is a world where each region
@@ -37,8 +45,8 @@ const sqrthalf = Math.sqrt(1/2);
 export class SimonsWorld extends World{
 	enableDebugHelpers:boolean = true;
 
-	worldSize=16;
-	chunkSize=32;
+	worldSize=2;
+	chunkSize=16;
 	viewAngle:number = 35;
 	worldDomain:THREE.Box2;
 	center: THREE.Vector2;
@@ -70,18 +78,31 @@ export class SimonsWorld extends World{
 	cursorRegion!:Region|null;
 
 	noiseGen1:SimplexNoise = new SimplexNoise.default();
-	mouseIntersects!: THREE.Intersection[];
+	noiseGenerators: SimplexNoise[];
+	biomeSelector:BiomeSelector;
 
-	constructor( ff:FrostedFlakes ){
+	mouseIntersects!: THREE.Intersection[];
+	debugTools!: DebugTools | null;
+
+	constructor( ff:FrostedFlakes, seed:string="0" ){
 		super( ff );
+
+		// Generate me some noise generators please
+		this.noiseGenerators = Object.keys( NOISE_GENERATOR_LABELS ).map( ( label:string )=>{
+			return new SimplexNoise.default( seed+label );
+		});
+		this.biomeSelector = new BiomeSelector( this.noiseGenerators );
+
 		let self = this;
 		this.center = new THREE.Vector2(this.chunkSize*this.worldSize/2, this.chunkSize*this.worldSize/2);
 		this.worldDomain = new THREE.Box2( new Vector2(-this.worldSize,-this.worldSize), new Vector2(this.worldSize-1,this.worldSize-1) );
 		this.player = new Player( this );
 		this.setupControls(ff);
+
 		this.regions = new BoundlessGrid<Region>(this.worldSize,(y,x)=>{
 			return self.instantiateRegion(x,y);
 		});
+		
 		this.setupImrHelper();
 		this.setupMouseControls();
 
@@ -93,6 +114,9 @@ export class SimonsWorld extends World{
 			}
 		})
 
+		this.tickScheduler.every( 10, ()=>{
+			self.updateDebug();
+		})
 	}
 
 	/**
@@ -118,6 +142,31 @@ export class SimonsWorld extends World{
 		return region;
 	}
 
+	/**
+	 * Set up the controls for SimonsWorld 
+	 * @param ff 
+	 */
+	setupControls( ff:FrostedFlakes ){
+		let self = this;
+		this.tickScheduler.after(10,()=>{
+			// Set up the player
+			self.setupPlayerPlacement(ff);	
+			self.setupMovementControls();
+		})
+		this.setupOrbitControls( ff) ;
+	}
+
+	/*###################################################################
+			Immediate Region Helper
+	####################################################################*/
+
+	iterateOverBox2( box2:THREE.Box2, callback:(x:number,y:number)=>void){
+		for( let x = box2.min.x; x < box2.max.x; x++ ){
+			for( let y = box2.min.y; y < box2.max.y; y++ ){
+				callback(x,y);
+			}
+		}
+	}
 
 	/**
 	 * imrHelper helps visualize the immediate viewable region
@@ -151,8 +200,25 @@ export class SimonsWorld extends World{
 		//this.imrHelper.visible=false;
 	}
 
+	getImmediateRegionBoundry( player:Player ):THREE.Box2{
+		let pPos = player.position.clone();
+		// pPos but floored
+		let fpPos = pPos.floor();
+		// The location of the region which the player is in
+		let imReg = fpPos.divideScalar(this.chunkSize).floor();
+		// turn imReg into a translation
+		let trans = imReg.sub( this.imrLowerBound );
+		return this.immediateRegionBox.clone().translate( trans );
+	}
+
+	updateImmediateRegionBoundry( player:Player ){
+		this.immediateRegionBoundry = this.getImmediateRegionBoundry(player);
+	}
 
 
+	/*###################################################################
+			Mouse Controls
+	####################################################################*/
 
 
 
@@ -217,46 +283,9 @@ export class SimonsWorld extends World{
 	}
 
 
-
-
-
-
-	iterateOverBox2( box2:THREE.Box2, callback:(x:number,y:number)=>void){
-		for( let x = box2.min.x; x < box2.max.x; x++ ){
-			for( let y = box2.min.y; y < box2.max.y; y++ ){
-				callback(x,y);
-			}
-		}
-	}
-
-	getImmediateRegionBoundry( player:Player ):THREE.Box2{
-		let pPos = player.position.clone();
-		// pPos but floored
-		let fpPos = pPos.floor();
-		// The location of the region which the player is in
-		let imReg = fpPos.divideScalar(this.chunkSize).floor();
-		// turn imReg into a translation
-		let trans = imReg.sub( this.imrLowerBound );
-		return this.immediateRegionBox.clone().translate( trans );
-	}
-
-	updateImmediateRegionBoundry( player:Player ){
-		this.immediateRegionBoundry = this.getImmediateRegionBoundry(player);
-	}
-
-	/**
-	 * Set up the controls for SimonsWorld 
-	 * @param ff 
-	 */
-	setupControls( ff:FrostedFlakes ){
-		let self = this;
-		this.tickScheduler.after(10,()=>{
-			// Set up the player
-			self.setupPlayerPlacement(ff);	
-			self.setupMovementControls();
-		})
-		this.setupOrbitControls( ff) ;
-	}
+	/*###################################################################
+			Camera Controls
+	####################################################################*/
 
 	setupOrbitControls(ff:FrostedFlakes){
 		// Set up the orbit controls
@@ -288,8 +317,9 @@ export class SimonsWorld extends World{
 
 
 
-
-
+	/*###################################################################
+			Keyboard Controls
+	####################################################################*/
 
 	/**
 	 * Sets up the initial player placement
@@ -362,6 +392,9 @@ export class SimonsWorld extends World{
 	}
 
 
+	/*###################################################################
+			Updating/Ticking
+	####################################################################*/
 
 	/**
 	 * Adds regions that will be seen
@@ -414,6 +447,45 @@ export class SimonsWorld extends World{
 		let regionsSeen = this.getImmediateRegionBoundry( this.player );
 		if(!regionsSeen.containsBox(this.immediateRegionBoundry)){
 			this.updateRegionsSeen( regionsSeen );
+		}	
+	}
+
+	/**
+	 * The mental f***ing gymnastics of react
+	 * make me want to tear my eyeballs out
+	 * 
+	 * mmle (make my life easier) makes sure
+	 * a react component is available to be
+	 * used.
+	 */
+	mmle<T>( a:any ): T | null {
+		if( a && a.current ){
+			return a.current;
+		}
+		return null;
+	}
+
+	private updateDebug(){
+		// updating the debug tools
+		if(this.debugTools){
+			let region = this.getRegionAtVec2( this.player.position );
+			let valueScope = this.mmle<ValuesScope>( this.debugTools.valuesScope );
+			const chp = this.cursorHelper.position
+			
+			let debugState:ValuesScopeState = {
+				tps: `${this.tps.toFixed(2).padEnd(12, ' ')} ${( 1000/this.tps ).toFixed(2)}ms/${1000/this.desiredTPS}ms    #${this.tickCount}`,
+				fps:`${this.fps}`,
+				blockData: this.getBlockColumn( chp.x, chp.z ).map(( blockData:BlockData, i )=>{
+					return `${i} > ${blockData.blockId}`;
+				})
+			};
+
+			if(region) debugState.regionWSCO = `${region.position.x} , ${region.position.y}`;
+			if(this.cursorHelper) debugState.cursorWSCO = `${chp.x} , ${chp.z}`;
+			
+			if( valueScope ){
+				valueScope.setState( debugState );
+			}
 		}
 	}
 
@@ -435,6 +507,11 @@ export class SimonsWorld extends World{
 		}
 	}
 
+	
+	/*###################################################################
+			Rendering
+	####################################################################*/
+
 	/**
 	 * Rendering will do a few things:
 	 * 	1 ) Update the camera position
@@ -446,5 +523,13 @@ export class SimonsWorld extends World{
 		// Handling movement
 		let md = this.player.movementDelta;
 		if( md.x || md.y ) this.tickMovement( md );
+	}
+
+	/*###################################################################
+			Debugging
+	####################################################################*/
+
+	readyDebug( debugTools:DebugTools ){
+		this.debugTools = debugTools;
 	}
 }

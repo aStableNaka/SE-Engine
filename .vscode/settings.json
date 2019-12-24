@@ -1,33 +1,6 @@
 {
   "files.exclude": {
-    "package-lock.json": true,
-    "node_modules": true,
-    "src\\Main.js": true,
-    "src\\index.js": true,
-    "src\\rendering\\GameSceneContainer.js": true,
-    "src\\environment\\World.js": true,
-    "src\\registry\\Models.js": true,
-    "src\\registry\\ModelRegistry.js": true,
-    "src\\registry\\ModelTypes.js": true,
-    "src\\registry\\RegistryHub.js": true,
-    "src\\registry\\Registry.js": true,
-    "src\\registry\\Blocks.js": true,
-    "src\\registry\\BlockRegistry.js": true,
-    "src\\environment\\SimonsWorld.js": true,
-    "src\\environment\\TickScheduler.js": true,
-    "src\\environment\\MapObject.js": true,
-    "src\\environment\\Layer.js": true,
-    "src\\environment\\region\\SimonsRegion.js": true,
-    "src\\environment\\region\\Region.js": true,
-    "src\\ui\\inventory\\CheatInventory.js": true,
-    "src\\ui\\inventory\\CheatBlockItem.js": true,
-    "src\\ui\\CheatMenu.js": true,
-    "src\\models\\Model.js": true,
-    "src\\models\\ModelTypes.js": true,
-    "src\\models\\RailedModel.js": true,
-    "src\\models\\UniformModel.js": true,
-    "src\\models\\NoModel.js": true,
-    "src\\models\\GLTFModel.js": true
+    "package-lock.json": true
   },
   "files.eol": "\r\n"
 }

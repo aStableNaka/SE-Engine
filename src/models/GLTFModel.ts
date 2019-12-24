@@ -2,7 +2,7 @@ import {GLTFResource} from "../loader/GLTFResource";
 import { GLTF } from "../utils/THREE/jsm/loaders/GLTFLoader";
 import { Resource } from "../loader/Resource";
 import * as THREE from "three";
-import { Layer } from "../environment/Layer";
+import { Layer } from "../environment/world/region/Layer";
 import { ModelRegistry } from "../registry/ModelRegistry";
 import { Vector4 } from "three";
 import { Model, ModelOptions } from "./Model";
@@ -36,8 +36,7 @@ export class GLTFModel extends Model{
 	}
 
 	setBoundingSphere( mesh:THREE.Mesh ){
-		mesh.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(0,0,0), 11.3137);
-		mesh.geometry.boundingSphere.center = new THREE.Vector3(32,0.5,32);
+		mesh.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(16,0.5,16), 16);
 		mesh.frustumCulled = false;
 	}
 

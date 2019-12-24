@@ -2,9 +2,9 @@ import {GLTFResource} from "../loader/GLTFResource";
 import { GLTF } from "../utils/THREE/jsm/loaders/GLTFLoader";
 import { Resource } from "../loader/Resource";
 import * as THREE from "three";
-import { Layer } from "../environment/Layer";
+import { Layer } from "../environment/world/region/Layer";
 import { ModelRegistry } from "../registry/ModelRegistry";
-import { Vector4 } from "three";
+import { Vector4, Vector2 } from "three";
 
 export type ModelOptions = {
 	scale?:number;
@@ -20,11 +20,13 @@ export type ModelOptions = {
  * an instancedMesh or a MeshGroup
  */
 export class ModelInstanceData{
-	needsUpdate:boolean = true;
+	needsUpdate:boolean = false;
 	contents:Vector4[] = [];
 	modelKey:string;
-	constructor(modelKey:string){
+	position:Vector2;
+	constructor(modelKey:string, position:Vector2){
 		this.modelKey = modelKey;
+		this.position = position;
 	}
 
 	public push( v4:Vector4 ){

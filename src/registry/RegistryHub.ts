@@ -1,6 +1,7 @@
 import {RegistryHub} from "./Registry";
 import {baseBlockRegistry} from "./Blocks";
 import {baseModelRegistry} from "./Models";
+import {baseBiomeRegistry} from "./Biomes";
 /**
  * Warning - Each registry can have its own usage spec. This just groups
  * all the registries together.
@@ -12,3 +13,4 @@ import {baseModelRegistry} from "./Models";
 export const regHub = new RegistryHub();
 regHub.add("base", "block", baseBlockRegistry);
 regHub.add("base", "model", baseModelRegistry);
+regHub.add("base", "biome", baseBiomeRegistry);

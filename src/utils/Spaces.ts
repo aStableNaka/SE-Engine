@@ -28,6 +28,15 @@ export function CreateVolume<T>( size:number, fill:( x : number, y : number, z :
 	});
 }
 
+export function CreateSuperSpace( size: number, depth: number, fill: (index: number[])=>any, index: number[] = [] ): any[] | any{
+	if( depth ){
+		return new Array<null>( size ).fill( null ).map((v, i)=>{
+			return CreateSuperSpace( size, depth-1, fill, [...index, i] );
+		});
+	}
+	return fill( index );
+}
+
 export function getSpaceDepth( space:any[] ):number{
 	if(space[0]){
 		if(Array.isArray(space[0])){

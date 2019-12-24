@@ -37,6 +37,9 @@ export class UniformModel extends GLTFModel{
 			material.map.needsUpdate=true;
 			material.map.minFilter = THREE.NearestFilter;
 			material.map.magFilter = THREE.NearestFilter;
+			//material.depthWrite = false;
+			//material.depthTest = false;
+			material.flatShading = true;
 			this.materials.push(material);	
 		}	
 	}

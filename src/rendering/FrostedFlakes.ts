@@ -9,7 +9,7 @@ export class FrostedFlakes extends THREE.Scene{
 	height:number = window.innerHeight;
 	viewAngle:number = 45;
 	near:number = 0.1;
-	far:number = 10000;
+	far:number = 1000;
 	aspect:number = this.width/this.height;
 
 	//referenceMesh:THREE.Mesh;

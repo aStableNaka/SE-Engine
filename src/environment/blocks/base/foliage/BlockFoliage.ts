@@ -1,7 +1,7 @@
-import { BlockFactory, Geometry, BlockData } from "../Block";
+import { BlockFactory, Geometry, BlockData } from "../../Block";
 import * as THREE from "three";
-import { BlockVariantData } from "./BlockVariantData";
-import { baseClass as BlockBaseClass } from '../../../utils/Classes';
+import { BlockVariantData } from "../BlockVariantData";
+import { baseClass as BlockBaseClass } from '../../../../utils/Classes';
 
 export class BlockVariantFoliageData extends BlockVariantData{
 	constructor( baseClass:BlockBaseClass, variant?:any ){

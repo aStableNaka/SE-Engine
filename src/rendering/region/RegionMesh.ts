@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Region } from '../../environment/region/Region';
+import { Region } from '../../environment/world/region/Region';
 
 /**
  * Region meshes with are THREE.Group(s) which contain all the

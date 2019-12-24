@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import {World} from "./World";
+import {World} from "./world/World";
 
 export type TickTask = (world:World)=>void;
 

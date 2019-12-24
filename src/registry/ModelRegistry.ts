@@ -10,7 +10,7 @@ import { Resource } from "../loader/Resource";
 import { Geometry } from "../environment/blocks/Block";
 import * as THREE from "three";
 import {BufferGeometryUtils} from "../utils/THREE/jsm/utils/BufferGeometryUtils";
-import { Layer } from "../environment/Layer";
+import { Layer } from "../environment/world/region/Layer";
 import {Model} from "../models/Model";
 
 /**

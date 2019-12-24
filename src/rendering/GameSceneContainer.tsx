@@ -1,7 +1,6 @@
 import React, { CSSProperties } from 'react';
 import {FrostedFlakes} from "./FrostedFlakes";
-import {World} from "../environment/World";
-import { SimonsWorld } from '../environment/SimonsWorld';
+import { SimonsWorld } from '../environment/world/SimonsWorld';
 import {regHub} from "../registry/RegistryHub";
 
 export type GPVProps = {

@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { World } from "../World";
+import { World } from "../world/World";
 import { Vector3 } from "three";
 
 /**
@@ -39,7 +39,15 @@ export class Entity{
 		this.meshGroup.position.set(this.position.x,1,this.position.y);
 	}
 
-	tick(){
+	render(){
 
+	}
+
+	update(){
+		
+	}
+
+	tick(){
+		this.update();
 	}
 }
