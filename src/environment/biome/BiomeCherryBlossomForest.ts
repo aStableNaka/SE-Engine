@@ -1,13 +1,9 @@
 import * as Biome from "./Biome";
-import * as SimplexNoise from "simplex-noise";
+import {Noise2D} from "open-simplex-noise";
 import { Vector3 } from "three";
 import { BlockData } from "../blocks/Block";
 
 export class BiomeCherryBlossomForest extends Biome.Biome{
-	
-	private ncx: number = 0;
-	private ncy: number = 0;
-	private noiseCacheValue: number = 0;
 
 	private pondFactor: number = 0.9;
 
@@ -19,24 +15,12 @@ export class BiomeCherryBlossomForest extends Biome.Biome{
 		));
 	}
 
-	
-
-	terrainNoise(x: number, y: number, noiseGen:SimplexNoise[]): number{
-		if( this.ncx == x && this.ncy == y ){
-			return this.noiseCacheValue;
-		}
-		this.ncx = x;
-		this.ncy = y;
-		this.noiseCacheValue = (noiseGen[Biome.NOISE_GENERATOR_LABELS.TERRAIN].noise2D(x/200,y/200)+1)/2;
-		return this.noiseCacheValue;
-	}
-	
 	/**
 	 * Floor layer
 	 */
-	public generateLayer0( x: number, y: number, noiseGen:SimplexNoise[] ): BlockData{
+	public generateLayer0( x: number, y: number, noiseGen:Noise2D[] ): BlockData{
 		const pondChance = this.terrainNoise( x, y, noiseGen );
-		let block = this.br.createBlockData( "base:BlockGround", 16 );
+		let block = this.br.createBlockData( "base:BlockGround", 15 );
 
 		// Grass
 		if(pondChance<this.pondFactor){
@@ -48,7 +32,7 @@ export class BiomeCherryBlossomForest extends Biome.Biome{
 	/**
 	 * Content layer
 	 */
-	public generateLayer1( x: number, y: number, noiseGen:SimplexNoise[] ): BlockData{
+	public generateLayer1( x: number, y: number, noiseGen:Noise2D[] ): BlockData{
 		const pondChance = this.terrainNoise( x, y, noiseGen );
 		let block = this.br.createBlockData( "base:BlockEmpty" );
 		

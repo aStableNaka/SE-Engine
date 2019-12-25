@@ -17,6 +17,6 @@ export class BlockGround extends BlockFactory{
 	}
 
 	static getModelKey( blockData:BlockVariantData ):string{
-			return `${this.model}:${blockData.data%16*16}`;
+			return `${this.model}:${blockData.data%(16*16)}`;
 	}
 }

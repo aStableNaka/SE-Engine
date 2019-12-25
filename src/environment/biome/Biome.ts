@@ -1,4 +1,4 @@
-import * as SimplexNoise from "simplex-noise";
+import {Noise2D} from "open-simplex-noise";
 import {BlockData} from "../blocks/Block";
 import { regHub } from "../../registry/RegistryHub";
 import { BlockRegistry } from "../../registry/BlockRegistry";
@@ -49,6 +49,10 @@ export const boringBiome: Vector3 = new Vector3( BIOME_TEMPERATURE.TEMPERATE, BI
  */
 export class Biome{
 	
+	private ncx: number = 0;
+	private ncy: number = 0;
+	private noiseCacheValue: number = 0;
+
 	public name: string;
 	public vector: Vector3;
 
@@ -72,20 +76,38 @@ export class Biome{
 	}
 
 	/**
+	 * Not the most efficient way to do this
+	 * but it caches terrain values for a single
+	 * point and references that for "optimization"
+	 * @param x 
+	 * @param y 
+	 * @param noiseGen 
+	 */
+	public terrainNoise(x: number, y: number, noiseGen:Noise2D[]): number{
+		if( this.ncx == x && this.ncy == y ){
+			return this.noiseCacheValue;
+		}
+		this.ncx = x;
+		this.ncy = y;
+		this.noiseCacheValue = (noiseGen[NOISE_GENERATOR_LABELS.TERRAIN](x/200,y/200)+1)/2;
+		return this.noiseCacheValue;
+	}
+
+	/**
 	 * Floor layer
 	 */
-	public generateLayer0( x: number, y: number, noiseGen:SimplexNoise[] ): BlockData{
+	public generateLayer0( x: number, y: number, noiseGen:Noise2D[] ): BlockData{
 		return this.br.createBlockData( "base:BlockEmpty" );
 	}
 
 	/**
 	 * Content layer
 	 */
-	public generateLayer1( x: number, y: number, noiseGen:SimplexNoise[] ): BlockData{
+	public generateLayer1( x: number, y: number, noiseGen:Noise2D[] ): BlockData{
 		return this.br.createBlockData( "base:BlockEmpty" );
 	}
 
-	public generate( x: number, y: number, zLevel: number, noiseGen:SimplexNoise[] ): BlockData{
+	public generate( x: number, y: number, zLevel: number, noiseGen:Noise2D[] ): BlockData{
 		switch( zLevel ){
 			case 0:
 				return this.generateLayer0( x, y, noiseGen );

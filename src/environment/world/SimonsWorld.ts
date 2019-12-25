@@ -9,8 +9,7 @@ import { Player } from "../entity/Player";
 import { Vector2, Vector3 } from "three";
 import {KeyboardControlManager} from "../../controls/Keyboard";
 import { any, object } from "prop-types";
-import * as SimplexNoise from "simplex-noise";
-import { makeNoise2D } from "open-simplex-noise";
+import {makeNoise2D, Noise2D} from "open-simplex-noise";
 import { BlockData } from "../blocks/Block";
 import { regHub } from "../../registry/RegistryHub";
 import { BlockRegistry } from "../../registry/BlockRegistry";
@@ -20,6 +19,7 @@ import { ValuesScope, ValuesScopeState } from "../../ui/debug/ValuesScope";
 import { RefObject } from "react";
 import {NOISE_GENERATOR_LABELS} from "../biome/Biome";
 import { BiomeSelector } from "../biome/BiomeSelector";
+import { CursorHelper } from "../../controls/CursorHelper";
 
 /**
  * @checkpoint
@@ -56,11 +56,8 @@ export class SimonsWorld extends World{
 	loadedRegions:Region[] = [];
 	regionLoadQueue:Region[] = [];
 
-	mouseRayCaster:THREE.Raycaster = new THREE.Raycaster();
-	mousePosition:THREE.Vector2 = new THREE.Vector2(0,0);
-	mouseWorldPosition:THREE.Vector2 = new THREE.Vector2(0,0);
-	
 	keyboardControls:KeyboardControlManager = new KeyboardControlManager( document.body );
+	cursorHelper: CursorHelper;
 
 	// The immediate region is the region where
 	// The player is most likely to be seeing
@@ -73,26 +70,22 @@ export class SimonsWorld extends World{
 	immediateRegions!: Grid<SimonsRegion>;
 	imrHelper!:THREE.Mesh;
 
-	mouseEvent!:MouseEvent;
-	cursorModel!:Model;
-	cursorHelper!:THREE.Mesh;
-	cursorRegion!:Region|null;
-
-	noiseGen1:SimplexNoise = new SimplexNoise.default();
-	noiseGenerators: SimplexNoise[];
+	noiseGenerators: Noise2D[];
 	biomeSelector:BiomeSelector;
 
-	mouseIntersects!: THREE.Intersection[];
 	debugTools!: DebugTools | null;
 
 	constructor( ff:FrostedFlakes, seed:string="0" ){
 		super( ff );
-
+		
 		// Generate me some noise generators please
-		this.noiseGenerators = Object.keys( NOISE_GENERATOR_LABELS ).map( ( label:string )=>{
-			return new SimplexNoise.default( seed+label );
+		this.noiseGenerators = Object.keys( NOISE_GENERATOR_LABELS ).map( ( label:string, i, v )=>{
+			console.log(v);
+			return makeNoise2D( this.stringToSeed(seed+label) );
 		});
 		this.biomeSelector = new BiomeSelector( this.noiseGenerators );
+
+		this.cursorHelper = new CursorHelper( this );
 
 		let self = this;
 		this.center = new THREE.Vector2(this.chunkSize*this.worldSize/2, this.chunkSize*this.worldSize/2);
@@ -105,7 +98,7 @@ export class SimonsWorld extends World{
 		}, true);
 		
 		this.setupImrHelper();
-		this.setupMouseControls();
+
 
 		this.tickScheduler.every(2, ()=>{
 			if(self.regionLoadQueue[0]){
@@ -118,6 +111,12 @@ export class SimonsWorld extends World{
 		this.tickScheduler.every( 10, ()=>{
 			self.updateDebug();
 		})
+
+		this.ready = true;
+	}
+
+	private stringToSeed( str:string ):number{
+		return str.split("").map((x)=>x.charCodeAt(0)).reduce((a,b)=>a+b)
 	}
 
 	/**
@@ -185,12 +184,11 @@ export class SimonsWorld extends World{
 			imrMaterialSettings.transparent = false;
 		}
 		this.imrHelper = new THREE.Mesh( new THREE.BoxGeometry(this.imr*2*this.chunkSize,1,this.imr*2*this.chunkSize, this.imr*2, 1, this.imr*2), new THREE.MeshBasicMaterial(imrMaterialSettings) );
-		this.cursorModel = (<Model>regHub.get("base:model:ConveyorInline"));
-		this.cursorHelper = this.cursorModel.mesh.clone();
+		
 		this.imrHelper.name = "IMRHelper&ci";
-		this.cursorHelper.name = "CursorHelper";
+		
 		this.ff.add(this.imrHelper);
-		this.ff.add(this.cursorHelper);
+		this.ff.add(this.cursorHelper.cursorMesh);
 	}
 
 	updateImrHelper(){
@@ -223,40 +221,10 @@ export class SimonsWorld extends World{
 
 
 
-	setupMouseControls(){
-		window.addEventListener("mousemove", this.updateMouse.bind(this));
-		window.addEventListener("click", this.handleMouseClick.bind(this));
-	}
+	
 
-	updateMouse( event:MouseEvent ){
-		this.mouseEvent = event;
-		this.projectMouse();
-	}
 
-	projectMouse(){
-		const event = this.mouseEvent;
-		this.mousePosition.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-		this.mousePosition.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-		this.updateRayCaster();
-	}
-
-	/**
-	 * If your object is not intersected, add &ci to the name.
-	 */
-	updateRayCaster(){
-		this.mouseRayCaster.setFromCamera(this.mousePosition,this.ff.camera);
-		this.mouseIntersects = this.mouseRayCaster.intersectObjects(this.ff.children, true);
-		let filt = this.mouseIntersects.filter((intersect)=>{
-			return intersect.object.name.indexOf("&ci") > 0;
-		})
-		if(filt[0]){
-			let obj3d = filt[0];
-			this.cursorHelper.position.x = Math.floor(obj3d.point.x+0.5);
-			this.cursorHelper.position.y = obj3d.point.y+0.5+(this.cursorModel.options.zOffset||0);
-			this.cursorHelper.position.z = Math.floor(obj3d.point.z+0.5);
-		}
-		this.cursorRegion = this.getRegionAtVec2( new THREE.Vector2(this.cursorHelper.position.x, this.cursorHelper.position.z) );
-	}
+	
 
 	/**
 	 * Place a block as a debugging measure
@@ -267,21 +235,7 @@ export class SimonsWorld extends World{
 		}
 	}
 
-	handleMouseClick(){
-		this.debugBlockPlace();
-		let chp = this.cursorHelper.position;
-		let blockRegistry:BlockRegistry = regHub.get( "base:block" );
-		let block = blockRegistry.createBlockData( "base:BlockConveyorBelt" );
-		this.setBlock( block, chp.x, chp.z, 1 );
-		block.blockDidMount( { position:new Vector3( chp.x, chp.z, 1 ) }); // REQUIRED
-		//console.log(this.mouseIntersects);
-		if(this.cursorRegion){
-			this.cursorRegion.meshGroup.children.map((obj3d)=>{
-				let intersection = this.mouseRayCaster.intersectObject(obj3d);
-				//console.log(intersection)
-			})
-		}
-	}
+	
 
 
 	/*###################################################################
@@ -293,7 +247,7 @@ export class SimonsWorld extends World{
 		ff.orbitControlls.maxPolarAngle=Math.PI/180*this.viewAngle;
 		ff.orbitControlls.minPolarAngle=Math.PI/180*this.viewAngle;
 		ff.orbitControlls.minDistance=5;
-		//ff.orbitControlls.maxDistance=60;
+		ff.orbitControlls.maxDistance=60;
 		ff.orbitControlls.enableDamping = false;
 		ff.orbitControlls.keyPanSpeed=5;
 
@@ -305,14 +259,15 @@ export class SimonsWorld extends World{
 		ff.orbitControlls.target.set(this.center.x-5,1,this.center.y-5);
 		ff.camera.position.set(this.center.x,5,this.center.y);
 
+		this.ff.add( new THREE.AmbientLight( 0xffffff,1 ))
+
 		this.setupOrbitControlsDebugging();
 	}
 
 	setupOrbitControlsDebugging(){
 		if(this.enableDebugHelpers){
 			// For debugging
-			this.ff.add( new THREE.AmbientLight( 0xffffff,1 ))
-			//this.ff.orbitControlls.maxDistance=100000;
+			this.ff.orbitControlls.maxDistance=100000;
 		}
 	}
 
@@ -471,11 +426,13 @@ export class SimonsWorld extends World{
 		if(this.debugTools){
 			let region = this.getRegionAtVec2( this.player.position );
 			let valueScope = this.mmle<ValuesScope>( this.debugTools.valuesScope );
-			const chp = this.cursorHelper.position
+			const chp = this.cursorHelper.cursorMesh.position
 
 			let debugState:ValuesScopeState = {
 				tps: `${this.tps.toFixed(2).padEnd(12, ' ')} ${( 1000/this.tps ).toFixed(2)}ms/${1000/this.desiredTPS}ms    #${this.tickCount}`,
 				fps:`${this.fps}`,
+				tickTime: `${this.tickComputeTime.toFixed(4)} / 50 ms`,
+				tickIdle: `${(50-this.tickComputeTime).toFixed(4)} / 50 ms`,
 				blockData: this.getBlockColumn( chp.x, chp.z ).map(( blockData:BlockData, i )=>{
 					return `${i} > ${blockData.blockId}`;
 				})
@@ -506,8 +463,8 @@ export class SimonsWorld extends World{
 		this.ff.orbitControlls.pan( md.x, md.y );
 		this.player.movementDelta.x = 0;
 		this.player.movementDelta.y = 0;
-		if(this.mouseEvent){
-			this.projectMouse();
+		if(this.cursorHelper.mouseEvent){
+			this.cursorHelper.projectMouse();
 		}
 	}
 

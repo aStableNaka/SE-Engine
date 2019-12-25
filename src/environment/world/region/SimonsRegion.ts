@@ -6,7 +6,6 @@ import { SimonsWorld } from "../SimonsWorld";
 import * as THREE from "three";
 import { BlockRegistry } from "../../../registry/BlockRegistry";
 import { BlockData } from "../../blocks/Block";
-import * as SimplexNoise from "simplex-noise";
 
 export class SimonsRegion extends Region{
 	world:SimonsWorld;

@@ -1,4 +1,4 @@
-import * as SimplexNoise from "simplex-noise";
+import {Noise2D} from "open-simplex-noise";
 import {BlockData} from "../blocks/Block";
 import { regHub } from "../../registry/RegistryHub";
 import { BlockRegistry } from "../../registry/BlockRegistry";
@@ -15,13 +15,13 @@ import { Vector3 } from "three";
 export class BiomeSelector{
 	public reg: BiomeRegistry;
 
-	private noiseGen: SimplexNoise[];
+	private noiseGen: Noise2D[];
 	private cache: Biome[][][][];
 
 	private vLowerBound: Vector3 = new Vector3(0,0,0);
 	private vUpperBound: Vector3 = new Vector3(5,5,5);
 
-	constructor( noiseGen:SimplexNoise[] ){
+	constructor( noiseGen:Noise2D[] ){
 		this.reg = regHub.get("base:biome");
 		this.noiseGen = noiseGen;
 		this.cache = this.createCache();
@@ -51,8 +51,18 @@ export class BiomeSelector{
 		});
 	}
 
+	ngCacheX = 0;
+	ngCacheY = 0;
+	ngCacheV = 0;
+	transitionRes = 1;
+
 	private ng( label: NOISE_GENERATOR_LABELS, x: number, y: number ): number{
-		return Math.round((this.noiseGen[ label ].noise2D( x, y ) + 1)/2 * 4);
+		if( this.ngCacheX != x || this.ngCacheY != y ){
+			this.ngCacheV = Math.round((this.noiseGen[ NOISE_GENERATOR_LABELS.RESOLUTION_1 ]( x*3.5, y*3.5 ) + 1)/2 * this.transitionRes);
+			this.ngCacheX = x;
+			this.ngCacheY = y;
+		}
+		return Math.round((this.noiseGen[ label ]( x, y ) + 1)/2 * (4-this.transitionRes) + this.ngCacheV );
 	}
 
 	public ngTemp( x: number, y: number ): number{
@@ -75,7 +85,7 @@ export class BiomeSelector{
 	 */
 	public ngSelect( bv: Vector3, x: number, y: number ): Biome{
 		const choices: Biome[] = this.cache[bv.x][bv.y][bv.z];
-		const selection: number = Math.floor((this.noiseGen[ NOISE_GENERATOR_LABELS.BIOME_SELECTION ].noise2D( x/500+255000, y/500+255000 ) + 1)/2 * choices.length);
+		const selection: number = Math.floor((this.noiseGen[ NOISE_GENERATOR_LABELS.BIOME_SELECTION ]( x/100, y/100 ) + 1)/2 * choices.length);
 		return choices[selection];
 	}
 

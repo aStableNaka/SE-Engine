@@ -33,11 +33,15 @@ export class World extends Storable{
 	tickInterval: NodeJS.Timeout;
 	tps: number = 0;
 
+	tickComputeTime: number = 0;
+	tickComputeDateLast: number = 0;
+
 	fps: number = 0;
 	frameLastTS: number = 0;
 
 	meshUpdates:number = 6000; // unused
 	
+	ready = false;
 
 
 	constructor( ff:FrostedFlakes ){
@@ -203,6 +207,7 @@ export class World extends Storable{
 	 * 	2 ) Update region states
 	 */
 	tick(): void {
+		this.tickComputeDateLast = new Date().getTime();
 		if(this.tickSkip){
 			this.tickSkip--;
 		}else{
@@ -213,6 +218,7 @@ export class World extends Storable{
 				reg.update(  )
 			}
 		}
+		this.tickComputeTime = new Date().getTime() - this.tickComputeDateLast;
 		this.queueNextTick();
 	}
 }

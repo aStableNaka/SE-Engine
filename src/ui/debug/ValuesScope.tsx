@@ -7,7 +7,9 @@ let divstyle:CSSProperties = {
 	left:"0px",
 	zIndex: 100,
 	color:"#ffffff",
-	backgroundColor:"rgba(0,0,0,0.5)"
+	backgroundColor:"rgba(0,0,0,0.5)",
+	fontFamily: "monospace",
+	fontSize: "8"
 }
 
 export class VMAppendEvent extends Event{
@@ -35,6 +37,8 @@ export type ValuesScopeState = {
 	cursorWSCO?: string;
 	blockData?:string[];
 	tps?: string;
+	tickTime?: string;
+	tickIdle?: string;
 	fps?: string;
 }
 
@@ -79,6 +83,8 @@ export class ValuesScope extends React.Component<{id:string}, ValuesScopeState>{
 				<div>[ Performance ]</div>
 				<div>TPS: {this.state.tps}</div>
 				<div>FPS: {this.state.fps}</div>
+				<div>TickTime: {this.state.tickTime}</div>
+				<div>TickIdle: {this.state.tickIdle}</div>
 				<br/>
 				<div>[ Environment ]</div>
 				<div>Reg-WS-CO: {this.state.regionWSCO}</div>
