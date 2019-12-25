@@ -8,7 +8,7 @@ export interface Ve2{
 export class BoundlessGrid<T> extends Grid<T>{
 	extended:Map<string,T> = new Map<string,T>();
 	generation: (row: number, column: number) => T;
-	constructor( initialSize:number, generation:(x:number,y:number)=>T ){
+	constructor( initialSize:number, generation:(x:number,y:number)=>T, forceInstanciate?:boolean ){
 		super( initialSize, generation );
 		this.generation = generation;
 	}

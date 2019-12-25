@@ -18,6 +18,9 @@ export class BiomeSelector{
 	private noiseGen: SimplexNoise[];
 	private cache: Biome[][][][];
 
+	private vLowerBound: Vector3 = new Vector3(0,0,0);
+	private vUpperBound: Vector3 = new Vector3(5,5,5);
+
 	constructor( noiseGen:SimplexNoise[] ){
 		this.reg = regHub.get("base:biome");
 		this.noiseGen = noiseGen;
@@ -49,7 +52,7 @@ export class BiomeSelector{
 	}
 
 	private ng( label: NOISE_GENERATOR_LABELS, x: number, y: number ): number{
-		return Math.round((this.noiseGen[ label ].noise2D( x, y ) + 1)/2 * 5);
+		return Math.round((this.noiseGen[ label ].noise2D( x, y ) + 1)/2 * 4);
 	}
 
 	public ngTemp( x: number, y: number ): number{
@@ -77,7 +80,7 @@ export class BiomeSelector{
 	}
 
 	public createBiomeVector( x: number, y: number ): Vector3{
-		return new Vector3( this.ngTemp( x, y ), this.ngWet( x, y ), this.ngFert( x, y ) );
+		return new Vector3( this.ngTemp( x, y ), this.ngWet( x, y ), this.ngFert( x, y ) );//.clamp(this.vLowerBound, this.vUpperBound);
 	}
 
 	generate( x: number, y: number, zLevel: number ): BlockData{

@@ -31,6 +31,7 @@
     "bootstrap": "^4.4.1",
     "jest-config": "^24.9.0",
     "jest-coverage-badges": "^1.1.2",
+    "open-simplex-noise": "^2.2.0",
     "react": "^16.12.0",
     "react-bootstrap": "^1.0.0-beta.16",
     "react-dom": "^16.12.0",

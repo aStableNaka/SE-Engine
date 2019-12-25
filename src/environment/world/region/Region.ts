@@ -115,6 +115,18 @@ export class Region extends Storable{
 		}, this);
 	}
 
+	public forceMeshReconstruct(){
+		(<ModelInstanceData[]>Object.values(this.modelData)).map((modelInstanceData:ModelInstanceData)=>{
+			let constructedMesh = this.meshGroup.children.find((o3d)=>o3d.name==modelInstanceData.modelKey);
+			if(constructedMesh){
+				this.meshGroup.remove(constructedMesh);
+				//console.log(constructedMesh);
+			}
+			this.constructModelMesh( modelInstanceData );
+			modelInstanceData.needsUpdate = false;
+		}, this);
+	}
+
 	/**
 	 * Iterates through model data searching for model instances that need updating.
 	 */

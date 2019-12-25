@@ -10,6 +10,7 @@ import { Vector2, Vector3 } from "three";
 import {KeyboardControlManager} from "../../controls/Keyboard";
 import { any, object } from "prop-types";
 import * as SimplexNoise from "simplex-noise";
+import { makeNoise2D } from "open-simplex-noise";
 import { BlockData } from "../blocks/Block";
 import { regHub } from "../../registry/RegistryHub";
 import { BlockRegistry } from "../../registry/BlockRegistry";
@@ -46,7 +47,7 @@ export class SimonsWorld extends World{
 	enableDebugHelpers:boolean = true;
 
 	worldSize=2;
-	chunkSize=16;
+	chunkSize=32;
 	viewAngle:number = 35;
 	worldDomain:THREE.Box2;
 	center: THREE.Vector2;
@@ -101,7 +102,7 @@ export class SimonsWorld extends World{
 
 		this.regions = new BoundlessGrid<Region>(this.worldSize,(y,x)=>{
 			return self.instantiateRegion(x,y);
-		});
+		}, true);
 		
 		this.setupImrHelper();
 		this.setupMouseControls();
@@ -471,7 +472,7 @@ export class SimonsWorld extends World{
 			let region = this.getRegionAtVec2( this.player.position );
 			let valueScope = this.mmle<ValuesScope>( this.debugTools.valuesScope );
 			const chp = this.cursorHelper.position
-			
+
 			let debugState:ValuesScopeState = {
 				tps: `${this.tps.toFixed(2).padEnd(12, ' ')} ${( 1000/this.tps ).toFixed(2)}ms/${1000/this.desiredTPS}ms    #${this.tickCount}`,
 				fps:`${this.fps}`,
@@ -480,7 +481,10 @@ export class SimonsWorld extends World{
 				})
 			};
 
-			if(region) debugState.regionWSCO = `${region.position.x} , ${region.position.y}`;
+			if(region){
+				debugState.regionWSCO = `${region.position.x} , ${region.position.y}`;
+				region.forceMeshReconstruct();
+			}
 			if(this.cursorHelper) debugState.cursorWSCO = `${chp.x} , ${chp.z}`;
 			
 			if( valueScope ){
