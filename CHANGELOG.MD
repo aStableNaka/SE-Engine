@@ -11,4 +11,20 @@
 - Migrated controls to ControlRouter, ControlBehavior, CursorBehavior. *To delegate the action responsibilities of user inputs based on game-state*
 - Added BlockBoundingBox
 - Added failsafes to TaskDenominators. *TickTasks now have a limit on how many times they can fail before they are ignored by the TickScheduler*
-- 
+- Added TickAnalytics. *The TickScheduler can now enable analytics for certain ScheduledTickTasks*
+- Added boundingBox to Block abstract class
+- Changed BlockVariantData.data from an integer an object. *This was to accompany the storage of block rotation data*
+- All BlockData now contains a rotation property. *It is a float that represents the block's vertical axis rotation in radians*
+- Entity absract class now has a addToWorld method, invoked when the entity is *added to the world*.
+- SimonsWorld controls have been moved
+- ControlRouter performs a tick before rendering.
+- World has a new method, getBlockModelTransform, which returns a vector4 describing a blocks rendered transformation.*This is used by the renderer and also by the cursor to mimic ray tracing with a cursor*. *I know it's a hack, but what can I do when the THREE library doesn't want to cooperate?*
+- GLTFModels now support a static "shadow"
+- IndividualModels added. *IndividualModels are models that cannot be instanced. These models should be used sparingly since they can cause significant rendering performance issues.*
+- Models now have the option of having a raycastable. A raycastable allows precise cursor interaction with a model. For models where no raycastable is needed, there is a flag in ModelOptions that can be set to true named "noRaycasting".
+- UniformModels updated to accompany the addition of static shadows.
+- Hello my name is naka gaming
+- ModelRegistry updated to detect discriminators in model names
+- Created AlwaysMap, which is a map that will always return a valid value. If a value does not exist in the map, it will initialize a new one based on a function
+- Bloons tower defense 2 is the most revolutionary game of our generation.
+- Updated Electron to display the window ion kisok mode.
