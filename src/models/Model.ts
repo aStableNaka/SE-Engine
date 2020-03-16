@@ -11,7 +11,9 @@ export type ModelOptions = {
 	usesInstancing?:boolean;
 	zOffset?:number;
 	blending?:THREE.Blending;
-	depthWrite?:boolean
+	depthWrite?:boolean,
+	boundingBoxGeom?:THREE.BufferGeometry,
+	noRaycasting?:boolean,
 };
 
 /**
@@ -55,6 +57,29 @@ export class ModelInstancedMesh extends THREE.InstancedMesh{
 }
 
 /**
+ * RayCastAble (RCAble)
+ */
+export class RCAble{
+	mesh: THREE.Mesh;
+	available: boolean;
+	model!: Model;
+
+	constructor( mesh:THREE.Mesh,model:Model, available:boolean=true ){
+		this.mesh = mesh;
+		this.available = available;
+		this.model = model;
+		this.mesh.name = this.model.name+"&ci";
+	}
+
+	/**
+	 * Must be called after raycastable is no longer in use
+	 */
+	returnToModel(){
+		this.available = true;
+	}
+}
+
+/**
  * This is for basic models that are composed of a single mesh
  */
 export class Model{
@@ -63,13 +88,70 @@ export class Model{
 	public mesh!:THREE.Mesh;
 	public options: ModelOptions;
 
+	/**
+	 * Raycastable meshes
+	 */
+	public rcAbles: RCAble[] = [];
+	public rcMaterial = new THREE.MeshBasicMaterial( { color:0x00ff00, transparent:true, opacity:0.5 });
+
 	constructor(name: string, options?: ModelOptions){
 		this.name = name;
 		this.options = options || {};
 	}
 
+	/**
+	 * For the sake of less constructor parameters
+	 * @param registry 
+	 */
 	assignRegistry(registry:ModelRegistry){
 		this.registry = registry;
+	}
+
+	/**
+	 * Create a clone of the current mesh's geometry.
+	 * 
+	 * Create an empty geometry if this model
+	 * does not have a mesh.
+	 */
+	cloneGeometry(){
+		if(this.mesh){
+			return this.mesh.geometry.clone();
+		}else{
+			return new THREE.BufferGeometry();
+		}
+	}
+
+	/**
+	 * @abstract
+	 * @override
+	 */
+	createRcMesh(){
+		return new THREE.Mesh(
+			this.options.noRaycasting ?
+			new THREE.BufferGeometry() :
+			( this.options.boundingBoxGeom || this.cloneGeometry()),
+		this.rcMaterial );
+	}
+
+	/**
+	 * Borrow a raycastable mesh. RCAbles are re-used
+	 * because creating new ones is expensive
+	 */
+	borrowRaycastable(){
+		let rcAble = this.rcAbles.find(( rca )=>{ return rca.available; });
+		if(!rcAble){
+
+			// This is a check for blocks that have no assigned mesh
+			if(!this.mesh){
+				this.mesh = new THREE.Mesh(new THREE.BufferGeometry(),this.rcMaterial);
+			}
+
+
+			rcAble = new RCAble( this.createRcMesh(), this, false );
+			this.rcAbles.push(rcAble);
+		}
+		rcAble.available = false;
+		return rcAble;
 	}
 
 	/**

@@ -20,10 +20,12 @@ export class Entity{
 		this.position = new THREE.Vector2(0,0);
 		this.meshMissing.position.set(0,0,0);
 		this.meshMissing.matrixWorldNeedsUpdate = true;
-		this.meshGroup.add( this.meshMissing );
 		this.world = world;
+	}
 
-		world.ff.add(this.meshGroup);
+	addToWorld(){
+		this.meshGroup.add( this.meshMissing );
+		this.world.ff.add(this.meshGroup);
 	}
 
 	move( vec2:THREE.Vector2 ){

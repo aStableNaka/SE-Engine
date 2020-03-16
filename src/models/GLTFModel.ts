@@ -11,6 +11,7 @@ export class GLTFModel extends Model{
 	resource!:GLTFResource;
 	gltf!:GLTF;
 	resourcePath:string;
+	shadowMesh: THREE.Mesh | undefined;
 	constructor( name: string, resourcePath: string, options?: ModelOptions){
 		console.log(options);
 		super( name, options );
@@ -33,6 +34,15 @@ export class GLTFModel extends Model{
 		let g  = this.mesh.geometry.clone();
 		this.convertToFloat32Attribute(<THREE.BufferGeometry>g);
 		return <THREE.BufferGeometry>g;
+	}
+
+	cloneShadowGeometry(): THREE.BufferGeometry | undefined{
+		if(this.shadowMesh){
+			let g  = this.shadowMesh.geometry.clone();
+			this.convertToFloat32Attribute(<THREE.BufferGeometry>g);
+			return <THREE.BufferGeometry>g;
+		}
+		return;
 	}
 
 	setBoundingSphere( mesh:THREE.Mesh ){
@@ -60,10 +70,8 @@ export class GLTFModel extends Model{
 
 	defaultHandleModelLoaded( data:GLTF,resource:Resource ){
 		this.gltf = data;
-		this.mesh = <THREE.Mesh>data.scene.children.filter((obj3d)=>{ return obj3d.type=="Mesh";})[0];
-		if(this.options.scale){
-			this.mesh.scale
-		}
+		this.mesh = <THREE.Mesh>data.scene.children.filter((obj3d)=>{ return obj3d.type=="Mesh" && obj3d.name!='shadow';})[0];
+		this.shadowMesh = <THREE.Mesh>data.scene.children.filter((obj3d)=>{ return obj3d.type=="Mesh" && obj3d.name=='shadow';})[0];
 		if(!this.mesh) throw new Error(`[Model] Mesh could not be found within scene of ${this.resourcePath} ${data}`);
 	}
 

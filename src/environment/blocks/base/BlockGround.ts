@@ -13,10 +13,10 @@ export class BlockGround extends BlockFactory{
 		if(variant==null || variant==undefined){
 			variant = Math.floor(Math.random()*16);
 		}
-		return new BlockVariantData( this, variant );
+		return new BlockVariantData( this, variant, 0 );
 	}
 
 	static getModelKey( blockData:BlockVariantData ):string{
-			return `${this.model}:${blockData.data%(16*16)}`;
+			return `${this.model}:${blockData.data.variant%(16*16)}`;
 	}
 }

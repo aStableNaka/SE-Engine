@@ -20,7 +20,6 @@ export const KIDModGen = {
  * keyboardManager.addListener(65, ()=>{console.log("A is being held"), true}) // a
  */
 export class KeyboardControlManager{
-	public target: HTMLElement;
 	public shift: boolean = false;
 	public alt: boolean = false;
 	public ctrl: boolean = false;
@@ -29,10 +28,8 @@ export class KeyboardControlManager{
 	private keysDown: any={};
 	private handlers: Map<KeyCode, KbHandlerContainer>= new Map<KeyCode, KbHandlerContainer>();
 	
-	constructor( target: HTMLElement ){
-		this.target = target;
-		target.addEventListener("keydown",this.handleKeyDown.bind(this));
-		target.addEventListener("keyup",this.handleKeyUp.bind(this));
+	constructor(){
+	
 	}
 
 	/**
@@ -66,7 +63,7 @@ export class KeyboardControlManager{
 		return event.keyCode;
 	}
 
-	private handleKeyDown( event: KeyboardEvent ): void{
+	public handleKeyDown( event: KeyboardEvent ): void{
 		let keyCode = event.keyCode;
 		this.shift = event.shiftKey;
 		this.alt = event.altKey;
@@ -81,7 +78,7 @@ export class KeyboardControlManager{
 		}
 	}
 
-	private handleKeyUp( event: KeyboardEvent ): void{
+	public handleKeyUp( event: KeyboardEvent ): void{
 		let keyCode = event.keyCode;
 		this.shift = event.shiftKey;
 		this.alt = event.altKey;

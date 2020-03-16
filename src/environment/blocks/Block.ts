@@ -1,9 +1,7 @@
 import { MapObject } from '../MapObject';
 import { Storable } from '../../io/Storable';
 import { baseClass as BlockBaseClass } from '../../utils/Classes';
-import * as Space from '../../utils/Spaces';
-import * as Regions from '../world/region/Region';
-import { BlockRegistry } from '../../registry/BlockRegistry';
+import { BlockBoundingBox } from "../../controls/cursor/BlockBoundingBox";
 import * as THREE from 'three';
 import { Vector3 } from 'three';
 
@@ -25,6 +23,10 @@ export class BlockFactory extends Storable{
 	static material:string = "base:mat:none";
 	static model: string = "base:model:none";
 	static noModel:boolean = true;
+	
+	
+	static boundingBox: BlockBoundingBox = new BlockBoundingBox( new THREE.Vector3(1,1,1) );
+	
 	/**
 	 * Create a new block instance. Unique
 	 * static blocks share a single instance,
@@ -98,6 +100,7 @@ export class BlockData extends Storable{
 	data: any;
 	matrixIndex:number = 0;
 	position!: THREE.Vector3;
+
 	constructor( baseClass:BlockBaseClass, data?:any ){
 		super();
 		this.baseClass = baseClass;

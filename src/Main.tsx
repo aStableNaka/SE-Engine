@@ -20,7 +20,7 @@ export class Main extends React.Component<{},{world:SimonsWorld|null}>{
 	componentDidMount(){
 		this.setState({world:null});
 		this.debug = {
-			valuesScope:this.valuesScope
+			valuesScopeRef:this.valuesScope
 		}
 	}
 

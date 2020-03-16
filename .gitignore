@@ -40,3 +40,5 @@ wasm-pack.log
 /src/**/*.js
 progress/*
 /.vscode
+license.txt
+.vscode/settings.json

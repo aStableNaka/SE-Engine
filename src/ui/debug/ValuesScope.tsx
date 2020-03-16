@@ -33,22 +33,42 @@ export class VMSetEvent extends Event{
 
 export type ValuesScopeState = {
 	list?: string[];
-	regionWSCO?: string;
-	cursorWSCO?: string;
+	/**
+	 * WSC ( World Space Coordinates )
+	 */
+	regionWSC?: string;
+	/**
+	 * WSC ( World Space Coordinates )
+	 */
+	cursorWSC?: string;
+	/**
+	 * The blockData of the block that the cursor is hovered over
+	 */
 	blockData?:string[];
-	tps?: string;
+	/**
+	 * The amount of time it takes to execute a single tick
+	 */
 	tickTime?: string;
+	/**
+	 * How much time is between ticks, where nothing is happening
+	 */
 	tickIdle?: string;
+	tps?: string;
 	fps?: string;
 }
 
 // A magic casting mechanic where holding down the button drains more mana, but scales the effect
+
+/**
+ * ValuesScope is a mini window react compoent that displays values to provide real-time polled
+ * data
+ */
 export class ValuesScope extends React.Component<{id:string}, ValuesScopeState>{
 	constructor(props:any){
 		super(props);
 		this.state = {
-			regionWSCO:"",
-			cursorWSCO:"",
+			regionWSC:"",
+			cursorWSC:"",
 			tps: "",
 			fps: "",
 			blockData: []
@@ -87,8 +107,8 @@ export class ValuesScope extends React.Component<{id:string}, ValuesScopeState>{
 				<div>TickIdle: {this.state.tickIdle}</div>
 				<br/>
 				<div>[ Environment ]</div>
-				<div>Reg-WS-CO: {this.state.regionWSCO}</div>
-				<div>Cur-WS-CO: {this.state.cursorWSCO}</div>
+				<div>Reg-WS-CO: {this.state.regionWSC}</div>
+				<div>Cur-WS-CO: {this.state.cursorWSC}</div>
 				<br/>
 				<div>[ Block Data ]</div>
 				<div>{(this.state.blockData||[]).map((str:string)=>{

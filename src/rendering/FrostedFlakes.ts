@@ -32,6 +32,22 @@ export class FrostedFlakes extends THREE.Scene{
 		this.background = new THREE.Color(0x000000);
 		this.add(this.camera);
 		this.renderer.setSize( this.width, this.height );
+		this.renderer.gammaInput = true;
+		this.renderer.gammaOutput = true;
+
+		/**
+		this.renderer.shadowMap.enabled = true;
+		this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+		const directionalLight = new THREE.DirectionalLight( 0xffffff, 1);
+		directionalLight.castShadow = true;
+
+		directionalLight.position.set(5,100,5);
+
+		this.add( directionalLight );
+		*/
+
+		//this.renderer.toneMapping = THREE.NoToneMapping
 		if( !container ){ container = document.body; }
 		this.container = container;
 		container.appendChild( this.renderer.domElement );

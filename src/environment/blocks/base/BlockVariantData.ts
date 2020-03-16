@@ -3,9 +3,11 @@ import { baseClass as BlockBaseClass } from '../../../utils/Classes';
 
 export class BlockVariantData extends BlockData{
 	/** The texture variant */
-	public data: number;
-	constructor( baseClass:BlockBaseClass, variant?:any ){
+	constructor( baseClass:BlockBaseClass, variant?:number, rotation?:number ){
 		super( baseClass );
-		this.data = variant;
+		this.data = {
+			variant: variant,
+			rotation: (typeof(rotation) == "number") ? rotation : Math.random()*Math.PI*2
+		};
 	}
 }

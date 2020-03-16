@@ -1,9 +1,9 @@
-import * as Biome from "./Biome";
+import * as Biome from "../Biome";
 import {Noise2D} from "open-simplex-noise";
 import { Vector3 } from "three";
-import { BlockData } from "../blocks/Block";
+import { BlockData } from "../../blocks/Block";
 
-export class BiomeTemprateGrasslands extends Biome.Biome{
+export class BiomeGrasslands extends Biome.Biome{
 
 	private pondFactor: number = 0.9;
 
@@ -30,7 +30,7 @@ export class BiomeTemprateGrasslands extends Biome.Biome{
 	 */
 	public generateLayer1( x: number, y: number, noiseGen:Noise2D[] ): BlockData{
 		let block;
-		if(Math.random()<0.5){
+		if(Math.random()<0.3){
 			// Foliage
 			block = this.br.createBlockData( "base:BlockFoliage" );
 		}else{

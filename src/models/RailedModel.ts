@@ -25,10 +25,8 @@ export class RailedModel extends UniformModel{
 	 * @param positions 
 	 * @param discriminator 
 	 */
+	/*
 	construct_instanced( positions:THREE.Vector4[], discriminator:number=0 ):THREE.Object3D{
-		/**
-		 * @note when using InstancedMesh, the reference geometry has to be cloned.
-		 */
 		let clonedGeom = this.cloneGeometry();
 		let mesh = new THREE.InstancedMesh( clonedGeom, this.materials[0] || this.mesh.material,positions.length );
 		positions.map(( vec4:THREE.Vector4, i:number )=>{
@@ -40,5 +38,5 @@ export class RailedModel extends UniformModel{
 
 		mesh.instanceMatrix.needsUpdate = true;
 		return mesh;
-	}
+	}*/
 }

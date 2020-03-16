@@ -5,11 +5,7 @@ import { baseClass as BlockBaseClass } from '../../../../utils/Classes';
 
 export class BlockVariantFoliageData extends BlockVariantData{
 	constructor( baseClass:BlockBaseClass, variant?:any ){
-		super( baseClass, variant );
-	}
-
-	getRotation(){
-		return Math.random()*Math.PI;
+		super( baseClass, variant, Math.random()*Math.PI*2 );
 	}
 }
 
@@ -25,7 +21,7 @@ export class BlockFoliage extends BlockFactory{
 	}
 
 	static getModelKey( blockData:BlockVariantFoliageData ):string{
-		return `base:model:FoliageSix:${ blockData.data }`;
+		return `base:model:FoliageSix:${ blockData.data.variant }`;
 		//return `${this.model}:${blockData.data||0}`;
 	}
 }

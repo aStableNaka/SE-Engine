@@ -1,7 +1,7 @@
-import * as Biome from "./Biome";
+import * as Biome from "../Biome";
 import {Noise2D} from "open-simplex-noise";
 import { Vector3 } from "three";
-import { BlockData } from "../blocks/Block";
+import { BlockData } from "../../blocks/Block";
 
 export class BiomeCherryBlossomForest extends Biome.Biome{
 

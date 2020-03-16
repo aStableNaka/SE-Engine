@@ -1,7 +1,7 @@
-import * as Biome from "./Biome";
+import * as Biome from "../Biome";
 import {Noise2D} from "open-simplex-noise";
 import { Vector3 } from "three";
-import { BlockData } from "../blocks/Block";
+import { BlockData } from "../../blocks/Block";
 
 export class BiomeRocklands extends Biome.Biome{
 
@@ -19,7 +19,7 @@ export class BiomeRocklands extends Biome.Biome{
 	 * Floor layer
 	 */
 	public generateLayer0( x: number, y: number, noiseGen:Noise2D[] ): BlockData{
-		let block = this.br.createBlockData( "base:BlockGround", 17 );
+		let block = this.br.createBlockData( "base:BlockGround", 3 );
 		return block;
 	}
 

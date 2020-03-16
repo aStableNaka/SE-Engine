@@ -37,6 +37,7 @@ export class ModelRegistry implements Registry{
 	}
 
 	get(key:string){
+		key = key.split(":")[0]; // In case the model key has a discriminiator
 		if(!this.entries.has(key)){
 			throw new Error(`[ModelRegistry] model:${key} is not registered.`);
 		}

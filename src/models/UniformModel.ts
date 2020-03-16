@@ -66,10 +66,14 @@ export class UniformModel extends GLTFModel{
 		if(this.options.scale){
 			console.log(`[Model:${this.name}] rescaling ${this.options.scale}`);
 			this.mesh.geometry.scale(this.options.scale,this.options.scale,this.options.scale);
+			if(this.shadowMesh){
+				this.shadowMesh.geometry.scale(this.options.scale,this.options.scale,this.options.scale);
+			}
 		}
 		this.convertToFloat32Attribute( <THREE.BufferGeometry>this.mesh.geometry );
 		this.generateVariations();
 	}
+
 
 	/**
 	 * Create a mesh using instancing.
@@ -82,13 +86,41 @@ export class UniformModel extends GLTFModel{
 		 * @note when using InstancedMesh, the reference geometry has to be cloned.
 		 */
 		const clonedGeom = this.cloneGeometry();
-		const mesh = new ModelInstancedMesh( clonedGeom, this.materials[discriminator] || this.mesh.material,positions.length );
+		const shadowGeom = this.cloneShadowGeometry();
+		const mesh = new ModelInstancedMesh( clonedGeom, this.materials[discriminator] || this.mesh.material, positions.length );
+		let shadowMesh: ModelInstancedMesh | undefined;
+		if( shadowGeom && this.shadowMesh ){
+			shadowMesh = new ModelInstancedMesh( shadowGeom, this.shadowMesh.material, positions.length );
+			shadowMesh.name = `${this.name}_shadow:${discriminator}`
+		}
+
 		positions.map(( vec4:THREE.Vector4, i:number )=>{
-			mesh.setMatrixAt(i, this.getLocalTransform(vec4));
+			const localTransform = this.getLocalTransform(vec4);
+			mesh.setMatrixAt(i, localTransform );
+			if( shadowMesh ){
+				shadowMesh.setMatrixAt( i, localTransform );
+			}
 		}, this);
+
 		mesh.name = `${this.name}:${discriminator}`;
 		this.setBoundingSphere( mesh );
 		mesh.instanceMatrix.needsUpdate = true;
+
+		if( shadowMesh ){
+			const mat = (<THREE.Material>shadowMesh.material);
+			this.setBoundingSphere( shadowMesh );
+			shadowMesh.instanceMatrix.needsUpdate = true;
+			//mat.blending = THREE.MultiplyBlending;
+			mat.depthWrite = false;
+			mat.transparent = true;
+			mat.opacity = 0.7;
+			mat.side = THREE.DoubleSide;
+			const group = new THREE.Group();
+			group.add(mesh);
+			group.add(shadowMesh);
+			return group;
+		}
+
 		return mesh;
 	}
 

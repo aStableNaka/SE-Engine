@@ -6,11 +6,19 @@ import { Grid } from "../../utils/Spaces";
 import { object } from "prop-types";
 import { TickScheduler } from "../TickScheduler"; 
 import { BlockData } from "../blocks/Block";
-import { Vector2 } from "three";
+import { Vector2, Vector3, Vector4 } from "three";
 import { Layer } from "./region/Layer";
+import { regHub } from "../../registry/RegistryHub";
+import { Model } from "../../models/Model";
 
-function mod( x:number, c:number ){
-	return ( x % c + c ) % c;
+/**
+ * True modulo. For all operations of x mod m
+ * where x is any real number.
+ * @param x number 
+ * @param m modulo
+ */
+function mod( x:number, m:number ){
+	return ( x % m + m ) % m;
 };
 
 
@@ -171,6 +179,38 @@ export class World extends Storable{
 	}
 
 	/**
+	 * Get a block's visual transform ( tx, ty, tz, ry );
+	 * @param location Location vector( x, y, zLayer)
+	 */
+	getBlockModelTransform( location: THREE.Vector3 ): THREE.Vector4;
+
+	/**
+	 * Get a block's visual transform ( tx, ty, tz, ry );
+	 * @param x x Location
+	 * @param y y location
+	 * @param layerZ vertical location
+	 */
+	getBlockModelTransform( x: number , y: number, layerZ: number ): THREE.Vector4;
+	
+	getBlockModelTransform( numOrVectX: number | THREE.Vector3, yOrNull?:number, layerZorNull?:number ): Vector4{
+		let [x,y,z] = [0,0,0];
+		if( numOrVectX instanceof Vector3 ){
+			[x,y,z] = numOrVectX.toArray();
+		}else if( numOrVectX && yOrNull && layerZorNull ){
+			[x,y,z] = [numOrVectX,yOrNull,layerZorNull]
+		}
+		// Grab z-offset and rotation of the block
+		const block = this.getBlock(x, y, z);
+		let [tz, ry] = [0,0]
+		if(block){
+			const model = <Model>(regHub.get( block.getModelKey() )) || {options:{}};
+			[tz,ry] = [ model.options.zOffset || 0, block.getRotation() ];
+		}
+
+		return new Vector4( x, y, z+tz, ry);
+	}
+
+	/**
 	 * Get a list of all blocks spanning the z (vertical) axis
 	 * of a particular location
 	 * @param x 
@@ -178,8 +218,7 @@ export class World extends Storable{
 	 */
 	getBlockColumn( x:number, y:number ):BlockData[]{
 		let region = this.getRegionAtVec2(new Vector2(x,y));
-		x = mod(x, this.chunkSize);
-		y = mod(y, this.chunkSize);
+		[x, y] = [ mod(x, this.chunkSize), mod(y, this.chunkSize)];
 		if(region){
 			return <BlockData[]> region.layers.map(( layer:Layer, i:number )=>{
 				return ( <Region> region ).getBlock(x,y,i);
@@ -196,9 +235,12 @@ export class World extends Storable{
 		this.regionUpdateQueue.push(region);
 		
 		// World space to region space conversion
-		x = mod(x, this.chunkSize);
-		y = mod(y, this.chunkSize);
+		[x, y] = [ mod(x, this.chunkSize), mod(y, this.chunkSize)];
 		region.setBlock(blockData,x,y,layerZ);
+
+		// Lets the block know that it is placed
+		// in the world
+		blockData.blockDidMount( {position: new Vector3( x, y, layerZ)} );
 	}
 
 	/**
@@ -213,9 +255,9 @@ export class World extends Storable{
 		}else{
 			this.update();
 			while(this.regionUpdateQueue.length){
-				let reg = this.regionUpdateQueue.pop();
-				if(!reg) return;
-				reg.update(  )
+				let region = this.regionUpdateQueue.pop();
+				if(!region) return;
+				region.update()
 			}
 		}
 		this.tickComputeTime = new Date().getTime() - this.tickComputeDateLast;

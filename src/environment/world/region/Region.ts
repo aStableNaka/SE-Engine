@@ -38,29 +38,68 @@ export class RegionEventEmitter extends EventEmitter{
 const placeHolderMeshMaterial = new THREE.MeshBasicMaterial({color:0xffffff});
 
 /**
- * @property lightGrid : grid<number>
- * - a grid where each element is the depth (layer-index) in which the block at the local
- * coordinate ( region(x,y)->grid(x,y) ) has direct LOS ( line of sight ) with the sky
+ * A high level container for partitioning blocks
  */
 export class Region extends Storable{
+	/**
+	 * The region position in world space coordinates, assigned by the world generator
+	 */
 	position: THREE.Vector2;
+
+	/**
+	 * A mesh group that contains everything in the region, for ease of transformation
+	 * and render partitioning
+	 */
 	meshGroup: RegionMesh;
 	dictionary: Dictionary = new Dictionary();
+
+	/**
+	 * Used to determine if a block has LOS of the "sky" and other tidbits
+	 */
 	lightGrid!: Grid<number>;
 	layers: Layer[] = [];
+
+	/**
+	 * Entities that enter this region will be "transfered" from their previous region, to this region
+	 */
 	entities: any[] = [];
+
+	/**
+	 * Contains all actor blocks located within this region for ease of iteration
+	 * 
+	 * Actor blocks are defined as blocks that are autonomous and can perform
+	 * their own operations on any determined tick basis
+	 */
 	actorBlocks: MapObject[] = [];
 	eventEmitter:RegionEventEmitter = new RegionEventEmitter();
+
+	/**
+	 * A reference to the parent world object
+	 */
 	world:World;
+
+	/**
+	 * The width and length of a region
+	 */
 	size: number;
+
+
 	requiresUpdate:boolean=true;
-	requiresMeshUpdate:boolean=true;
+	requiresMeshUpdate:boolean=true; // Used for initialization
 	updateQueued:boolean = true;
 	modelData:any = {};
 
+	/**
+	 * Ideally, this region will not be used until this is true
+	 */
 	loaded:boolean=false;
 	modified:boolean=false;
 
+	/**
+	 * A mesh that serves as a non-null value for the scene to render in place
+	 * of the region's meshGroup in case the renderer decides to act before
+	 * the meshGroup is generated
+	 */
 	placeHolderMesh:THREE.Mesh;
 
 	/**
@@ -84,6 +123,7 @@ export class Region extends Storable{
 		this.placeHolderMesh = new THREE.Mesh(new THREE.BoxBufferGeometry(this.world.chunkSize, 1, this.world.chunkSize), placeHolderMeshMaterial);
 		this.placeHolderMesh.name = "placeholder";
 		this.generateTerrain();
+		//this.constructMesh();
 	}
 
 	addToWorld(){
@@ -99,7 +139,7 @@ export class Region extends Storable{
 	meshUpdate(){}
 
 	/**
-	 * Looks for constructed model
+	 * Reconstructs modelMeshes that have been updated
 	 */
 	private reconstructModelMeshGroups(): void{
 		(<ModelInstanceData[]>Object.values(this.modelData)).map((modelInstanceData:ModelInstanceData)=>{
@@ -115,6 +155,10 @@ export class Region extends Storable{
 		}, this);
 	}
 
+	/**
+	 * Forces reconstruction of all modelMeshes. Useful for when modelMeshes
+	 * break, but also very expensive.
+	 */
 	public forceMeshReconstruct(){
 		(<ModelInstanceData[]>Object.values(this.modelData)).map((modelInstanceData:ModelInstanceData)=>{
 			let constructedMesh = this.meshGroup.children.find((o3d)=>o3d.name==modelInstanceData.modelKey);
@@ -155,6 +199,12 @@ export class Region extends Storable{
 		Region manipulation
 	*/
 
+	/**
+	 * Get a block at a specific location in world-space
+	 * @param x 
+	 * @param y 
+	 * @param z 
+	 */
 	getBlock( x:number, y:number, z:number ):BlockData|null{
 		return this.layers[z].getBlock(x,y);
 	}
@@ -173,6 +223,9 @@ export class Region extends Storable{
 		this.requestUpdate()
 	}
 
+	/**
+	 * Clears every child of the meshGroup
+	 */
 	clearMeshGroup(){
 		while(this.meshGroup.children.length){
 			this.meshGroup.remove(this.meshGroup.children[0]);
@@ -193,6 +246,7 @@ export class Region extends Storable{
 	 * @optimize
 	 */
 	constructMesh():void{
+		if(!this.requiresMeshUpdate){ return; }
 		this.modelData = {};
 		this.clearMeshGroup();
 		this.layers.map((layer)=>{
@@ -205,7 +259,10 @@ export class Region extends Storable{
 		(<ModelInstanceData[]>Object.values(this.modelData)).map((modelInstanceData)=>{
 			this.constructModelMesh(modelInstanceData);
 		}, this);
+		this.loaded = true;
 		//this.meshGroup.remove(this.placeHolderMesh);
+
+		this.requiresMeshUpdate = false;
 	}
 
 	/**

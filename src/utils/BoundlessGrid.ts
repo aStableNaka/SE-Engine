@@ -7,16 +7,23 @@ export interface Ve2{
 
 export class BoundlessGrid<T> extends Grid<T>{
 	extended:Map<string,T> = new Map<string,T>();
-	generation: (row: number, column: number) => T;
+	generationSubroutine: (row: number, column: number) => T;
+	temp: T[] = [];
 	constructor( initialSize:number, generation:(x:number,y:number)=>T, forceInstanciate?:boolean ){
 		super( initialSize, generation );
-		this.generation = generation;
+		this.generationSubroutine = generation;
+	}
+
+	private generation( row: number, column: number ): T{
+		const val = this.generationSubroutine( row, column );
+		this.temp.push(val);
+		return val;
 	}
 
 	private gS( row:number, column:number ){
 		return `${row}_${column}`;
 	}
-
+	
 	/**
 	 * Generate a new entry using the same generation
 	 * rules defined during grid construction.

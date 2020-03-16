@@ -7,7 +7,8 @@ function createWindow(){
 		webPreferences:{
 			nodeIntegration:true
 		},
-		//frame:false /** Enable for distribution */
+		kiosk: true,
+		frame:false /** Enable for distribution */
 	})
 	
 	window.loadFile("index.html");
