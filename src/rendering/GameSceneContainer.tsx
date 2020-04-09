@@ -2,9 +2,10 @@ import React, { CSSProperties } from 'react';
 import {FrostedFlakes} from "./FrostedFlakes";
 import { SimonsWorld } from '../environment/world/SimonsWorld';
 import {regHub} from "../registry/RegistryHub";
+import { GameController } from '../GameController';
 
 export type GPVProps = {
-	setWorld:(world:SimonsWorld)=>void
+	setController:( gameScene: FrostedFlakes )=> GameController;
 }
 
 /**
@@ -19,6 +20,7 @@ export class GameSceneContainer extends React.Component<GPVProps>{
 		top: '0px',
 		left: '0px',
 	}
+	gameController!: GameController;
 
 	constructor(props:GPVProps){
 		super(props);
@@ -30,13 +32,17 @@ export class GameSceneContainer extends React.Component<GPVProps>{
 	}
 
 	componentDidMount() {
+		/**
+		 * Load order:
+		 * RegHub/Assets
+		 * Interface
+		 * GameScene
+		 * World
+		 */
 		regHub.load((()=>{
 			if(this.mount!=undefined){
 				this.gameScene = new FrostedFlakes( this.mount );
-				this.world = new SimonsWorld(this.gameScene);
-				this.world.tick();
-				this.world.render();
-				this.props.setWorld(this.world);
+				this.gameController = this.props.setController( this.gameScene );
 			}
 		}).bind(this));
 	}

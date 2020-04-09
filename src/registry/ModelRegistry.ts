@@ -1,7 +1,3 @@
-/**
- * @todo finish this, I will finally have a working rendered world
- */
-
 import {Registry} from "./Registry";
 import {GLTFResource} from "../loader/GLTFResource";
 import {ResourceLoader} from "../loader/ResourceLoader";

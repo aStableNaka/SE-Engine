@@ -4,9 +4,16 @@ import { regHub } from "../../registry/RegistryHub";
 import { BlockRegistry } from "../../registry/BlockRegistry";
 import { BiomeRegistry } from "../../registry/BiomeRegistry";
 import { Biome, NOISE_GENERATOR_LABELS } from "./Biome";
-import { CreateSuperSpace, getSpaceDepth } from "../../utils/Spaces";
+import { CreateSuperSpace, getSpaceDepth } from "../../utils/collections/Spaces";
 import { BiomeOverlap } from "../../registry/BiomeRegistry";
 import { Vector3 } from "three";
+import { Verbose } from "../../utils/Verboosie";
+
+/**
+ * Ailias to NOISE_GENERATOR_LABELS
+ */
+const NGL = NOISE_GENERATOR_LABELS;
+type NGL = NOISE_GENERATOR_LABELS;
 
 /**
  * Helper to determine which biome generation rules to invoke
@@ -25,7 +32,7 @@ export class BiomeSelector{
 		this.reg = regHub.get("base:biome");
 		this.noiseGen = noiseGen;
 		this.cache = this.createCache();
-		console.log(getSpaceDepth(this.cache));
+		Verbose.log( getSpaceDepth(this.cache), 'BiomeSelector#Enviroment', 0xf );
 	}
 
 	/**
@@ -56,9 +63,9 @@ export class BiomeSelector{
 	ngCacheV = 0;
 	transitionRes = 1;
 
-	private ng( label: NOISE_GENERATOR_LABELS, x: number, y: number ): number{
+	private ng( label: NGL, x: number, y: number ): number{
 		if( this.ngCacheX != x || this.ngCacheY != y ){
-			this.ngCacheV = Math.round((this.noiseGen[ NOISE_GENERATOR_LABELS.RESOLUTION_1 ]( x*3.5, y*3.5 ) + 1)/2 * this.transitionRes);
+			this.ngCacheV = Math.round((this.noiseGen[ NGL.RESOLUTION_1 ]( x*3.5, y*3.5 ) + 1)/2 * this.transitionRes);
 			this.ngCacheX = x;
 			this.ngCacheY = y;
 		}
@@ -66,15 +73,15 @@ export class BiomeSelector{
 	}
 
 	public ngTemp( x: number, y: number ): number{
-		return this.ng( NOISE_GENERATOR_LABELS.BIOME_TEMPERATURE, x/1200, y/1200 );
+		return this.ng( NGL.BIOME_TEMPERATURE, x/1200, y/1200 );
 	}
 
 	public ngWet( x: number, y: number ): number{
-		return this.ng( NOISE_GENERATOR_LABELS.BIOME_WETNESS, x/500, y/500 );
+		return this.ng( NGL.BIOME_WETNESS, x/500, y/500 );
 	}
 
 	public ngFert( x: number, y: number ): number{
-		return this.ng( NOISE_GENERATOR_LABELS.BIOME_FERTILITY, x/200, y/200 );
+		return this.ng( NGL.BIOME_FERTILITY, x/200, y/200 );
 	}
 
 	/**
@@ -85,12 +92,13 @@ export class BiomeSelector{
 	 */
 	public ngSelect( bv: Vector3, x: number, y: number ): Biome{
 		const choices: Biome[] = this.cache[bv.x][bv.y][bv.z];
-		const selection: number = Math.floor((this.noiseGen[ NOISE_GENERATOR_LABELS.BIOME_SELECTION ]( x/100, y/100 ) + 1)/2 * choices.length);
+		const selection: number = Math.floor((this.noiseGen[ NGL.BIOME_SELECTION ]( x/100, y/100 ) + 1)/2 * choices.length);
 		return choices[selection];
 	}
 
 	public createBiomeVector( x: number, y: number ): Vector3{
-		return new Vector3( this.ngTemp( x, y ), this.ngWet( x, y ), this.ngFert( x, y ) );//.clamp(this.vLowerBound, this.vUpperBound);
+		return new Vector3( this.ngTemp( x, y ), this.ngWet( x, y ), this.ngFert( x, y ) );
+		//.clamp(this.vLowerBound, this.vUpperBound);
 	}
 
 	generate( x: number, y: number, zLevel: number ): BlockData{

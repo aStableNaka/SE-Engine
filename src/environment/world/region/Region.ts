@@ -1,6 +1,6 @@
 import { RegionMesh } from '../../../rendering/region/RegionMesh';
 import { MapObject } from '../../MapObject';
-import { CreateGrid, Position, Grid } from '../../../utils/Spaces';
+import { CreateGrid, Position, Grid } from '../../../utils/collections/Spaces';
 import {EventEmitter} from 'events';
 import { PositionalAudio, Vector4, Matrix4, Vector3 } from 'three';
 import { Dictionary } from '../../../utils/Dictionary';

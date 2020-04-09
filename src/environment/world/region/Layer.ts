@@ -1,4 +1,4 @@
-import { CreateGrid, Grid } from "../../../utils/Spaces";
+import { CreateGrid, Grid } from "../../../utils/collections/Spaces";
 import { BlockEmpty } from "../../blocks/base/BlockEmpty";
 import { regHub } from '../../../registry/RegistryHub';
 import { BlockData, BlockFactory } from "../../blocks/Block";

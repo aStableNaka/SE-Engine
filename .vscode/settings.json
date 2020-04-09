@@ -1,6 +1,14 @@
 {
   "files.exclude": {
-    "package-lock.json": true
+    "package-lock.json": true,
+    "src\\registry\\BlockRegistry.js": true,
+    "src\\registry\\Registry.js": true,
+    "src\\registry\\Models.js": true,
+    "src\\registry\\BiomeRegistry.js": true,
+    "src\\registry\\Biomes.js": true,
+    "src\\registry\\Blocks.js": true,
+    "src\\registry\\ModelRegistry.js": true,
+    "src\\registry\\RegistryHub.js": true
   },
   "files.eol": "\r\n"
 }

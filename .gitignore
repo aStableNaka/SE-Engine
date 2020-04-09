@@ -42,3 +42,6 @@ progress/*
 /.vscode
 license.txt
 .vscode/settings.json
+/packages.js
+/pkg.js
+/packages.txt

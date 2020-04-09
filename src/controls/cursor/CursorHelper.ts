@@ -6,7 +6,7 @@ import { regHub } from "../../registry/RegistryHub";
 import { BlockRegistry } from "../../registry/BlockRegistry";
 import { Vector2 } from "three";
 import { SimonsWorld } from "../../environment/world/SimonsWorld";
-import { CappedAlwaysMap } from "../../utils/AlwaysMap";
+import { CappedAlwaysMap } from "../../utils/collections/AlwaysMap";
 import { BlockData } from "../../environment/blocks/Block";
 
 export class CursorHelper{
@@ -268,7 +268,7 @@ export class CursorHelper{
 				scroll.y = 0;
 		}
 
-		const pPos = this.world.player.position;
+		const pPos = this.world.cameraAnchor.position;
 		const camDist = this.world.ff.camera.position.distanceTo( new THREE.Vector3( pPos.x, 1, pPos.y ) ) / 2;
 
 		this.world.ff.orbitControlls.pan( scroll.x*camDist, scroll.y*camDist );

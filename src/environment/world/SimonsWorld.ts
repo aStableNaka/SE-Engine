@@ -1,21 +1,22 @@
 import {World} from "./World";
 import { FrostedFlakes } from "../../rendering/FrostedFlakes";
 import * as THREE from "three";
-import { Grid } from "../../utils/Spaces";
+import { Grid } from "../../utils/collections/Spaces";
 import { Region } from "./region/Region";
 import {SimonsRegion} from "./region/SimonsRegion";
 import { Player } from "../entity/Player";
 import { Vector2, Vector3 } from "three";
 import { makeNoise2D, Noise2D } from "open-simplex-noise";
 import { BlockData } from "../blocks/Block";
-import { BoundlessGrid } from "../../utils/BoundlessGrid";
+import { BoundlessGrid } from "../../utils/collections/BoundlessGrid";
 import { ValuesScope, ValuesScopeState } from "../../ui/debug/ValuesScope";
 import { RefObject } from "react";
 import { NOISE_GENERATOR_LABELS } from "../biome/Biome";
 import { BiomeSelector } from "../biome/BiomeSelector";
 import { ControlRouter } from "../../controls/ControlRouter"
 import { ControlBehaviors } from "../../controls/behaviors/ControlBehaviors";
-import { options } from "../../controls/Config";
+import { config } from "../../controls/Config";
+import { RegionDisplayBehavior } from "../../rendering/RegionDisplayBehavior";
 
 /**
  * @checkpoint
@@ -45,33 +46,25 @@ export type DebugTools = {
 export class SimonsWorld extends World{
 	enableDebugHelpers:boolean = false;
 
-	worldSize=options.world.mapSize || 8;
-	chunkSize=options.world.chunkSize || 32;
-	viewAngle:number = options.camera.viewAngle || 35;
+	worldSize=config.world.mapSize || 8;
+	chunkSize=config.world.chunkSize || 32;
+	viewAngle:number = config.camera.viewAngle || 35;
 	worldDomain:THREE.Box2;
 	center: THREE.Vector2;
-	player!: Player;
+	cameraAnchor!: Player;
 
 	loadedRegions:Region[] = [];
 	regionLoadQueue:string[] = [];
 	regionLoadMap:Map<string,Region> = new Map<string,Region>();
 
-	// The immediate region is the region where
-	// The player is most likely to be seeing
-	// at the current moment.
-	imr:number = options.gameplay.imrSize || 3; // immediate region size
-	imrLowerBound:THREE.Vector2 = new THREE.Vector2(-this.imr,-this.imr);
-	imrUpperBound:THREE.Vector2 = new THREE.Vector2(this.imr,this.imr);
-	immediateRegionBox:THREE.Box2 = new THREE.Box2( this.imrLowerBound , this.imrUpperBound );
-	immediateRegionBoundry!:THREE.Box2;
-	immediateRegions!: Grid<SimonsRegion>;
-	imrHelper!:THREE.Mesh;
-
 	noiseGenerators: Noise2D[];
 	biomeSelector:BiomeSelector;
 
+	RDB: RegionDisplayBehavior = new RegionDisplayBehavior( this );
+
 	debugTools!: DebugTools | null;
 
+	// TODO: Migrate controlRouter to GameController
 	controlRouter: ControlRouter = new ControlRouter( this, document.body, "default" );
 
 	constructor( ff:FrostedFlakes, seed:string="0" ){
@@ -89,10 +82,10 @@ export class SimonsWorld extends World{
 		
 		this.center = new THREE.Vector2(this.chunkSize*this.worldSize/2, this.chunkSize*this.worldSize/2);
 		this.worldDomain = new THREE.Box2( new Vector2(-this.worldSize,-this.worldSize), new Vector2(this.worldSize-1,this.worldSize-1) );
-		this.player = new Player( this );
+		this.cameraAnchor = new Player( this );
 		this.setupControls(ff);
 
-		if(options.world.bounded){
+		if(config.world.bounded){
 			this.regions = new Grid<Region>(this.worldSize,(y,x)=>{
 				return self.instantiateRegion(x,y);
 			});
@@ -106,7 +99,7 @@ export class SimonsWorld extends World{
 			reg.constructMesh();
 		} )
 		
-		this.setupImrHelper();
+		this.RDB.setup();
 
 		this.scheduleTicks();
 
@@ -120,7 +113,7 @@ export class SimonsWorld extends World{
 		/**
 		 * Loads a single region every tick
 		 */
-		this.tickScheduler.every(options.tick.ts_region_load, ()=>{
+		this.tickScheduler.every(config.tick.ts_region_load, ()=>{
 			if(self.regionLoadQueue[0]){
 				let regKey = <string> self.regionLoadQueue.pop();
 				let reg = <Region> self.regionLoadMap.get( regKey );
@@ -133,7 +126,7 @@ export class SimonsWorld extends World{
 		/**
 		 * Updates information on the debug ui
 		 */
-		this.tickScheduler.every( options.tick.ts_debug_info_update, ()=>{
+		this.tickScheduler.every( config.tick.ts_debug_info_update, ()=>{
 			self.updateDebug();
 		}, "debug-info-update");
 	}
@@ -153,8 +146,14 @@ export class SimonsWorld extends World{
 			this.regionLoadQueue.push(regKey);
 			this.regionLoadMap.set( regKey, region );
 		}
-		
+	}
 
+	iterateOverBox2( box2:THREE.Box2, callback:(x:number,y:number)=>void){
+		for( let x = box2.min.x; x < box2.max.x; x++ ){
+			for( let y = box2.min.y; y < box2.max.y; y++ ){
+				callback(x,y);
+			}
+		}
 	}
 
 	/**
@@ -190,43 +189,8 @@ export class SimonsWorld extends World{
 			Immediate Region Helper
 	####################################################################*/
 
-	iterateOverBox2( box2:THREE.Box2, callback:(x:number,y:number)=>void){
-		for( let x = box2.min.x; x < box2.max.x; x++ ){
-			for( let y = box2.min.y; y < box2.max.y; y++ ){
-				callback(x,y);
-			}
-		}
-	}
+	
 
-	/**
-	 * imrHelper helps visualize the immediate viewable region
-	 */
-	setupImrHelper(){
-		let imrMaterialSettings = {
-			color:0xffff00,
-			wireframe:false,
-			transparent:true,
-			opacity:0
-		};
-		if(this.enableDebugHelpers){
-			console.warn("[ImrHelper] enabled");
-			imrMaterialSettings.wireframe = true;
-			imrMaterialSettings.transparent = false;
-		}
-		this.imrHelper = new THREE.Mesh( new THREE.BoxGeometry(this.imr*2*this.chunkSize,1,this.imr*2*this.chunkSize, this.imr*2, 1, this.imr*2), new THREE.MeshBasicMaterial(imrMaterialSettings) );
-		
-		this.imrHelper.name = "IMRHelper&ci";
-		
-		this.ff.add(this.imrHelper);
-	}
-
-	updateImrHelper(){
-		this.imrHelper.position.set(this.immediateRegionBoundry.min.x*this.chunkSize, 0,  this.immediateRegionBoundry.min.y*this.chunkSize);
-		if(this.enableDebugHelpers){
-			//this.imrHelper.visible=true;
-		}
-		//this.imrHelper.visible=false;
-	}
 
 	getImmediateRegionBoundry( player:Player ):THREE.Box2{
 		let pPos = player.position.clone();
@@ -235,15 +199,13 @@ export class SimonsWorld extends World{
 		// The location of the region which the player is in
 		let imReg = fpPos.divideScalar(this.chunkSize).floor();
 		// turn imReg into a translation
-		let trans = imReg.sub( this.imrLowerBound );
-		return this.immediateRegionBox.clone().translate( trans );
+		let trans = imReg.sub( this.RDB.imrLowerBound );
+		return this.RDB.immediateRegionBox.clone().translate( trans );
 	}
 
 	updateImmediateRegionBoundry( player:Player ){
-		this.immediateRegionBoundry = this.getImmediateRegionBoundry(player);
+		this.RDB.immediateRegionBoundry = this.getImmediateRegionBoundry(player);
 	}
-
-	
 
 
 	/*###################################################################
@@ -254,12 +216,12 @@ export class SimonsWorld extends World{
 		// Set up the orbit controls
 		ff.orbitControlls.maxPolarAngle=Math.PI/180*this.viewAngle;
 		ff.orbitControlls.minPolarAngle=Math.PI/180*this.viewAngle;
-		ff.orbitControlls.minDistance=options.camera.minZoom;
-		if(options.camera.noZoomLimit){
-			ff.orbitControlls.maxDistance=options.camera.maxZoom;
+		ff.orbitControlls.minDistance=config.camera.minZoom;
+		if(config.camera.noZoomLimit){
+			ff.orbitControlls.maxDistance=config.camera.maxZoom;
 		}
 		ff.orbitControlls.enableDamping = false;
-		ff.orbitControlls.keyPanSpeed= options.camera.panSpeed || 5;
+		ff.orbitControlls.keyPanSpeed= config.camera.panSpeed || 5;
 
 		ff.orbitControlls.mouseButtons = {
 			LEFT:THREE.MOUSE.ROTATE
@@ -293,11 +255,11 @@ export class SimonsWorld extends World{
 	 * @param ff 
 	 */
 	setupPlayerPlacement(ff:FrostedFlakes){
-		this.player.setPosition(this.center.add(new THREE.Vector2(-5,-5)));
+		this.cameraAnchor.setPosition(this.center.add(new THREE.Vector2(-5,-5)));
 
 
-		this.updateImmediateRegionBoundry( this.player );
-		this.updateRegionsSeen(this.immediateRegionBoundry);
+		this.updateImmediateRegionBoundry( this.cameraAnchor );
+		this.updateRegionsSeen(this.RDB.immediateRegionBoundry);
 		/*this.iterateOverBox2( this.immediateRegionBoundry, (x,y)=>{
 			this.regions.get(x,y).addToWorld();
 		});*/
@@ -308,7 +270,7 @@ export class SimonsWorld extends World{
 		 * as a child to the camera.
 		 */
 		ff.orbitControlls.onPan = ( panOffset )=>{	
-			this.player.setPosition( new Vector2(panOffset.x,panOffset.z) );
+			this.cameraAnchor.setPosition( new Vector2(panOffset.x,panOffset.z) );
 		}
 	}
 
@@ -337,7 +299,7 @@ export class SimonsWorld extends World{
 		// Add regions that are to be seen
 		this.iterateOverBox2(newRegionBoundry, (x,y)=>{
 			// Location of the region
-			let regionLocation = new THREE.Vector2( x-this.imr,y-this.imr );
+			let regionLocation = new THREE.Vector2( x-this.RDB.imr,y-this.RDB.imr );
 			// If the point is inside the intersection
 			// or if the world does not contain this region
 			// Do nothing.
@@ -355,13 +317,13 @@ export class SimonsWorld extends World{
 
 		// Remove regions that aren't seen anymore
 		// this can be optimized using lazy iteration
-		this.iterateOverBox2(this.immediateRegionBoundry, (x,y)=>{
+		this.iterateOverBox2(this.RDB.immediateRegionBoundry, (x,y)=>{
 			let removalQueue:THREE.Object3D[] = []
 			this.ff.children.map((obj3d)=>{
 				if(obj3d.name.indexOf("reg_")==0){
 					let n = obj3d.name.replace("reg_",'');
 					let [x,y] = [...n.split(":").map(x=>parseInt(x))];
-					if(!newRegionBoundry.containsPoint(new THREE.Vector2(x+this.imr,y+this.imr))){
+					if(!newRegionBoundry.containsPoint(new THREE.Vector2(x+this.RDB.imr,y+this.RDB.imr))){
 						removalQueue.push(obj3d);
 					}
 				}
@@ -370,14 +332,14 @@ export class SimonsWorld extends World{
 				this.ff.remove(obj3d);
 			},this);
 		})
-		this.immediateRegionBoundry = newRegionBoundry;
-		this.updateImrHelper()
+		this.RDB.immediateRegionBoundry = newRegionBoundry;
+		this.RDB.updateImrHelper()
 	}
 
 	update(){
 		//this.player.tick();
-		let regionsSeen = this.getImmediateRegionBoundry( this.player );
-		if(!regionsSeen.containsBox(this.immediateRegionBoundry)){
+		let regionsSeen = this.getImmediateRegionBoundry( this.cameraAnchor );
+		if(!regionsSeen.containsBox(this.RDB.immediateRegionBoundry)){
 			this.updateRegionsSeen( regionsSeen );
 		}
 	}
@@ -397,7 +359,7 @@ export class SimonsWorld extends World{
 	private updateDebug(){
 		// updating the debug tools
 		if(this.debugTools){
-			let region = this.getRegionAtVec2( this.player.position );
+			let region = this.getRegionAtVec2( this.cameraAnchor.position );
 			let valueScope = this.ensureRefAvailable<ValuesScope>( this.debugTools.valuesScopeRef );
 			let chp;
 			const cB = this.controlRouter.cBehavior;
@@ -440,8 +402,8 @@ export class SimonsWorld extends World{
 		}
 		//document.title = this.player.velocity.toString() + ` ${md.x} / ${md.y}`;
 		this.ff.orbitControlls.pan( md.x, md.y );
-		this.player.movementDelta.x = 0;
-		this.player.movementDelta.y = 0;
+		this.cameraAnchor.movementDelta.x = 0;
+		this.cameraAnchor.movementDelta.y = 0;
 	}
 
 	
@@ -458,7 +420,7 @@ export class SimonsWorld extends World{
 		this.defaultRender();
 
 		// Handling movement
-		let md = this.player.movementDelta;
+		let md = this.cameraAnchor.movementDelta;
 		if( md.x || md.y ) this.tickMovement( md );
 	}
 

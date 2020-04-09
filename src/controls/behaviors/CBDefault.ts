@@ -18,29 +18,29 @@ export namespace ControlBehaviors{
 			// left, A and SHIFT+A
 			this.keyboardControls.addListener(65, ( event, kbm )=>{
 				let speed = self.calcPlayerSpeed(kbm);
-				if(world.player.movementDelta.x){ return world.player.movementDelta.x = 0 }
-				world.player.movementDelta.x +=  speed;
+				if(world.cameraAnchor.movementDelta.x){ return world.cameraAnchor.movementDelta.x = 0 }
+				world.cameraAnchor.movementDelta.x +=  speed;
 			}, true); 
 	
 			// up, W and SHIFT+W
 			this.keyboardControls.addListener(87, ( event, kbm )=>{
 				let speed = self.calcPlayerSpeed(kbm);
-				if(world.player.movementDelta.y){ return world.player.movementDelta.y = 0 }
-				world.player.movementDelta.y += speed;
+				if(world.cameraAnchor.movementDelta.y){ return world.cameraAnchor.movementDelta.y = 0 }
+				world.cameraAnchor.movementDelta.y += speed;
 			}, true);
 	
 			// right, D and SHIFT+D
 			this.keyboardControls.addListener(68, ( event, kbm )=>{
 				let speed = self.calcPlayerSpeed(kbm);
-				if(world.player.movementDelta.x){ return world.player.movementDelta.x = 0 }
-				world.player.movementDelta.x -= speed;
+				if(world.cameraAnchor.movementDelta.x){ return world.cameraAnchor.movementDelta.x = 0 }
+				world.cameraAnchor.movementDelta.x -= speed;
 			}, true);
 	
 			// down, S and SHIFT+S
 			this.keyboardControls.addListener(83, ( event, kbm )=>{
 				let speed = self.calcPlayerSpeed(kbm);
-				if(world.player.movementDelta.y){ return world.player.movementDelta.y = 0 }
-				world.player.movementDelta.y -= speed;
+				if(world.cameraAnchor.movementDelta.y){ return world.cameraAnchor.movementDelta.y = 0 }
+				world.cameraAnchor.movementDelta.y -= speed;
 			}, true);
 		}
 	
@@ -52,7 +52,7 @@ export namespace ControlBehaviors{
 			const baseSpeedMult = 1.5 // 1
 			const sprintSpeedMult = 4; // 4
 			const world = this.controlRouter.world;
-			return world.player.speed * (kbm.shift?sprintSpeedMult:baseSpeedMult);
+			return world.cameraAnchor.speed * (kbm.shift?sprintSpeedMult:baseSpeedMult);
 		}
 	}
 }

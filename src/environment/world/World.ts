@@ -2,7 +2,7 @@ import { FrostedFlakes } from "../../rendering/FrostedFlakes";
 import {Player} from "../entity/Player";
 import {Storable} from "../../io/Storable";
 import { Region } from "./region/Region";
-import { Grid } from "../../utils/Spaces";
+import { Grid } from "../../utils/collections/Spaces";
 import { object } from "prop-types";
 import { TickScheduler } from "../TickScheduler"; 
 import { BlockData } from "../blocks/Block";

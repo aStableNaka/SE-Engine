@@ -7,6 +7,7 @@ import * as THREE from "three";
 import { BlockRegistry } from "../../../registry/BlockRegistry";
 import { BlockData } from "../../blocks/Block";
 
+
 export class SimonsRegion extends Region{
 	world:SimonsWorld;
 	constructor(world:SimonsWorld, location:THREE.Vector2){

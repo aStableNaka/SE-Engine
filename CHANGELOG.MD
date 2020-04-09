@@ -1,3 +1,13 @@
+# 0.0.2
+
+## CODEBASE
+- Delegated world loading and handling to GameController
+- TODO: Delegate world loading to GameSession
+- Changed world.player to world.cameraAnchor
+- Added Verboosie and Verbose.log to organize logging
+- Moved IMR handling to RegionDisplayBehavior
+- Moved collection objects to their own subdirectory under /utils
+
 # 0.0.1
 *This is to keep a record of changes to the core codebase*
 

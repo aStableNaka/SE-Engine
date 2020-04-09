@@ -44,6 +44,9 @@ export class UniformModel extends GLTFModel{
 		}	
 	}
 
+	/**
+	 * Generates texture variations, if the model uses any.
+	 */
 	private generateVariations(){
 		// This will set up texture variations
 		const mat = (<THREE.MeshStandardMaterial>this.mesh.material);
