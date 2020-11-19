@@ -1,14 +1,19 @@
-import {Grid} from "./Spaces";
+import {Grid, gridMapContentsCallback} from "./Spaces";
 
 export interface Ve2{
 	x:number;
 	y:number;
 }
 
+/**
+ * @memberof collections
+ */
 export class BoundlessGrid<T> extends Grid<T>{
 	extended:Map<string,T> = new Map<string,T>();
 	generationSubroutine: (row: number, column: number) => T;
 	temp: T[] = [];
+
+	exists: number[][] = [];
 	constructor( initialSize:number, generation:(x:number,y:number)=>T, forceInstanciate?:boolean ){
 		super( initialSize, generation );
 		this.generationSubroutine = generation;
@@ -16,6 +21,7 @@ export class BoundlessGrid<T> extends Grid<T>{
 
 	private generation( row: number, column: number ): T{
 		const val = this.generationSubroutine( row, column );
+		this.exists.push([row,column]);
 		this.temp.push(val);
 		return val;
 	}
@@ -37,6 +43,23 @@ export class BoundlessGrid<T> extends Grid<T>{
 			this.extended.set(vNew, this.generation( row, column ));
 		}
 		return <T>this.extended.get( vNew );
+	}
+
+	/**
+	 * Maps a function to all generated entries
+	 * 
+	 * WARNING: This mapping is based on insert order,
+	 * sequential mapping is not guaranteed.
+	 * @param callback 
+	 * @param thisArg 
+	 */
+	mapExisting( callback:gridMapContentsCallback<T>, thisArg?:any ):any{
+		const self = this;
+		this.exists.map( (coords)=>{
+			const [row, col] = [...coords];
+			const entry = this.get( row, col );
+			callback( entry, row, col, self );
+		}, thisArg);
 	}
 
 	/**

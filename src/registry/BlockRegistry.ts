@@ -2,10 +2,14 @@ import { BlockFactory, BlockData } from "../environment/blocks/Block";
 import { baseClass } from "../utils/Classes";
 import {Registry} from "./Registry";
 
-export type blockBaseClass = baseClass & {blockId:string, createBlockData:Function, recallBlockData:Function};
+export type IBlockBase = baseClass & {
+	blockId:string,
+	createBlockData:Function,
+	restateBlockData:Function
+};
 
 export class BlockRegistryComponent{
-	baseClass:blockBaseClass;
+	baseClass:IBlockBase;
 	forceRegister:boolean;
 	identities:baseClass[];
 
@@ -42,10 +46,10 @@ export class BlockRegistry implements Registry{
 
 	/**
 	 * Register a block inside the block registry
-	 * @param baseClass {blockBaseClass} 
+	 * @param baseClass {IBlockBase} 
 	 * @param forceRegister force the registry to override the old block
 	 */
-	register( baseClass: blockBaseClass, forceRegister:boolean=false ):string{
+	register( baseClass: IBlockBase, forceRegister:boolean=false ):string{
 		let blockID:string = baseClass.blockId;
 
 		if( this.blocks[blockID] ){
@@ -94,7 +98,7 @@ export class BlockRegistry implements Registry{
 	 * @example
 	 * baseRegistry.getBlockClass("base:BlockNull") // [ Object BlockNull ]
 	 */
-	getBlockClass( blockId:string ):blockBaseClass{
+	getBlockClass( blockId:string ):IBlockBase{
 		return this.get(blockId).baseClass;
 	}
 

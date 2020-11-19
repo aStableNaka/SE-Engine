@@ -1,7 +1,7 @@
 import React from 'react';
-import { blockBaseClass } from '../../registry/BlockRegistry';
+import { IBlockBase } from '../../registry/BlockRegistry';
 
-export type CBIProps = {baseClass:blockBaseClass, key:string}
+export type CBIProps = {baseClass:IBlockBase, key:string}
 
 let divstyle = {
 }

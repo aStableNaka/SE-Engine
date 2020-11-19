@@ -6,6 +6,7 @@ import { SimonsWorld } from "../SimonsWorld";
 import * as THREE from "three";
 import { BlockRegistry } from "../../../registry/BlockRegistry";
 import { BlockData } from "../../blocks/Block";
+import { Serializer } from "../../../io/Serializer";
 
 
 export class SimonsRegion extends Region{
@@ -58,3 +59,25 @@ export class SimonsRegion extends Region{
 	}
 
 }
+
+export class SimonsRegionSerializer extends Serializer<SimonsRegion>{
+	constructor(){
+		super( SimonsRegion );
+	}
+
+	dataMapping( instance: SimonsRegion ){
+		return {
+			type: "SimonsRegion",
+			renderLoads: instance.renderLoads,
+			renderUnloads: instance.renderUnloads,
+			modified: instance.modified,
+			size: instance.size,
+			position: instance.position,
+			dictionary: instance.dictionary,
+			layers: instance.layers,	// TODO: LayerSerializer
+			actorBlocks: instance.actorBlocks,
+		}
+	}
+}
+
+new SimonsRegionSerializer();

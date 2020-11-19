@@ -28,9 +28,10 @@ export class ControlRouter{
 
 			window.addEventListener( "mousemove", this.routeMouseEvent.bind(this) );
 			window.addEventListener( "click", this.routeMouseEvent.bind(this) );
+			window.addEventListener( "mousedown", this.routeMouseEvent.bind(this) );
+			window.addEventListener( "mouseup", this.routeMouseEvent.bind(this) );
 		});
 	}
-
 	/**
 	 * Reverts controls and routing paths
 	 * to the default state

@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { Layer } from "../environment/world/region/Layer";
 import { ModelRegistry } from "../registry/ModelRegistry";
 import { Vector4, Vector2 } from "three";
+import { config } from "../controls/Config";
 
 export type ModelOptions = {
 	scale?:number;
@@ -57,9 +58,9 @@ export class ModelInstancedMesh extends THREE.InstancedMesh{
 }
 
 /**
- * RayCastAble (RCAble)
+ * RayCastAble (ModelRaycastable)
  */
-export class RCAble{
+export class ModelRaycastable{
 	mesh: THREE.Mesh;
 	available: boolean;
 	model!: Model;
@@ -68,7 +69,7 @@ export class RCAble{
 		this.mesh = mesh;
 		this.available = available;
 		this.model = model;
-		this.mesh.name = this.model.name+"&ci";
+		this.mesh.name = `${this.model.name}:${config.int.rcTag}`;
 	}
 
 	/**
@@ -79,6 +80,12 @@ export class RCAble{
 	}
 }
 
+const RC_MAT = new THREE.MeshBasicMaterial( {
+	color:0x00ff00,
+	transparent:true,
+	opacity:0.5
+});
+
 /**
  * This is for basic models that are composed of a single mesh
  */
@@ -88,11 +95,14 @@ export class Model{
 	public mesh!:THREE.Mesh;
 	public options: ModelOptions;
 
+	// Enable for models that use ticks somehow
+	public usesTick: boolean = false;
+
 	/**
 	 * Raycastable meshes
 	 */
-	public rcAbles: RCAble[] = [];
-	public rcMaterial = new THREE.MeshBasicMaterial( { color:0x00ff00, transparent:true, opacity:0.5 });
+	public modelRaycastables: ModelRaycastable[] = [];
+	public rcMaterial = RC_MAT;
 
 	constructor(name: string, options?: ModelOptions){
 		this.name = name;
@@ -134,12 +144,12 @@ export class Model{
 	}
 
 	/**
-	 * Borrow a raycastable mesh. RCAbles are re-used
+	 * Borrow a raycastable mesh. ModelRaycastables are re-used
 	 * because creating new ones is expensive
 	 */
 	borrowRaycastable(){
-		let rcAble = this.rcAbles.find(( rca )=>{ return rca.available; });
-		if(!rcAble){
+		let modelRaycastable = this.modelRaycastables.find(( rca )=>{ return rca.available; });
+		if(!modelRaycastable){
 
 			// This is a check for blocks that have no assigned mesh
 			if(!this.mesh){
@@ -147,11 +157,11 @@ export class Model{
 			}
 
 
-			rcAble = new RCAble( this.createRcMesh(), this, false );
-			this.rcAbles.push(rcAble);
+			modelRaycastable = new ModelRaycastable( this.createRcMesh(), this, false );
+			this.modelRaycastables.push(modelRaycastable);
 		}
-		rcAble.available = false;
-		return rcAble;
+		modelRaycastable.available = false;
+		return modelRaycastable;
 	}
 
 	/**
@@ -175,5 +185,12 @@ export class Model{
 	 */
 	construct( positions:THREE.Vector4[], discriminator:number ):THREE.Object3D | null{
 		throw new Error("[Model] mesh cannot be constructed. No constuction definitions found.");
+	}
+
+	/**
+	 * Called once every tick
+	 */
+	tick( n: number){
+
 	}
 }

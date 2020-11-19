@@ -6,10 +6,14 @@ import { Grid } from "../../utils/collections/Spaces";
 import { object } from "prop-types";
 import { TickScheduler } from "../TickScheduler"; 
 import { BlockData } from "../blocks/Block";
-import { Vector2, Vector3, Vector4 } from "three";
+import { Vector2, Vector3, Vector4, Group } from "three";
 import { Layer } from "./region/Layer";
 import { regHub } from "../../registry/RegistryHub";
 import { Model } from "../../models/Model";
+import { config } from "../../controls/Config";
+import { Entity } from "../entity/Entity";
+import { EntityActor } from "../entity/EntityActor";
+import { Verbose } from "../../utils/Verboosie";
 
 /**
  * True modulo. For all operations of x mod m
@@ -27,6 +31,7 @@ export class World extends Storable{
 	ff: FrostedFlakes;
 	regions!: Grid<Region>
 	regionUpdateQueue: Region[] = [];
+	limboMeshGroup: Group = new Group();
 
 	worldSize = 4;
 	chunkSize = 16;
@@ -35,10 +40,10 @@ export class World extends Storable{
 	tickSkip = this.tickLoggingLength*2;
 	tickTime: number = 0;
 	tickCount: number = 0;
-	desiredTPS: number = 20;
+	desiredTPS: number = config.tick.ps;
 	tickDeltas: number[] = new Array<number>(this.tickLoggingLength).fill(1000/this.desiredTPS);
-	tickScheduler: TickScheduler;
-	tickInterval: NodeJS.Timeout;
+	tickScheduler!: TickScheduler;
+	tickInterval!: NodeJS.Timeout;
 	tps: number = 0;
 
 	tickComputeTime: number = 0;
@@ -51,17 +56,41 @@ export class World extends Storable{
 	
 	ready = false;
 
+	entities: Set<Entity> = new Set();
 
 	constructor( ff:FrostedFlakes ){
 		super();
-		console.log(`[World] initialized`);
 		this.ff = ff;
-		console.log(this);
+
+		Verbose.log(`Initializing`, 'World', 0x8);
+		
+		this.setupDefaultFF();
+		this.setupDefaultTicks();
+
+		Verbose.log( this, "World", 0x20);
+	}
+
+	setupDefaultFF(){
+		this.ff.add( this.limboMeshGroup );
+	}
+
+	setupDefaultTicks(){
 		const self = this;
 		this.tickScheduler = new TickScheduler( this );
 		this.tickInterval = setInterval( ()=>{
 			self.tick();
 		}, 1000/this.desiredTPS);
+
+		this.tickScheduler.after( 50, ()=>{
+			self.test();
+		}, "World-TEST" );
+	}
+
+		/**
+	 * Any test methods: put in here
+	 */
+	test(){
+		
 	}
 
 	/**
@@ -99,9 +128,17 @@ export class World extends Storable{
 		this.fps = Math.round(1000/(date-this.frameLastTS));
 		this.frameLastTS = date;
 
-		window.requestAnimationFrame(()=>{
-			self.render();
-		});
+		this.renderEntities();
+		if(config.graphics.enableFPSLimit){
+			setTimeout( ()=>{
+				self.render();
+			}, 1000/config.graphics.FPSLimit );
+		}else{
+			window.requestAnimationFrame(()=>{
+				self.render();
+			});
+		}
+		
 		try{
 			self.ff.render();
 		}catch(e){
@@ -243,12 +280,25 @@ export class World extends Storable{
 		blockData.blockDidMount( {position: new Vector3( x, y, layerZ)} );
 	}
 
+	tickEntities(): void {
+		for( let entity of this.entities ){
+			entity.tick();
+		}
+	}
+
+	renderEntities():void{
+		for( let entity of this.entities ){
+			entity.render();
+		}
+	}
+
 	/**
 	 * Tick will do a few things
 	 * 	1 ) Update mesh transforms
 	 * 	2 ) Update region states
 	 */
 	tick(): void {
+		this.queueNextTick();
 		this.tickComputeDateLast = new Date().getTime();
 		if(this.tickSkip){
 			this.tickSkip--;
@@ -259,8 +309,8 @@ export class World extends Storable{
 				if(!region) return;
 				region.update()
 			}
+			this.tickEntities();
 		}
 		this.tickComputeTime = new Date().getTime() - this.tickComputeDateLast;
-		this.queueNextTick();
 	}
 }

@@ -58,13 +58,13 @@ export class GLTFModel extends Model{
 	convertToFloat32Attribute(geometry:THREE.BufferGeometry){
 		geometry.computeVertexNormals();
 		let attr = geometry.attributes;
-		attr.position = this.bufferAttributeToFloat32BufferAttribute( <THREE.BufferAttribute>attr.position );
-		attr.normal = this.bufferAttributeToFloat32BufferAttribute( <THREE.BufferAttribute>attr.normal );
-		attr.uv = this.bufferAttributeToFloat32BufferAttribute( <THREE.BufferAttribute>attr.uv );
+		attr.position = this.bufferAttribute_To_Float32BufferAttribute( <THREE.BufferAttribute>attr.position );
+		attr.normal = this.bufferAttribute_To_Float32BufferAttribute( <THREE.BufferAttribute>attr.normal );
+		attr.uv = this.bufferAttribute_To_Float32BufferAttribute( <THREE.BufferAttribute>attr.uv );
 		geometry.index = new THREE.Uint16BufferAttribute(geometry.index.array, geometry.index.itemSize, geometry.index.normalized);
 	}
 
-	bufferAttributeToFloat32BufferAttribute(bufferAttribute:THREE.BufferAttribute){
+	bufferAttribute_To_Float32BufferAttribute(bufferAttribute:THREE.BufferAttribute){
 		return new THREE.Float32BufferAttribute(bufferAttribute.array, bufferAttribute.itemSize, bufferAttribute.normalized);
 	}
 

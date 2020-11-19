@@ -23,7 +23,7 @@ export class BlockFactory extends Storable{
 	static material:string = "base:mat:none";
 	static model: string = "base:model:none";
 	static noModel:boolean = true;
-	
+	static miniMapColorDictionary = new Map<string, THREE.Color>();
 	
 	static boundingBox: BlockBoundingBox = new BlockBoundingBox( new THREE.Vector3(1,1,1) );
 	
@@ -50,18 +50,31 @@ export class BlockFactory extends Storable{
 	}
 
 	/**
+	 * Creates new BlockData using old serialized BlockData
+	 * 
+	 * Called by the BlockBaseClass, typically retrived from a
+	 * BlockRegistry
+	 * @param blockData 
+	 */
+	static restateBlockData(blockData:BlockData):BlockData{
+		let recalledBD:BlockData = this.createBlockData();
+		recalledBD.data = blockData.data;
+		return recalledBD;
+	}
+	
+/**
 	 * Creates new BlockData but recalls old BlockData
 	 * 
 	 * Called by the BlockBaseClass, typically retrived from a
 	 * BlockRegistry
 	 * @param blockData 
 	 */
-	static recallBlockData(blockData:BlockData):BlockData{
+	static recallUniqueData(uniqueData:any):BlockData{
 		let recalledBD:BlockData = this.createBlockData();
-		recalledBD.data = blockData.data;
+		recalledBD.uniqueData = uniqueData;
 		return recalledBD;
 	}
-	
+
 	static toStorageObject(){
 		return { type:this.name, blockId:this.blockId };
 	}
@@ -83,6 +96,15 @@ export class BlockFactory extends Storable{
 	static getModelKey( blockData:BlockData ){
 		return this.model;
 	}
+
+	/**
+	 * Use miniMapColorDictionary whenever available
+	 * @param blockData 
+	 * @override
+	 */
+	static getMinimapColor( blockData: BlockData ){
+		return new THREE.Color(0xffffff);
+	}
 }
 
 export interface blockMountEvent{
@@ -100,6 +122,8 @@ export class BlockData extends Storable{
 	data: any;
 	matrixIndex:number = 0;
 	position!: THREE.Vector3;
+
+	uniqueData:any = {};
 
 	constructor( baseClass:BlockBaseClass, data?:any ){
 		super();
@@ -123,8 +147,8 @@ export class BlockData extends Storable{
 	}
 
 	// Storable definitions
-	toStorageObject():{blockId:string,data:any}{
-		return { blockId:this.baseClass.blockId, data:this.data };
+	toStorageObject():{}{
+		return { blockId:this.baseClass.blockId, data:this.data, uniqueData: this.uniqueData };
 	}
 
 	getModelKey():string{

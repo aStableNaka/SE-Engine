@@ -6,6 +6,7 @@ import { SimonsWorld, DebugTools } from './environment/world/SimonsWorld';
 import { ValuesScope } from './ui/debug/ValuesScope';
 import { GameController } from './GameController';
 import { FrostedFlakes } from './rendering/FrostedFlakes';
+import { MousePointer } from "./ui/core/MousePointer";
 
 type MainState = {
 	gameController: GameController | null;
@@ -59,6 +60,7 @@ export class Main extends React.Component<{},MainState>{
 		let self = this;
 		return (
 			<div>
+				
 				<ValuesScope id="vsmain" ref={this.valuesScope}></ValuesScope>
 				<GameSceneContainer setController={
 					( gameScene: FrostedFlakes )=>{

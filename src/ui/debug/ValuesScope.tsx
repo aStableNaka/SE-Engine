@@ -1,7 +1,10 @@
-import React, { CSSProperties } from 'react';
+import React, { CSSProperties, RefObject } from 'react';
 import * as THREE from "three";
+import { SuperEvents } from '../../utils/SuperEvents';
+import { GUIDict } from "../GUIDictionary";
 
-let divstyle:CSSProperties = {
+
+let divStyleBase: CSSProperties = {
 	position:"absolute",
 	top:"0px",
 	left:"0px",
@@ -9,8 +12,16 @@ let divstyle:CSSProperties = {
 	color:"#ffffff",
 	backgroundColor:"rgba(0,0,0,0.5)",
 	fontFamily: "monospace",
-	fontSize: "8"
+	fontSize: "8",
 }
+
+let divStyleVisible:CSSProperties = Object.assign({
+	visibility: "visible"
+}, divStyleBase); 
+
+let divStyleHidden:CSSProperties = Object.assign({
+	visibility: "hidden"
+}, divStyleBase); 
 
 export class VMAppendEvent extends Event{
 	list: string[];
@@ -32,6 +43,8 @@ export class VMSetEvent extends Event{
 
 
 export type ValuesScopeState = {
+	visibility?: boolean;
+
 	list?: string[];
 	/**
 	 * WSC ( World Space Coordinates )
@@ -64,15 +77,29 @@ export type ValuesScopeState = {
  * data
  */
 export class ValuesScope extends React.Component<{id:string}, ValuesScopeState>{
+	divStyle: React.CSSProperties;
+	ref: RefObject<ValuesScope>
 	constructor(props:any){
 		super(props);
 		this.state = {
+			visibility: true,
 			regionWSC:"",
 			cursorWSC:"",
 			tps: "",
 			fps: "",
 			blockData: []
 		};
+		this.divStyle = divStyleVisible;
+		const self = this;
+
+		SuperEvents.addListener("debug-visibility-toggle", ( state: boolean )=>{
+			console.log("Toggling ValuesScope");
+			self.toggle( state );
+		});
+
+		this.ref = React.createRef();
+
+		GUIDict.register<ValuesScope>( this, "ValuesScope" );
 		//this.setupEventListeners();
 	}
 
@@ -96,10 +123,21 @@ export class ValuesScope extends React.Component<{id:string}, ValuesScopeState>{
 		this.setState( Object.assign(this.state, obj) );
 	}
 
+	toggle( state?:boolean ){
+		const newState = (state===undefined || state===null)? !this.state.visibility : state;
+		this.divStyle = newState ? divStyleVisible : divStyleHidden;
+
+		// SetState to ensure re-rendering
+		this.setState({visibility:newState});
+	}
+
+	isVisible(){
+		return this.state.visibility;
+	}
+
 	render():React.ReactNode{
 		return (
-			<div style={divstyle}>
-
+			<div style={this.divStyle}>
 				<div>[ Performance ]</div>
 				<div>TPS: {this.state.tps}</div>
 				<div>FPS: {this.state.fps}</div>

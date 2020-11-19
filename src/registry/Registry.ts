@@ -26,6 +26,8 @@ export interface Registry{
 	 * @param ready 
 	 */
 	checkReady( ready:()=>void ):void;
+
+	tick?(n: number):void;
 }
 
 /**
@@ -118,5 +120,13 @@ export class RegistryHub extends EventEmitter{
 		}else{
 			this.addListener("ready", callback);
 		}
+	}
+
+	tick(n: number){
+		this.registries.map( (reg)=>{
+			if(reg.tick){
+				reg.tick( n );
+			}
+		} )
 	}
 }

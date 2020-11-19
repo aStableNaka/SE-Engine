@@ -18,6 +18,7 @@ export class ModelRegistry implements Registry{
 	entries:Map<string,Model> = new Map<string,Model>();
 	loader:ResourceLoader;
 	list:Model[] = [];
+	tickTable:Model[] = [];
 	constructor(resourcePath:string){
 		this.loader = new ResourceLoader(resourcePath);
 	}
@@ -29,6 +30,12 @@ export class ModelRegistry implements Registry{
 		model.assignRegistry(this);
 		this.entries.set(model.name,model);
 		this.list.push(model);
+
+		// For models that require some data update
+		if(model.usesTick){
+			this.tickTable.push( model );
+		}
+
 		return model.name;
 	}
 
@@ -44,5 +51,11 @@ export class ModelRegistry implements Registry{
 		this.loader.load(()=>{
 			ready();
 		})
+	}
+
+	tick( n:number ){
+		this.tickTable.map( ( model )=>{
+			model.tick( n );
+		});
 	}
 }

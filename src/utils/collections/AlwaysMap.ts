@@ -1,4 +1,6 @@
-
+/**
+ * @namespace collections
+ */
 
 /**
  * An AlwaysMap will always return a valid value for any given key when
@@ -7,10 +9,17 @@
  * AlwaysMap will use the initializer function to ensure this.
  * 
  * Removes the need for a Map.has() check
+ * @memberof collections
  */
 export class AlwaysMap<TKey,TVal> extends Map<TKey,TVal>{
 	initializer: (key: TKey) => TVal;
 	temp: TVal[] = [];
+
+	/**
+	 * 
+	 * @param {function} initializer 
+	 * @param {string[]} entries 
+	 */
 	constructor( initializer: ( key:TKey )=>TVal, entries?: readonly( readonly[TKey, TVal] )[] ){
 		super( entries );
 		this.initializer = initializer;

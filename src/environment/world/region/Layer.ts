@@ -2,17 +2,28 @@ import { CreateGrid, Grid } from "../../../utils/collections/Spaces";
 import { BlockEmpty } from "../../blocks/base/BlockEmpty";
 import { regHub } from '../../../registry/RegistryHub';
 import { BlockData, BlockFactory } from "../../blocks/Block";
-import { Storable } from "../../../io/Storable";
+import { Storable, compressionMeta, compressedData } from "../../../io/Storable";
 import { quickHash } from "../../../utils/QuickHash";
 import {Vector2, Vector3, Vector4} from "three";
 import { Region } from "./Region";
 import { ModelInstanceData } from "../../../models/Model";
+import { Verbose } from "../../../utils/Verboosie";
+import { Serializer } from "../../../io/Serializer";
 
 const defaultBlock = new BlockData(BlockEmpty);
 
 type compressedGrid<T> = {contents:T[][]}
-type compressedData = { compressed:boolean, grid:compressedGrid<number>, map:[string, any][], location:number };
-type storageData = { grid:Grid<BlockData>, location:number }
+
+type layerCompressionData = compressedData & {
+	grid:compressedGrid<number>,
+	map:[string, any][],
+	location:number
+};
+
+type layerStorageData = {
+	grid:Grid<BlockData>,
+	location:number
+}
 
 
 export class Layer extends Storable{
@@ -111,6 +122,10 @@ export class Layer extends Storable{
 			this.addToModelData(modelData, blockData, xPos, yPos);
 		}, this);
 	}
+	
+	/*###################################################################
+			Serialization
+	####################################################################*/
 
 	/**
 	 * Compress the Storable.data whenever it's requested as a string
@@ -127,26 +142,37 @@ export class Layer extends Storable{
 	 * @note Each number corresponds to index in the map
 	 * @param data 
 	 */
-	public compress( data:storageData ):compressedData{
+	public compress( data:layerStorageData ):layerCompressionData{
 		const dictionary = new Map<string,any>();
 		const bdDefault = new BlockData(BlockFactory);
-		const out : compressedData = {
+		const out : layerCompressionData = {
 			compressed:true,
 			map:[],
 			grid:new Grid<number>( this.size, ()=>{return 0;} ),
 			location:data.location
 		}
+
+		/**
+		 * Convert the grid of blockIDs to a grid of indecies
+		 */
 		const contents = data.grid.map( (rowArr)=>{
 			return rowArr.map((bd:BlockData)=>{
-				const key:string = quickHash(JSON.stringify(bd));
+				// Update: No longer keeps track of random data like rotation
+				const key:string = quickHash(JSON.stringify(bd.uniqueData)+bd.baseClass.blockID);
 				if(!dictionary.has(key)){
-					console.log(`[ [Layer.compress] registered ${key} ]`);
-					dictionary.set(key, {blockData:bd, index:dictionary.size});
+					Verbose.log(`registered ${key}`, 'Layer#Compression', 0x10);
+					dictionary.set(key, {
+						bc:bd.baseClass.blockID, 	// BaseClass
+						ud: bd.uniqueData, 		// Unique Data
+						index:dictionary.size
+					});
 				}
 				const entry = dictionary.get(key);
 				return entry.index;
 			})
 		});
+
+		// Shallow copy of contents
 		out.grid = new Grid<number>(this.size, (row, col)=>{ return contents[row][col]; })
 
 		out.map = [...dictionary.entries()];
@@ -157,26 +183,43 @@ export class Layer extends Storable{
 	 * Undos the compression process
 	 * @param data assumes data has been parsed back into an object
 	 */
-	public decompress( data:compressedData ):void{
-		const dictionary = new Map<string,BlockData>();
+	public decompress( data:layerCompressionData ):void{
+		const dictionary = new Map<number,BlockData>();
 		data.map.map(([key, value])=>{
-			//console.log(key, value);
 			const blockId = value.blockData.baseClass.blockId;
 			const blockClass = regHub.get("base:block").getBlockClass(blockId);
-			const blockData = blockClass.recallBlockData( value.blockData );
-			//console.log(blockData);
-			dictionary.set(`_${value.index}`, blockData);
+			const blockData = blockClass.recallUniqueData( value.blockData );
+			dictionary.set(value.index, blockData);
 		});
-		//console.log('BWHJAKBSJKHD KWAJ',dictionary.get("_1"));
+
 		const dataGrid = new Grid(this.size, (row, col)=>{
-			return dictionary.get( `_${data.grid.contents[row][col]}` ) || BlockEmpty.createBlockData();
+			return dictionary.get( data.grid.contents[row][col] ) || BlockEmpty.createBlockData();
 		})
-		//console.log(dataGrid.get(0,0));
+
 		this.grid.assign(dataGrid);
 		this.location = data.location;
 	}
 
-	public toStorageObject():storageData{
+	public toStorageObject():layerStorageData{
 		return {grid:this.grid, location:this.location};
+	}
+
+}
+
+
+/*###################################################################
+		Serialization V2
+####################################################################*/
+
+export class LayerSerializer extends Serializer<Layer>{
+	constructor(){
+		super( Layer );
+	}
+
+	dataMapping( instance: Layer ){
+		return {
+			grid: instance.grid,
+			location: instance.location
+		}
 	}
 }

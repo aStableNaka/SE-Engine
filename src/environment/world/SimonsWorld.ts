@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { Grid } from "../../utils/collections/Spaces";
 import { Region } from "./region/Region";
 import {SimonsRegion} from "./region/SimonsRegion";
-import { Player } from "../entity/Player";
+import { CameraAnchor } from "../entity/CameraAnchor";
 import { Vector2, Vector3 } from "three";
 import { makeNoise2D, Noise2D } from "open-simplex-noise";
 import { BlockData } from "../blocks/Block";
@@ -17,6 +17,14 @@ import { ControlRouter } from "../../controls/ControlRouter"
 import { ControlBehaviors } from "../../controls/behaviors/ControlBehaviors";
 import { config } from "../../controls/Config";
 import { RegionDisplayBehavior } from "../../rendering/RegionDisplayBehavior";
+import { Verbose } from "../../utils/Verboosie";
+import { Serializer } from "../../io/Serializer";
+import { EntityActor } from "../entity/EntityActor";
+import { regHub } from "../../registry/RegistryHub";
+import { StockpileMaster } from "../networks/stockpile/StockpileMaster";
+
+import * as TFmt from "../../utils/TextFormat";
+import * as TsxTools from "../../utils/TsxTools";
 
 /**
  * @checkpoint
@@ -35,6 +43,7 @@ export type DebugTools = {
 	valuesScopeRef: RefObject<ValuesScope> | null | undefined;
 };
 
+
 /**
  * Simons world is a world where each region
  * has 4 or more layers. The layers follow this mapping:
@@ -51,7 +60,7 @@ export class SimonsWorld extends World{
 	viewAngle:number = config.camera.viewAngle || 35;
 	worldDomain:THREE.Box2;
 	center: THREE.Vector2;
-	cameraAnchor!: Player;
+	cameraAnchor!: CameraAnchor;
 
 	loadedRegions:Region[] = [];
 	regionLoadQueue:string[] = [];
@@ -66,15 +75,20 @@ export class SimonsWorld extends World{
 
 	// TODO: Migrate controlRouter to GameController
 	controlRouter: ControlRouter = new ControlRouter( this, document.body, "default" );
+	seed: string;
+
+	stockpileMaster = new StockpileMaster();
 
 	constructor( ff:FrostedFlakes, seed:string="0" ){
 		super( ff );
+
+		this.seed = seed;
 
 		const self = this;
 		
 		// Generate me some noise generators please
 		this.noiseGenerators = Object.keys( NOISE_GENERATOR_LABELS ).map( ( label:string, i, v )=>{
-			console.log(v);
+			Verbose.log( v, "SimonsWorld#BiomeVector", 0x10 );
 			return makeNoise2D( this.stringToSeed(seed+label) );
 		});
 		this.biomeSelector = new BiomeSelector( this.noiseGenerators );
@@ -82,7 +96,7 @@ export class SimonsWorld extends World{
 		
 		this.center = new THREE.Vector2(this.chunkSize*this.worldSize/2, this.chunkSize*this.worldSize/2);
 		this.worldDomain = new THREE.Box2( new Vector2(-this.worldSize,-this.worldSize), new Vector2(this.worldSize-1,this.worldSize-1) );
-		this.cameraAnchor = new Player( this );
+		this.cameraAnchor = new CameraAnchor( this );
 		this.setupControls(ff);
 
 		if(config.world.bounded){
@@ -130,6 +144,19 @@ export class SimonsWorld extends World{
 			self.updateDebug();
 		}, "debug-info-update");
 	}
+
+	/**
+	 * Any test methods: put in here
+	 */
+	test(){
+
+		for(let w = 0; w < config.debug.entityAmount; w++ ){
+			const entity = new EntityActor( this );
+			entity.addToWorld();
+			entity.teleport( this.center );
+		}
+	}
+
 
 	private stringToSeed( str:string ):number{
 		return str.split("").map((x)=>x.charCodeAt(0)).reduce((a,b)=>a+b)
@@ -179,7 +206,7 @@ export class SimonsWorld extends World{
 		let self = this;
 		this.tickScheduler.after(10,()=>{
 			// Set up the player
-			self.setupPlayerPlacement(ff);	
+			self.setupAnchorPlacement(ff);	
 			self.setupControlBehaviors();
 		})
 		this.setupOrbitControls( ff) ;
@@ -192,8 +219,8 @@ export class SimonsWorld extends World{
 	
 
 
-	getImmediateRegionBoundry( player:Player ):THREE.Box2{
-		let pPos = player.position.clone();
+	getImmediateRegionBoundry( cameraAnchor: CameraAnchor ):THREE.Box2{
+		let pPos = cameraAnchor.position.clone();
 		// pPos but floored
 		let fpPos = pPos.floor();
 		// The location of the region which the player is in
@@ -203,8 +230,8 @@ export class SimonsWorld extends World{
 		return this.RDB.immediateRegionBox.clone().translate( trans );
 	}
 
-	updateImmediateRegionBoundry( player:Player ){
-		this.RDB.immediateRegionBoundry = this.getImmediateRegionBoundry(player);
+	updateImmediateRegionBoundry( cameraAnchor: CameraAnchor ){
+		this.RDB.immediateRegionBoundry = this.getImmediateRegionBoundry(cameraAnchor);
 	}
 
 
@@ -250,11 +277,10 @@ export class SimonsWorld extends World{
 	####################################################################*/
 
 	/**
-	 * Sets up the initial player placement
-	 * as well as tethering the player to the camera.
+	 * Sets up the initial camera anchor placement
 	 * @param ff 
 	 */
-	setupPlayerPlacement(ff:FrostedFlakes){
+	setupAnchorPlacement(ff:FrostedFlakes){
 		this.cameraAnchor.setPosition(this.center.add(new THREE.Vector2(-5,-5)));
 
 
@@ -266,10 +292,9 @@ export class SimonsWorld extends World{
 
 
 		/**
-		 * I could try setting the player mesh
-		 * as a child to the camera.
+		 * Move the camera anchor on ocPan
 		 */
-		ff.orbitControlls.onPan = ( panOffset )=>{	
+		ff.orbitControlls.onPan = ( panOffset: {x:number, y:number, z:number } )=>{	
 			this.cameraAnchor.setPosition( new Vector2(panOffset.x,panOffset.z) );
 		}
 	}
@@ -338,37 +363,27 @@ export class SimonsWorld extends World{
 
 	update(){
 		//this.player.tick();
+		this.tickRegistries();
 		let regionsSeen = this.getImmediateRegionBoundry( this.cameraAnchor );
 		if(!regionsSeen.containsBox(this.RDB.immediateRegionBoundry)){
 			this.updateRegionsSeen( regionsSeen );
 		}
 	}
 
-	/**
-	 * mmle (make my life easier) makes sure
-	 * a react component ref is available to be
-	 * used.
-	 */
-	ensureRefAvailable<T>( a:any ): T | null {
-		if( a && a.current ){
-			return a.current;
-		}
-		return null;
-	}
-
 	private updateDebug(){
 		// updating the debug tools
-		if(this.debugTools){
+		this.provideValuesScope( (valuesScope: ValuesScope)=>{
 			let region = this.getRegionAtVec2( this.cameraAnchor.position );
-			let valueScope = this.ensureRefAvailable<ValuesScope>( this.debugTools.valuesScopeRef );
 			let chp;
 			const cB = this.controlRouter.cBehavior;
 			if(cB){
-				chp = cB.cursorHelper.cursorMesh.position;
+				chp = cB.cursorHelper.cursorHighlightMesh.position;
 			}else{
 				chp = new THREE.Vector3(0,0,0);
 			}
-
+			if( ! valuesScope.isVisible() ){
+				return;
+			}
 			let debugState:ValuesScopeState = {
 				tps: `${this.tps.toFixed(2).padEnd(12, ' ')} ${( 1000/this.tps ).toFixed(2)}ms/${1000/this.desiredTPS}ms    #${this.tickCount}`,
 				fps:`${this.fps}`,
@@ -381,15 +396,24 @@ export class SimonsWorld extends World{
 			};
 
 			if(region){
-				debugState.regionWSC = `${region.position.x} , ${region.position.y}`;
+				
+				debugState.regionWSC = TFmt.list( [ region.position.x, region.position.y ]);
 				//region.forceMeshReconstruct();
 			}
-			
-			if( valueScope ){
-				valueScope.setState( debugState );
-			}
-		}
+
+			valuesScope.setState( debugState );
+		});
 	}
+
+	/**
+	 * A wrapper for the function above, for the valuesScope
+	 * @param callback 
+	 */
+	provideValuesScope( callback: (valuesScope:ValuesScope)=>void){
+		if(this.debugTools){
+			TsxTools.provideUIObject<ValuesScope>( this.debugTools.valuesScopeRef, callback);
+		}
+	};
 
 	/**
 	 * A tick that does stuff for player movement
@@ -404,6 +428,10 @@ export class SimonsWorld extends World{
 		this.ff.orbitControlls.pan( md.x, md.y );
 		this.cameraAnchor.movementDelta.x = 0;
 		this.cameraAnchor.movementDelta.y = 0;
+	}
+
+	tickRegistries(){
+		regHub.tick( this.tickCount );
 	}
 
 	
@@ -431,4 +459,60 @@ export class SimonsWorld extends World{
 	readyDebug( debugTools:DebugTools ){
 		this.debugTools = debugTools;
 	}
+	
+	/*###################################################################
+			Serialization
+	####################################################################*/
+
+	/**
+	 * Custom override of the toString to handle stack overflow
+	 * @param compress 
+	 */
+	toString( compress:boolean=false ): string{
+		throw new Error("Depricated");
+		let obj = this.toStorageObject();
+		let out: any[] = [];
+		
+		this.regions.mapExisting( ( region, row, col )=>{
+			Verbose.log( `${row}, ${col}`, "SimonsWorld#Serializer", 0x20 );
+			out.push(region.processSelf( compress ));
+		});
+
+		return JSON.stringify( {seed:this.seed, regions: out} );
+	}
+	
+	toStorageObject(){
+		throw new Error("Depricated");
+		return { seed:this.seed, regions: this.regions };
+	}
+
+	/*###################################################################
+			Serialization V2
+	####################################################################*/
+
+	serializev2( compress=false ){
+		const instanceSerializer: Serializer<SimonsWorld> = Serializer.grabSerializer( this );
+		return instanceSerializer.convertToRaw( this );
+	}
+
 }
+
+export class SimonsWorldSerializer extends Serializer<SimonsWorld>{
+	constructor(){
+		super( SimonsWorld );
+	}
+
+	dataMapping( instance: SimonsWorld ){
+		return {
+			type: "SimonsWorld",
+			seed: instance.seed,
+			worldSize: instance.worldSize,
+			chunkSize: instance.chunkSize,
+			tickCount: instance.tickCount,
+			regions: instance.regions,
+		}
+	}
+	
+}
+
+new SimonsWorldSerializer();

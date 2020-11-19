@@ -1,6 +1,12 @@
 # Notes for using Blender to create GLTF models
 Refer to these notes when using blender to make models
 
+# Important
+
+## Reserved mesh names
+Please do not name your mesh any of the following
+> "shadow"
+
 # Models
 GLTFModels implementations by default only allow single-object meshes with an additional static shadow object.
 This blender object can have any name other than "shadow", otherwise it will cause complications.

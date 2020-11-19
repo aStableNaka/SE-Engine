@@ -3,6 +3,9 @@ import { config } from "../controls/Config";
 import { Grid } from "../utils/collections/Spaces";
 import { SimonsRegion } from "../environment/world/region/SimonsRegion";
 import { World } from "../environment/world/World";
+import { SuperEvents } from "../utils/SuperEvents";
+import * as tFmt from "../utils/TextFormat";
+import { MeshBasicMaterial } from "three";
 
 /**
  * RegionDisplayBehavior controls which regions
@@ -37,23 +40,37 @@ export class RegionDisplayBehavior{
 	 * imrHelper helps visualize the immediate viewable region
 	 */
 	setup(){
-		const imrMaterialSettings = {
+		const self = this;
+		const imrMatSettingsHidden = {
 			color:0xffff00,
 			wireframe:false,
 			transparent:true,
 			opacity:0
 		};
-		if(config.debug.enable){
-			console.warn("[ImrHelper] enabled");
-			imrMaterialSettings.wireframe = true;
-			imrMaterialSettings.transparent = false;
-		}
+		const imrMatSettingsVisible = {
+			color:0xffff00,
+			wireframe:true,
+			transparent:false,
+			opacity:0
+		};
+
+		const imrMatHidden = new MeshBasicMaterial( imrMatSettingsHidden );
+		const imrMatVisible = new MeshBasicMaterial( imrMatSettingsVisible );
+
 		const chunkSize = config.world.chunkSize;
-		this.imrHelper = new THREE.Mesh( new THREE.BoxGeometry(this.imr*2*chunkSize,1,this.imr*2*chunkSize, this.imr*2, 1, this.imr*2), new THREE.MeshBasicMaterial(imrMaterialSettings) );
-		
-		this.imrHelper.name = "IMRHelper&ci";
+		const imrSize = this.imr*2*chunkSize;
+
+		this.imrHelper = new THREE.Mesh( new THREE.BoxGeometry(imrSize,1,imrSize, this.imr*2, 1, this.imr*2), imrMatHidden );
+
+		this.imrHelper.name = `IMRHelper${config.int.rcTag}`;
 		
 		this.world.ff.add(this.imrHelper);
+
+		SuperEvents.on("debug-visibility-toggle", ( state: boolean )=>{
+			console.warn(`[ImrHelper] ${tFmt.bool( state, 'enabled', 'disabled')}`);
+			// Hotswap imrHelper material
+			this.imrHelper.material = state?imrMatVisible:imrMatHidden;
+		});
 	}
 
 	updateImrHelper(){

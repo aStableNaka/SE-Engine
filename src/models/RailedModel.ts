@@ -1,6 +1,8 @@
 import { UniformModel } from "./UniformModel";
 import { ModelOptions } from "./Model";
 import * as THREE from "three";
+import { GLTF } from "../utils/THREE/jsm/loaders/GLTFLoader";
+import { Resource } from "../loader/Resource";
 
 /**
  * RailedModels are models which have textures meant for
@@ -11,10 +13,29 @@ import * as THREE from "three";
  * textures with texture animations.
  * 
  * Each x-interval 
+ * 
+ * RailedModel meshes can only have a single material
  */
 export class RailedModel extends UniformModel{
+	usesTick = true;
+	material!: THREE.MeshStandardMaterial;
+
 	constructor( name:string, resourcePath:string, options?:ModelOptions ){
 		super(name, resourcePath, 1, options);
+		console.log(this.mesh);
+		
+	}
+
+	setupRailedMaterial(){
+		this.material = <THREE.MeshStandardMaterial>this.mesh.material;
+	}
+
+	/**
+	 * Invoked when model loads
+	 */
+	handleModelLoaded( data:GLTF, resource:Resource ){
+		this.defaultHandleModelLoaded( data, resource );
+		this.setupRailedMaterial();
 	}
 
 	/**
@@ -39,4 +60,18 @@ export class RailedModel extends UniformModel{
 		mesh.instanceMatrix.needsUpdate = true;
 		return mesh;
 	}*/
+	
+	calcYOffset( n: number ): number{
+		return 0;
+	}
+
+	/**
+	 * Called once every tick
+	 * @param n 
+	 */
+	tick( n: number ){
+		if(this.material.map){
+			this.material.map.offset.y=this.calcYOffset( n );
+		}
+	}
 }

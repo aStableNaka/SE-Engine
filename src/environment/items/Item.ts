@@ -7,6 +7,15 @@ export type ItemBaseClass = baseClass & {
 	stackSize:number
 };
 
+export enum ITEM_TAGS{
+	CHUNKS,
+	RAW_MATERIALS,
+	FOOD,
+	CLOTHING
+}
+
+console.log( Object.keys(ITEM_TAGS) );
+
 export class Item extends Storable{
 	static module:string = "base";
 	static icon:string = "base:icon:missingItemIcon";
@@ -33,11 +42,16 @@ export class ItemData extends Storable{
 	baseClass: ItemBaseClass;
 	data: any;
 	amount:number = 0;
+	maxCapacity: number = 200;
 	constructor(baseClass:ItemBaseClass, data?:any, amount:number=0){
 		super();
 		this.baseClass = baseClass;
 		this.data = this.baseClass.parseData(data);
 		this.amount = amount;
+	}
+	
+	get hasInsertsAvailable(){
+		return this.amount != this.maxCapacity;
 	}
 
 	/**

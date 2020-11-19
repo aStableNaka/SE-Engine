@@ -1,5 +1,7 @@
 const {app, BrowserWindow} = require("electron");
 
+app.commandLine.appendSwitch("--disable-frame-rate-limit");
+app.commandLine.appendSwitch("--disable-gpu-vsync");
 function createWindow(){
 	const window = new BrowserWindow({
 		width: 800,

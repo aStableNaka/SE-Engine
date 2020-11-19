@@ -1,3 +1,20 @@
+# 0.0.3
+
+## CODEBASE
+- Updated build scripts
+- Added config options for debugging, control and graphics defaults, and entity behavior
+- Added keyboard code definitions
+- CursorHelper now handles cursor events and emissions (why?)
+- changed BlockFactory.recallBlockData to BlockFactory.restateBlockData (deserialization)
+- changed BlockData.variant to BlockData.uniqueData for lack of a better name
+- camera now follows the camera anchor instead of some mythical "player" entity. There's representation of a player in this game. it's a freaking colony sim.
+- Entitys now can handle their own mesh construction
+- EntityActors exist now
+- The framework for ActorBehaviors now exist
+- More (failed) attempts at proper serialization
+- Global events are handled under the SuperHooks structure (why?)
+
+
 # 0.0.2
 
 ## CODEBASE
@@ -35,6 +52,6 @@
 - UniformModels updated to accompany the addition of static shadows.
 - Hello my name is naka gaming
 - ModelRegistry updated to detect discriminators in model names
-- Created AlwaysMap, which is a map that will always return a valid value. If a value does not exist in the map, it will initialize a new one based on a function
+- Created AlwaysMap, which is a map that will always return a valid value.
 - Bloons tower defense 2 is the most revolutionary game of our generation.
 - Updated Electron to display the window ion kisok mode.

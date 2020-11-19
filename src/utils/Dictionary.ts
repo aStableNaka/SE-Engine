@@ -1,3 +1,6 @@
+import { Serializer } from "../io/Serializer";
+
+
 /**
  * 
  */
@@ -17,3 +20,20 @@ export class Dictionary{
 		return this.entries[entryName];
 	}
 }
+
+export class DictionarySerializer extends Serializer<Dictionary>{
+	constructor(){
+		super( Dictionary );
+	}
+
+	dataMapping( instance: Dictionary ){
+		return {
+			type: "Dictionary",
+			entries: Object.keys(instance.entries).map( ( key )=>{
+				return [key, instance.entries[key] ];
+			}),
+		}
+	}
+}
+
+new DictionarySerializer();

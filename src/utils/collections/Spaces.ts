@@ -1,9 +1,11 @@
 import * as THREE from 'three';
+import { Serializer } from "../../io/Serializer";
 
 /**
  * Creates a 2D grid
  * @param size Size of a sidelength of a table
  * @param fill Callback to fill the contents of a table elemment
+ * @memberof collections
  */
 export function CreateGrid<T>( size:number, fill:( x : number, y : number ) => T ) : T[][]{
 	return new Array< null >( size ).fill( null ).map( (a, y)=>{
@@ -17,6 +19,7 @@ export function CreateGrid<T>( size:number, fill:( x : number, y : number ) => T
  * Creates a 3D volume
  * @param size Size of a sidelength of a table
  * @param fill Callback to fill the contents of a table elemment
+ * @memberof collections
  */
 export function CreateVolume<T>( size:number, fill:( x : number, y : number, z : number ) => T ) : T[][][]{
 	return new Array< null >( size ).fill( null ).map( (a, z)=>{
@@ -28,6 +31,14 @@ export function CreateVolume<T>( size:number, fill:( x : number, y : number, z :
 	});
 }
 
+/**
+ * Create an N-Dimensional space
+ * @param size 
+ * @param depth 
+ * @param fill 
+ * @param index 
+ * @memberof collections
+ */
 export function CreateSuperSpace( size: number, depth: number, fill: (index: number[])=>any, index: number[] = [] ): any[] | any{
 	if( depth ){
 		return new Array<null>( size ).fill( null ).map((v, i)=>{
@@ -37,6 +48,11 @@ export function CreateSuperSpace( size: number, depth: number, fill: (index: num
 	return fill( index );
 }
 
+/**
+ * 
+ * @param space 
+ * @memberof collections
+ */
 export function getSpaceDepth( space:any[] ):number{
 	if(space[0]){
 		if(Array.isArray(space[0])){
@@ -48,6 +64,9 @@ export function getSpaceDepth( space:any[] ):number{
 
 export class Position extends THREE.Vector3{};
 
+/**
+ * @memberof collections
+ */
 export class Space<T> extends Array<T>{
 	depth:number;
 	constructor(depth : number){
@@ -58,6 +77,7 @@ export class Space<T> extends Array<T>{
 
 export type gridType<T> = T[][];
 export type gridMapContentsCallback<T> = (value:any, row:number,col:number,self:Grid<T>)=>(any | any[][] | undefined);
+
 /**
  * Row major
  */
@@ -69,6 +89,14 @@ export class Grid<T>{
 	constructor( size:number, fill:(x:number,y:number) => T ){
 		this.contents = CreateGrid(size, fill);
 		this.size = size;
+	}
+
+	flatten(): T[]{
+		const out: T[] = [];
+		this.contents.map( ( col )=>{
+			out.push(...col);
+		});
+		return out;
 	}
 
 	/**
@@ -120,7 +148,7 @@ export class Grid<T>{
 	 * @param callback 
 	 * @param thisArg 
 	 */
-	public mapContents(callback:gridMapContentsCallback<T>, thisArg?:any):any{
+	public mapContents(callback:gridMapContentsCallback<T>, thisArg?:any):any[][]{
 		let self = this;
 		return this.contents.map((vRow, row)=>{
 			return vRow.map((value, col)=>{
@@ -131,6 +159,16 @@ export class Grid<T>{
 
 	private assignSizeError( gSourceSize:number ):Error{
 		return new Error(`[ Grid ] cannot assign grid size ${gSourceSize} to grid size ${this.size}, invalid sizes.`)
+	}
+
+	/**
+	 * Maps a method to all existing entries, used for
+	 * x compatability with BoundlessGrid.
+	 * @param callback 
+	 * @param thisArg 
+	 */
+	public mapExisting( callback:gridMapContentsCallback<T>,thisArg?:any):any{
+		return this.mapContents(callback, thisArg);
 	}
 
 	/**
@@ -162,5 +200,25 @@ export class Grid<T>{
 			return this;	
 		}
 	}
+
+	toStorageObject(){
+		return this.contents;
+	}
 	
 }
+
+export class GridSerializer extends Serializer<Grid<any>>{
+	constructor(){
+		super( Grid );
+	}
+
+	dataMapping( instance: Grid<any> ){
+		return {
+			type:"Grid",
+			size: instance.size,
+			contents: instance.flatten(),
+		}
+	}
+}
+
+new GridSerializer();

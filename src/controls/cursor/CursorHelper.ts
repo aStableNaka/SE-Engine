@@ -1,26 +1,37 @@
-import { Model, RCAble } from "../../models/Model";
+import { Model, ModelRaycastable } from "../../models/Model";
 import * as THREE from "three";
 import { Region } from "../../environment/world/region/Region";
 import { World } from "../../environment/world/World";
 import { regHub } from "../../registry/RegistryHub";
 import { BlockRegistry } from "../../registry/BlockRegistry";
-import { Vector2 } from "three";
+import { Vector2, Vector3 } from "three";
 import { SimonsWorld } from "../../environment/world/SimonsWorld";
 import { CappedAlwaysMap } from "../../utils/collections/AlwaysMap";
 import { BlockData } from "../../environment/blocks/Block";
+import { Key } from "../Keys"
+import { config } from "../Config";
+import { GUIDict } from "../../ui/GUIDictionary";
+import { MousePointer } from "../../ui/core/MousePointer";
+import { create } from "domain";
 
+/**
+ * Provides helpers to interact with the game world
+ */
 export class CursorHelper{
 	mouseEvent!:MouseEvent;
-	cursorModel!:Model;
-	cursorMesh!:THREE.Mesh;
+	cursorHighlightModel!:Model;
+	cursorHighlightMesh!:THREE.Mesh;
 	cursorRegion!:Region|null;
 	world: SimonsWorld;
 
-	rayCastingMap!: CappedAlwaysMap<string, RCAble>;
+	rayCastingMap!: CappedAlwaysMap<string, ModelRaycastable>;
 	rayCastingGroup: THREE.Group = new THREE.Group();
-	rayCastingList: RCAble[] = [];
+	rayCastingList: ModelRaycastable[] = [];
 	
 	mouseRayCaster:THREE.Raycaster = new THREE.Raycaster();
+
+	panStart: Vector3 = new THREE.Vector3(0,1,0);
+	panning: boolean = false;
 
 	/**
 	 * In block coordinates
@@ -34,25 +45,40 @@ export class CursorHelper{
 	mouseWorldPosition:THREE.Vector2 = new THREE.Vector2(0,0);
 	mouseIntersects!: THREE.Intersection[];
 
-	edgeScrollingSensitivity: number = 50;
+	edgeScrollingSpeed: number = config.control.edgeScrollingSpeed;
+	edgeScrollingSens: number = config.control.edgeScrollingSens;
+
+	pointerComponent!: MousePointer;
 	
 
 	constructor( world:SimonsWorld ){
 		const self = this;
 		this.world = world;
-		this.cursorModel = (<Model>regHub.get("base:model:ConveyorInline"));
-		this.cursorMesh = this.cursorModel.mesh.clone();
-		this.cursorMesh.name = `CursorHelper#${(Math.random()*9999).toString().padStart(4)}`;
+		this.cursorHighlightModel = (<Model>regHub.get("base:model:Cube"));
+		this.cursorHighlightMesh = this.cursorHighlightModel.mesh.clone();
+		this.cursorHighlightMesh.name = `CursorHelper#${Math.floor(Math.random()*9999).toString().padStart(4)}`;
 		
 		/**
 		 * This map contains raycastables
 		 */
-		return;
+		//return;
 
 		/**
 		 * This was an alternative to using the regular map
 		 */
-		this.rayCastingMap = new CappedAlwaysMap<string, RCAble>( 5*5*2, ( key: string )=>{
+		return;
+		
+		this.createRaycastingMap(world);
+
+	}
+
+	/**
+	 * Depricated
+	 * Creates a map of meshes that intersect with the cursor raycaster
+	 */
+	createRaycastingMap( world: SimonsWorld ){
+		const self = this;
+		this.rayCastingMap = new CappedAlwaysMap<string, ModelRaycastable>( 5*5*2, ( key: string )=>{
 			const [x,y] = [...key.split("_").map((n)=>{return parseInt(n)})];
 			const block = <BlockData>self.world.getBlock(x,y,1);
 			const model = <Model>regHub.get(block.getModelKey());
@@ -64,28 +90,43 @@ export class CursorHelper{
 
 			self.world.ff.add(rc.mesh);
 			return rc;
-		}, undefined, ( rcAble )=>{
-			rcAble.mesh.rotation.y = 0;
-			self.world.ff.remove(rcAble.mesh);
-			rcAble.returnToModel();
-			return rcAble;
+		}, undefined, ( modelRaycastable )=>{
+			modelRaycastable.mesh.rotation.y = 0;
+			self.world.ff.remove(modelRaycastable.mesh);
+			modelRaycastable.returnToModel();
+			return modelRaycastable;
 		});
 	}
 
+	startPan( clientX: number, clientY: number ){
+		this.panning = true;
+		this.panStart = new Vector3(clientX, 1, clientY);
+	}
+
+	stopPan(){
+		this.panning = false;
+	}
+
+	calculatePan( clientX: number, clientY: number ){
+		const diff = this.panStart.clone().sub(new Vector3( clientX, 0, clientY ));
+		diff.applyMatrix4( this.world.ff.camera.projectionMatrixInverse );
+		console.log(diff);
+	}
+
 	/**
-	 * Returns a list of meshes that are flagged with the &ci tag in their name
+	 * Returns a list of meshes that are tagged with config.int.rcTag
 	 * Updates am internal list of intersects
 	 */
 	updateRCIntersects(){
 		this.mouseIntersects = this.mouseRayCaster.intersectObjects(this.world.ff.children, true);
 		let filteredRaycastables = this.mouseIntersects.filter((intersect)=>{
-			return intersect.object.name.indexOf("&ci") > 0;
+			return intersect.object.name.indexOf(config.int.rcTag) > 0;
 		})
 		return filteredRaycastables;
 	}
 
 	/**
-	 * If your object is not intersected, add &ci to the name.
+	 * If your object is not intersected, add config.int.rcTag to the name.
 	 */
 	updateRayCaster(){
 
@@ -94,7 +135,7 @@ export class CursorHelper{
 		const self = this;
 		
 		if(filteredRaycastables[0]){
-			let imrh = filteredRaycastables.find((o3d)=>{ return o3d.object.name=="IMRHelper&ci" });
+			let imrh = filteredRaycastables.find((o3d)=>{ return o3d.object.name==`IMRHelper${config.int.rcTag}` });
 
 			if(!imrh){
 				return;
@@ -119,9 +160,9 @@ export class CursorHelper{
 	 * @param imrh 
 	 */
 	updateBlockSpace( blockX: number, blockY: number, imrh: THREE.Intersection ){
-		this.cursorMesh.position.x = blockX;
-		this.cursorMesh.position.y = imrh.point.y+0.5+(this.cursorModel.options.zOffset||0);
-		this.cursorMesh.position.z = blockY;
+		this.cursorHighlightMesh.position.x = blockX;
+		this.cursorHighlightMesh.position.y = imrh.point.y+0.5+(this.cursorHighlightModel.options.zOffset||0);
+		this.cursorHighlightMesh.position.z = blockY;
 		
 		this.mouseBlockSpace.x = blockX;
 		this.mouseBlockSpace.y = blockY;
@@ -151,18 +192,16 @@ export class CursorHelper{
 
 				// Remove old rc objects
 				if(this.rayCastingList[index]){
-					const rcAble = this.rayCastingList[index];
-					rcAble.mesh.rotation.y = 0;
-					self.world.ff.remove(rcAble.mesh);
-					rcAble.returnToModel();
+					const modelRaycastable = this.rayCastingList[index];
+					modelRaycastable.mesh.rotation.y = 0;
+					self.world.ff.remove(modelRaycastable.mesh);
+					modelRaycastable.returnToModel();
 				}
 				
 				const block = <BlockData>self.world.getBlock(wbx,wby,wbz);
 
 				// If the cursor goes out of the region bounds
-				if(!block){
-					return;
-				}
+				if(!block) return;
 
 				const model = <Model>regHub.get(block.getModelKey());
 				const transform = self.world.getBlockModelTransform( wbx,wby,wbz );
@@ -176,37 +215,6 @@ export class CursorHelper{
 			}
 		}
 		this.updateRCIntersects();
-	}
-
-	/**
-	 * @override
-	 * @abstract
-	 */
-	handleMouseClick(){		
-		// Block placing example
-		/*
-		let block = blockRegistry.createBlockData( "base:BlockConveyorBelt" );
-		this.world.setBlock( block, chp.x, chp.z, 1 );
-		*/
-		
-		console.log(this.mouseIntersects);
-		console.log(this.rayCastingMap);
-		console.log(regHub.get("base:model:TreeSakura0"));
-
-		// An attempt to do raycasting with instanced meshes
-		/*
-
-		this.mouseRayCaster.setFromCamera(this.mousePosition,this.world.ff.camera);
-		if(this.cursorRegion){
-			this.cursorRegion.meshGroup.traverse((obj3d)=>{
-				if((<THREE.Mesh>obj3d).isMesh ){
-					let intersection = this.mouseRayCaster.intersectObject(obj3d, true);
-					console.log(obj3d, intersection);
-				}
-			})
-		}
-
-		*/
 	}
 
 	/**
@@ -246,12 +254,33 @@ export class CursorHelper{
 		if(!this.mouseEvent){ return; }
 		const scroll = new Vector2( 0, 0 );
 
+		const [x,y] = [this.mouseEvent.clientX, this.mouseEvent.clientY];
+		
+		if(0 <= x && x <= this.edgeScrollingSens){
+			// left border
+			scroll.x = this.edgeScrollingSpeed;
+
+		}else if( window.innerWidth-this.edgeScrollingSens <= x && x <= window.innerWidth-1){
+			// right border
+			scroll.x = -this.edgeScrollingSpeed;
+		}
+
+		if(0 <= y && y <= this.edgeScrollingSens){
+			// top border
+			scroll.y = this.edgeScrollingSpeed;
+
+		}else if( window.innerHeight-this.edgeScrollingSens <= y && y <= window.innerHeight-1){
+			// bottom border
+			scroll.y = -this.edgeScrollingSpeed;
+		}
+
+		/*
 		switch( this.mouseEvent.clientX ){
 			case 0:
-				scroll.x = this.edgeScrollingSensitivity;
+				scroll.x = this.edgeScrollingSpeed;
 				break;
 			case window.innerWidth-1:
-				scroll.x = -this.edgeScrollingSensitivity;
+				scroll.x = -this.edgeScrollingSpeed;
 				break;
 			default:
 				scroll.x = 0;
@@ -259,19 +288,59 @@ export class CursorHelper{
 
 		switch( this.mouseEvent.clientY ){
 			case 0:
-				scroll.y = this.edgeScrollingSensitivity;
+				scroll.y = this.edgeScrollingSpeed;
 				break;
 			case window.innerHeight-1:
-				scroll.y = -this.edgeScrollingSensitivity;
+				scroll.y = -this.edgeScrollingSpeed;
 				break;
 			default:
 				scroll.y = 0;
 		}
+		*/
 
 		const pPos = this.world.cameraAnchor.position;
 		const camDist = this.world.ff.camera.position.distanceTo( new THREE.Vector3( pPos.x, 1, pPos.y ) ) / 2;
 
 		this.world.ff.orbitControlls.pan( scroll.x*camDist, scroll.y*camDist );
+	}
+
+	handleWheelDown( event: MouseEvent ){
+		this.startPan( event.clientX, event.clientY );
+	}
+
+	/**
+	 * @override
+	 * @abstract
+	 */
+	handleMouseClick( event: MouseEvent ){
+
+		// Block placing example
+		/*
+		let block = blockRegistry.createBlockData( "base:BlockConveyorBelt" );
+		this.world.setBlock( block, chp.x, chp.z, 1 );
+		*/
+		
+
+
+		console.log(this.mouseIntersects);
+		console.log(this.rayCastingMap);
+		console.log(this.mousePosition);
+		//console.log(regHub.get("base:model:TreeSakura0"));
+
+		// An attempt to do raycasting with instanced meshes
+		/*
+
+		this.mouseRayCaster.setFromCamera(this.mousePosition,this.world.ff.camera);
+		if(this.cursorRegion){
+			this.cursorRegion.meshGroup.traverse((obj3d)=>{
+				if((<THREE.Mesh>obj3d).isMesh ){
+					let intersection = this.mouseRayCaster.intersectObject(obj3d, true);
+					console.log(obj3d, intersection);
+				}
+			})
+		}
+
+		*/
 	}
 
 	/**
@@ -282,7 +351,17 @@ export class CursorHelper{
 		if( event.type=="mousemove" ){
 			this.updateMouse( event );
 		}else if(event.type=="click"){
-			this.handleMouseClick();
+			if(event.button == Key.MOUSE_MIDDLE_BUTTON){
+
+			}else{
+				this.handleMouseClick( event );
+			}
+		}
+		
+		if(event.type=="mousedown" ){
+			
+		}else if(event.type=="mouseup"){
+
 		}
 	}
 
@@ -290,12 +369,26 @@ export class CursorHelper{
 	 * Called by world.update
 	 */
 	update(){
-		this.handleEdgeScrolling();
+		if(config.control.enableEdgeScrolling){
+			this.handleEdgeScrolling();
+		}
 	}
 
 	updateMouse( event:MouseEvent ){
 		if(!this.world.ready){ return; }
+		
 		this.mouseEvent = event;
 		this.projectMouse();
+
+		return;
+
+		// Update the visual pointer
+		if(!this.pointerComponent && GUIDict.get("mousePointer")){
+			this.pointerComponent = <MousePointer>(GUIDict.getComponent<MousePointer>("mousePointer"));
+		}
+
+		if(this.pointerComponent){
+			this.pointerComponent.updatePos( event.clientX, event.clientY );
+		}
 	}
 }

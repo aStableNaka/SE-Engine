@@ -21,7 +21,7 @@ export class BlockFoliage extends BlockFactory{
 	}
 
 	static getModelKey( blockData:BlockVariantFoliageData ):string{
-		return `base:model:FoliageSix:${ blockData.data.variant }`;
+		return `base:model:FoliageSix:${ blockData.uniqueData.variant }`;
 		//return `${this.model}:${blockData.data||0}`;
 	}
 }

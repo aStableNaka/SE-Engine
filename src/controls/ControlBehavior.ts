@@ -1,4 +1,4 @@
-import {KeyboardControlManager} from "./Keyboard";
+import {KeyboardControlManager, KbHandlerCallback} from "./Keyboard";
 import { ControlRouter } from "./ControlRouter";
 import { CursorHelper } from "./cursor/CursorHelper";
 
@@ -32,6 +32,16 @@ export class ControlBehavior{
 	crDidBind( controlRouter: ControlRouter ){
 
 	}
+
+	/**
+	 * Add a keyboard input listener
+	 * @param keyCode 
+	 * @param callback 
+	 * @param hold 
+	 */
+	addKeyboardListener( keyCode: number, callback: KbHandlerCallback, hold = false ){
+		this.keyboardControls.addListener( keyCode, callback, hold );
+	}
 	
 	handleMouseEvent( event:MouseEvent ){
 		if(this.cursorHelper){
@@ -48,19 +58,19 @@ export class ControlBehavior{
 	}
 
 	load(){
-		this.controlRouter.world.ff.add(this.cursorHelper.cursorMesh);
+		this.controlRouter.world.ff.add(this.cursorHelper.cursorHighlightMesh);
 	}
 
 	/**
 	 * Invoked when this behavior is no longer in action
 	 */
 	unload(){
-		this.controlRouter.world.ff.remove(this.cursorHelper.cursorMesh);
+		this.controlRouter.world.ff.remove(this.cursorHelper.cursorHighlightMesh);
 	}
 
 	update(){
 		this.keyboardControls.tick();
-		this.cursorHelper.handleEdgeScrolling();
+		this.cursorHelper.update();
 		if(this.cursorHelper.mouseEvent){
 			this.cursorHelper.projectMouse();
 		}

@@ -34,6 +34,7 @@ export class FrostedFlakes extends THREE.Scene{
 		this.renderer.setSize( this.width, this.height );
 		this.renderer.gammaInput = true;
 		this.renderer.gammaOutput = true;
+		this.renderer.domElement.requestPointerLock();
 
 		/**
 		this.renderer.shadowMap.enabled = true;

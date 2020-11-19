@@ -4,7 +4,8 @@ export enum VerboseLevel{
 	WARNING = 0x2,
 	IMPORTANT = 0x4,
 	STATUS = 0x8,
-	VERBOSE = 0xf,
+	VERBOSE = 0x10,
+	VARIABLES = 0x20
 }
 
 /**
@@ -22,7 +23,7 @@ export class Verboosie{
 		this.log( `Verboosie with vMask of ${ vMask } initialized`, `Verboosie#Logger`, );
 	}
 
-	createVMask( vLevels: VerboseLevel[] ){
+	static createVMask( vLevels: VerboseLevel[] ){
 		return vLevels.reduce( (a,b)=>{
 			return a+b;
 		});
@@ -36,12 +37,13 @@ export class Verboosie{
 	 * WARNING = 0x2,
 	 * IMPORTANT = 0x4,
 	 * STATUS = 0x8,
-	 * VERBOSE = 0xf,
+	 * VERBOSE = 0x10,
+	 * VARIABLES = 0x20
 	 * @param data 
 	 * @param identity ClassName#GroupName
 	 * @param vLevel 
 	 */
-	public log( data: any, identity?: string, vLevel: VerboseLevel = 4 ){
+	public log( data: any, identity?: string, vLevel: VerboseLevel = 0x10 ){
 		if( this.vMask & vLevel ){
 			let id = '';
 			if( identity ){
@@ -52,4 +54,7 @@ export class Verboosie{
 	}
 }
 
-export const Verbose = new Verboosie();
+/**
+ * Global Verboosie for general logging
+ */
+export const Verbose = new Verboosie( Verboosie.createVMask([0xff]) );

@@ -11,6 +11,7 @@ import { Storable } from '../../../io/Storable';
 import { regHub } from '../../../registry/RegistryHub';
 import * as THREE from "three";
 import { ModelInstancedMesh, ModelInstanceData, Model } from '../../../models/Model';
+import { Entity } from '../../entity/Entity';
 
 /**
  * How blocks are represented in regions
@@ -62,7 +63,7 @@ export class Region extends Storable{
 	/**
 	 * Entities that enter this region will be "transfered" from their previous region, to this region
 	 */
-	entities: any[] = [];
+	entities: Set<Entity> = new Set();
 
 	/**
 	 * Contains all actor blocks located within this region for ease of iteration
@@ -305,9 +306,17 @@ export class Region extends Storable{
 	}
 
 	/** Storable overloads begin*/
-
 	toStorageObject(){
-		return { layers:this.layers, entities:this.entities, dictionary:this.dictionary, lightGrid:this.lightGrid, renderLoads:this.renderLoads, renderUnloads:this.renderUnloads }
+		return {
+			layers:this.layers,
+			entities:this.entities,
+			dictionary:this.dictionary,
+			lightGrid:this.lightGrid,
+			renderLoads:this.renderLoads,
+			renderUnloads:this.renderUnloads,
+			x: this.position.x,
+			y: this.position.y
+		}
 	}
 
 	/** Storable overloads end */

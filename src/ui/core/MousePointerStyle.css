@@ -1,0 +1,17 @@
+.mouse-pointer{
+	pointer-events: none;
+	cursor: none;
+	position: relative;
+	width: 10px;
+	height: 10px;
+	background-color: black;
+	z-index:10000;
+}
+
+body{
+	cursor:none;
+}
+
+::-webkit-scrollbar{
+	display: none;
+}

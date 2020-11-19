@@ -32,7 +32,7 @@ export class BiomeSelector{
 		this.reg = regHub.get("base:biome");
 		this.noiseGen = noiseGen;
 		this.cache = this.createCache();
-		Verbose.log( getSpaceDepth(this.cache), 'BiomeSelector#Enviroment', 0xf );
+		Verbose.log( getSpaceDepth(this.cache), 'BiomeSelector#Enviroment', 0x10 );
 	}
 
 	/**
@@ -63,6 +63,12 @@ export class BiomeSelector{
 	ngCacheV = 0;
 	transitionRes = 1;
 
+	/**
+	 * Noise Generator
+	 * @param label 
+	 * @param x 
+	 * @param y 
+	 */
 	private ng( label: NGL, x: number, y: number ): number{
 		if( this.ngCacheX != x || this.ngCacheY != y ){
 			this.ngCacheV = Math.round((this.noiseGen[ NGL.RESOLUTION_1 ]( x*3.5, y*3.5 ) + 1)/2 * this.transitionRes);

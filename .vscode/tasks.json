@@ -36,6 +36,17 @@
 			"script": "compile",
 			"group": "build",
 			"problemMatcher": []
+		},
+		{
+			"type": "npm",
+			"script": "compile-and-run",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": [],
+			"label": "npm: compile-and-run",
+			"detail": "npm run build-and-pack && electron ."
 		}
 	]
 }
