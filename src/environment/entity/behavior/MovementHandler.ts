@@ -1,4 +1,4 @@
-import { config } from "../../../controls/Config";
+import { config } from "@config";
 import { Vector3, Vector2 } from "three";
 import { Verbose } from "../../../utils/Verboosie";
 

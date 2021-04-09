@@ -4,7 +4,7 @@ import { regHub } from "../registry/RegistryHub";
 
 /**
  * Control routers will route controls to different
- * behaviors.
+ * behaviors depending on the ui target
  */
 export class ControlRouter{
 	state: string;
@@ -12,26 +12,48 @@ export class ControlRouter{
 	defaultState: string;
 
 	states: Map<string,ControlBehavior> = new Map();
-	target: HTMLElement;
 	world: SimonsWorld;
 
-	constructor( world: SimonsWorld, target: HTMLElement, defaultState: string ){
+	keyboardTarget: HTMLElement;
+	mouseTarget: HTMLElement;
+	
+
+	constructor( world: SimonsWorld, keyboardTarget: HTMLElement, mouseTarget: HTMLElement, defaultState: string ){
 		this.defaultState = defaultState;
 		this.state = defaultState;
 		this.world = world;
-		this.target = target;
+		this.keyboardTarget = keyboardTarget;
+		this.mouseTarget = mouseTarget;
 
 		// Don't capture anything until the reghub has loaded every asset
 		regHub.onReady(()=>{
-			target.addEventListener("keydown",this.routeKeyboardEvent.bind(this));
-			target.addEventListener("keyup",this.routeKeyboardEvent.bind(this));
+			window.addEventListener("keydown",this.routeKeyboardEvent.bind(this));
+			window.addEventListener("keyup",this.routeKeyboardEvent.bind(this));
 
-			window.addEventListener( "mousemove", this.routeMouseEvent.bind(this) );
-			window.addEventListener( "click", this.routeMouseEvent.bind(this) );
-			window.addEventListener( "mousedown", this.routeMouseEvent.bind(this) );
-			window.addEventListener( "mouseup", this.routeMouseEvent.bind(this) );
+			mouseTarget.addEventListener( "mousemove", this.routeMouseEvent.bind(this) );
+			mouseTarget.addEventListener( "click", this.routeMouseEvent.bind(this) );
+			mouseTarget.addEventListener( "mousedown", this.routeMouseEvent.bind(this) );
+			mouseTarget.addEventListener( "mouseup", this.routeMouseEvent.bind(this) );
 		});
 	}
+
+	/**
+	 * Executes cleanup subroutines. Resets control states and cancels any inter-event
+	 * operations from completing.
+	 */
+	cleanup(): void {
+		console.log("wee wee");
+		this.cBehavior.cleanup();
+		this.cBehavior.freezeKeyboardTicks();
+	}
+
+	/**
+	 * Unfreeze keyboard ticks for current state
+	 */
+	unfreezeKeyboardTicks(){
+		this.cBehavior.unfreezeKeyboardTicks();
+	}
+
 	/**
 	 * Reverts controls and routing paths
 	 * to the default state
@@ -43,6 +65,10 @@ export class ControlRouter{
 	addState( controlBehavior: ControlBehavior ){
 		this.states.set( controlBehavior.name, controlBehavior );
 		controlBehavior.bindControlRouter( this );
+	}
+
+	targetSwitch<EventType>( event: EventType ){
+		
 	}
 
 	/**
@@ -70,12 +96,23 @@ export class ControlRouter{
 	}
 
 	routeMouseEvent( event: MouseEvent ){
+		if(event.target != this.mouseTarget){
+			this.cleanup();
+			return;
+		}
+		this.unfreezeKeyboardTicks();
 		this.taskCurrentState( ( cBehavior )=>{
 			cBehavior.handleMouseEvent( event );
 		});
 	}
 
 	routeKeyboardEvent( event: KeyboardEvent ){
+		// This is required because the keybinds are listening on the window context
+		if(event.target != this.keyboardTarget){
+			this.cleanup();
+			return;
+		}
+		this.unfreezeKeyboardTicks();
 		this.taskCurrentState( ( cBehavior )=>{
 			cBehavior.handleKeyboardEvent( event );
 		});

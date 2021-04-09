@@ -8,6 +8,7 @@ import { CreateSuperSpace, getSpaceDepth } from "../../utils/collections/Spaces"
 import { BiomeOverlap } from "../../registry/BiomeRegistry";
 import { Vector3 } from "three";
 import { Verbose } from "../../utils/Verboosie";
+import { config } from "@config";
 
 /**
  * Ailias to NOISE_GENERATOR_LABELS
@@ -79,15 +80,18 @@ export class BiomeSelector{
 	}
 
 	public ngTemp( x: number, y: number ): number{
-		return this.ng( NGL.BIOME_TEMPERATURE, x/1200, y/1200 );
+		const scale = config.world.biome.tempScale;
+		return this.ng( NGL.BIOME_TEMPERATURE, x/scale, y/scale );
 	}
 
 	public ngWet( x: number, y: number ): number{
-		return this.ng( NGL.BIOME_WETNESS, x/500, y/500 );
+		const scale = config.world.biome.wetScale;
+		return this.ng( NGL.BIOME_WETNESS, x/scale, y/scale );
 	}
 
 	public ngFert( x: number, y: number ): number{
-		return this.ng( NGL.BIOME_FERTILITY, x/200, y/200 );
+		const scale = config.world.biome.fertScale
+		return this.ng( NGL.BIOME_FERTILITY, x/scale, y/scale );
 	}
 
 	/**
@@ -98,7 +102,21 @@ export class BiomeSelector{
 	 */
 	public ngSelect( bv: Vector3, x: number, y: number ): Biome{
 		const choices: Biome[] = this.cache[bv.x][bv.y][bv.z];
-		const selection: number = Math.floor((this.noiseGen[ NGL.BIOME_SELECTION ]( x/100, y/100 ) + 1)/2 * choices.length);
+
+		const genSteps = [
+			[NGL.BIOME_SELECTION, 100 ],
+			[NGL.RESOLUTION_1, 30],
+			[NGL.RESOLUTION_2, 4]
+		]
+		
+		const val = (genSteps.map((w:any[])=>{
+			return this.noiseGen[w[0]](x/w[1], y/w[1]);
+		}).reduce((p,n)=>{
+			return p+n;
+		})+genSteps.length) / ( genSteps.length * 2 )
+
+		//(this.noiseGen[ NGL.BIOME_SELECTION ]( x/100, y/100 ) + this.noiseGen[NGL.RESOLUTION_1](x/2,y/2)+2)/4
+		const selection: number = Math.floor(val * choices.length);
 		return choices[selection];
 	}
 

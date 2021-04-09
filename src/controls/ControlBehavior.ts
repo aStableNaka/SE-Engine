@@ -1,12 +1,15 @@
 import {KeyboardControlManager, KbHandlerCallback} from "./Keyboard";
 import { ControlRouter } from "./ControlRouter";
 import { CursorHelper } from "./cursor/CursorHelper";
+import { config } from "@config";
 
 export class ControlBehavior{
 	name: string;
 	keyboardControls: KeyboardControlManager = new KeyboardControlManager();
 	controlRouter!: ControlRouter;
 	cursorHelper!: CursorHelper;
+	tickLast: number = new Date().getTime();
+	tickDelta: number = 0;
 
 	constructor( name:string ){
 		this.name = name;
@@ -21,6 +24,22 @@ export class ControlBehavior{
 		this.controlRouter = controlRouter;
 		this.crDidBind( controlRouter );
 		this.load();
+	}
+
+	/**
+	 * Resets states, terminates multi-event interactions
+	 * 
+	 */
+	cleanup(){
+
+	}
+
+	freezeKeyboardTicks(){
+		this.keyboardControls.freeze();
+	}
+
+	unfreezeKeyboardTicks(){
+		this.keyboardControls.unfreeze();
 	}
 
 	/**
@@ -43,6 +62,10 @@ export class ControlBehavior{
 		this.keyboardControls.addListener( keyCode, callback, hold );
 	}
 	
+	/**
+	 * Mouse events are automatically routed to the cursorHelper
+	 * @param event 
+	 */
 	handleMouseEvent( event:MouseEvent ){
 		if(this.cursorHelper){
 			this.cursorHelper.handle( event );
@@ -55,6 +78,22 @@ export class ControlBehavior{
 		}else if( event.type == "keyup" ){
 			this.keyboardControls.handleKeyUp( event );
 		}
+	}
+
+	/**
+		 * Calculate camera speed in pan units
+		 * @param kbm required to determine if shift pressed
+		 */
+	 calcPanSpeed( kbm: KeyboardControlManager ):number{
+		const baseSpeedMult = 1.5 // 1
+		const superSpeedMult = 4; // 4
+		const world = this.controlRouter.world;
+		const cameraAnchor = world.cameraAnchor;
+		const speedPerTick = 1000 / config.tick.ps * config.camera.panSpeed
+		const adjustedSpeed = Math.log( cameraAnchor.distanceToOwnCamera() ) / 100 * speedPerTick * this.tickDelta ;
+											// Shift multiplies the pan speed
+		
+		return adjustedSpeed * (kbm.shift?superSpeedMult:baseSpeedMult);
 	}
 
 	load(){
@@ -74,6 +113,9 @@ export class ControlBehavior{
 		if(this.cursorHelper.mouseEvent){
 			this.cursorHelper.projectMouse();
 		}
+		const date = new Date().getTime();
+		this.tickDelta = date - this.tickLast;
+		this.tickLast = date;
 		this.tick();
 	}
 

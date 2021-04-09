@@ -27,9 +27,23 @@ export class KeyboardControlManager{
 
 	private keysDown: any={};
 	private handlers: Map<KeyCode, KbHandlerContainer>= new Map<KeyCode, KbHandlerContainer>();
+
+	private frozen: boolean = false;
 	
 	constructor(){
 	
+	}
+
+	/**
+	 * Freeze ticking
+	 */
+	freeze(){
+		this.keysDown = {};
+		this.frozen = true;
+	}
+
+	unfreeze(){
+		this.frozen = false;
 	}
 
 	/**
@@ -46,6 +60,9 @@ export class KeyboardControlManager{
 	 * 
 	 */
 	public tick(): void{
+		if(this.frozen){
+			return;
+		}
 		this.handlers.forEach(( kbhc, keyCode )=>{
 			if(this.keysDown[keyCode] && kbhc.hold ){
 				kbhc.callback( this.keysDown[keyCode], this );

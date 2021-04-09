@@ -4,7 +4,7 @@ import {World} from "./world/World";
 export type TickTask = (world:World)=>void;
 
 export class TaskDenominator{
-	uuid: string;
+	id: string;
 	tickTask: TickTask;
 	tick: any;
 	persistent: any;
@@ -13,7 +13,7 @@ export class TaskDenominator{
 	suspended = false;
 	
 	constructor( tt:TickTask, tick:number, persistent:boolean=false, uuid?:string ){
-		this.uuid = uuid || THREE.Math.generateUUID();
+		this.id = uuid || THREE.Math.generateUUID();
 		this.tickTask = tt;
 		this.tick = tick;
 		this.persistent = persistent;
@@ -117,13 +117,14 @@ export class TickScheduler{
 					if(!td.persistent) keep = false;
 				}catch( error ){
 					// Suspend the scheduled task if it fails too much
-					if(this.analytics.has(td.uuid)){
+					if(this.analytics.has(td.id)){
 						// This is for "every" tasks
-						const analytics = <TickAnalytics> this.analytics.get( td.uuid );
+						const analytics = <TickAnalytics> this.analytics.get( td.id );
 						analytics.failed( error );
 						if( analytics.failCount >= td.maxFails ){
 							td.suspended = true;
-							console.error( `[ TickScheduler ] suspended task "${td.uuid}"\nReason: Too many failures`, td );
+							console.error( `[ TickScheduler ] suspended task "${td.id}"\nReason: Too many failures`, td );
+							console.error( `[ TickScheduler ] Analytics Dump for suspended task "${td.id}"`, analytics)
 						}
 					}else{
 						// This is for "once" tassks
@@ -132,8 +133,8 @@ export class TickScheduler{
 				}
 				
 				
-				if(this.analytics.has( td.uuid )){
-					const ta = <TickAnalytics> this.analytics.get( td.uuid );
+				if(this.analytics.has( td.id )){
+					const ta = <TickAnalytics> this.analytics.get( td.id );
 					ta.addTimeSample( new Date().getTime() - startTime );
 				}
 			}
@@ -156,7 +157,7 @@ export class TickScheduler{
 	 */
 	every(tick:number,task:TickTask, uuid?:string ){
 		let td = new TaskDenominator(task, tick, true, uuid);
-		this.analytics.set( td.uuid, new TickAnalytics( td.uuid ) );
+		this.analytics.set( td.id, new TickAnalytics( td.id ) );
 		this.finalize(td);
 	}
 

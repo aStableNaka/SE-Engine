@@ -3,7 +3,7 @@ import {BlockVariantData} from "./BlockVariantData";
 import * as THREE from "three";
 
 export class BlockGround extends BlockFactory{
-	static model:string = "base:model:Cube";
+	static model:string = "base:model:Tile";
 	static noModel = false;
 
 	/**
@@ -18,5 +18,9 @@ export class BlockGround extends BlockFactory{
 
 	static getModelKey( blockData:BlockVariantData ):string{
 			return `${this.model}:${blockData.uniqueData.variant%(16*16)}`;
+	}
+
+	static getMinimapColor( blockData:BlockData ){
+		return [10,100,50,255];
 	}
 }

@@ -8,7 +8,7 @@ import * as THREE from "three";
 const veloPerUnit = 0.82268/10;
 
 /**
- * The player is a controllable entitity
+ * The entity that the camera is always looking at
  */
 export class CameraAnchor extends Entity{
 	speed: number = 1000; //15;

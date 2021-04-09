@@ -38,7 +38,7 @@ export class Layer extends Storable{
 		super();
 		this.location = location;
 		this.region = region;
-		this.size = region.world.chunkSize;
+		this.size = region.world.regionSize;
 		this.grid = new Grid<BlockData>(this.size, generation);
 	}
 	

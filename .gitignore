@@ -45,3 +45,4 @@ license.txt
 /packages.js
 /pkg.js
 /packages.txt
+jsdoc*

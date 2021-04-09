@@ -13,7 +13,7 @@ export type compressionMeta = {
 
 export type compressedData = {
 	compressed?:boolean,
-	meta?:compressionMeta,
+	param?:compressionMeta,
 }
 
 

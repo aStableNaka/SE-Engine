@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { config } from "../controls/Config";
+import { config } from "@config";
 import { Grid } from "../utils/collections/Spaces";
 import { SimonsRegion } from "../environment/world/region/SimonsRegion";
 import { World } from "../environment/world/World";
@@ -15,10 +15,10 @@ export class RegionDisplayBehavior{
 	// The immediate region is the region where
 	// The player is most likely to be seeing
 	// at the current moment.
-	imr:number = config.gameplay.imrSize || 3; // immediate region size
-	imrLowerBound:THREE.Vector2 = new THREE.Vector2(-this.imr,-this.imr);
-	imrUpperBound:THREE.Vector2 = new THREE.Vector2(this.imr,this.imr);
-	immediateRegionBox:THREE.Box2 = new THREE.Box2( this.imrLowerBound , this.imrUpperBound );
+	fixedImrSize:number = config.gameplay.imrSize || 3; // immediate region size
+	imrLowerBound!:THREE.Vector2;
+	imrUpperBound!:THREE.Vector2;
+	immediateRegionBox!:THREE.Box2;
 	immediateRegionBoundry!:THREE.Box2;
 	immediateRegions!: Grid<SimonsRegion>;
 	imrHelper!:THREE.Mesh;
@@ -26,8 +26,30 @@ export class RegionDisplayBehavior{
 
 	constructor( world: World ){
 		this.world = world;
+		this.calculateBoundExtrema();
 	}
 
+	calculateBoundExtrema(){
+		this.imrLowerBound = new THREE.Vector2(-this.fixedImrSize,-this.fixedImrSize);
+		this.imrUpperBound = new THREE.Vector2(this.fixedImrSize,this.fixedImrSize);
+		this.immediateRegionBox = new THREE.Box2( this.imrLowerBound , this.imrUpperBound );
+	}
+
+	// TODO Implement
+	/**
+	 * This does a baseless calculation to determine the square-length of the imr.
+	 * this should be recalculated whenever the user scrolls past a certain threshold (for performance reasons)
+	 * 
+	 */
+	recalculateImr(){
+		this.fixedImrSize = Math.ceil(Math.min(3, Math.log(this.world.ff.camera.position.y)))
+	}
+
+	/**
+	 * Modified from SimonsWorld to be a void method (why?)
+	 * @param box2 
+	 * @param callback 
+	 */
 	iterateOverBox2( box2:THREE.Box2, callback:(x:number,y:number)=>void){
 		for( let x = box2.min.x; x <= box2.max.x; x++ ){
 			for( let y = box2.min.y; y <= box2.max.y; y++ ){
@@ -57,10 +79,10 @@ export class RegionDisplayBehavior{
 		const imrMatHidden = new MeshBasicMaterial( imrMatSettingsHidden );
 		const imrMatVisible = new MeshBasicMaterial( imrMatSettingsVisible );
 
-		const chunkSize = config.world.chunkSize;
-		const imrSize = this.imr*2*chunkSize;
+		const regionSize = config.world.regionSize;
+		const imrSize = this.fixedImrSize*2*regionSize;
 
-		this.imrHelper = new THREE.Mesh( new THREE.BoxGeometry(imrSize,1,imrSize, this.imr*2, 1, this.imr*2), imrMatHidden );
+		this.imrHelper = new THREE.Mesh( new THREE.BoxGeometry(imrSize,1,imrSize, this.fixedImrSize*2, 1, this.fixedImrSize*2), imrMatHidden );
 
 		this.imrHelper.name = `IMRHelper${config.int.rcTag}`;
 		
@@ -74,8 +96,8 @@ export class RegionDisplayBehavior{
 	}
 
 	updateImrHelper(){
-		const chunkSize = config.world.chunkSize;
-		this.imrHelper.position.set(this.immediateRegionBoundry.min.x*chunkSize, 0,  this.immediateRegionBoundry.min.y*chunkSize);
+		const regionSize = config.world.regionSize;
+		this.imrHelper.position.set(this.immediateRegionBoundry.min.x*regionSize, 0,  this.immediateRegionBoundry.min.y*regionSize);
 		if(config.debug.enable){
 			//this.imrHelper.visible=true;
 		}

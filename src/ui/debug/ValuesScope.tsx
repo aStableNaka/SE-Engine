@@ -8,7 +8,7 @@ let divStyleBase: CSSProperties = {
 	position:"absolute",
 	top:"0px",
 	left:"0px",
-	zIndex: 100,
+	zIndex: 1,
 	color:"#ffffff",
 	backgroundColor:"rgba(0,0,0,0.5)",
 	fontFamily: "monospace",
@@ -152,6 +152,7 @@ export class ValuesScope extends React.Component<{id:string}, ValuesScopeState>{
 				<div>{(this.state.blockData||[]).map((str:string)=>{
 					return <div>{str}</div>
 				})}</div>
+				{this.props.children}
 			</div>
 		)
 	}

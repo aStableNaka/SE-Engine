@@ -19,7 +19,7 @@ import { Entity } from '../../entity/Entity';
 export class BlockMapObject{
 	position: Position;
 	ref: any;
-	constructor( position:Position, ref:any, meta?:any){
+	constructor( position:Position, ref:any, param?:any){
 		this.position = position;
 		this.ref = ref;
 	}
@@ -118,10 +118,10 @@ export class Region extends Storable{
 	constructor( world:World, location:THREE.Vector2 ){
 		super();
 		this.position = location;
-		this.size = world.chunkSize;
+		this.size = world.regionSize;
 		this.world = world;
 		this.meshGroup = new RegionMesh( this );
-		this.placeHolderMesh = new THREE.Mesh(new THREE.BoxBufferGeometry(this.world.chunkSize, 1, this.world.chunkSize), placeHolderMeshMaterial);
+		this.placeHolderMesh = new THREE.Mesh(new THREE.BoxBufferGeometry(this.world.regionSize, 1, this.world.regionSize), placeHolderMeshMaterial);
 		this.placeHolderMesh.name = "placeholder";
 		this.generateTerrain();
 		//this.constructMesh();

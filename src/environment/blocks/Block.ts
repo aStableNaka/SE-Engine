@@ -4,6 +4,8 @@ import { baseClass as BlockBaseClass } from '../../utils/Classes';
 import { BlockBoundingBox } from "../../controls/cursor/BlockBoundingBox";
 import * as THREE from 'three';
 import { Vector3 } from 'three';
+import { ContextMenu, ContextMenuAction } from '../../controls/ContextMenu';
+import { World } from '../world/World';
 
 export type Geometry = THREE.Geometry | THREE.BufferGeometry | THREE.InstancedBufferGeometry;
 
@@ -12,6 +14,12 @@ export enum Facing{
 	WEST = 1,
 	SOUTH = 2,
 	EAST = 3
+}
+
+export class BlockContextMenuAction extends ContextMenuAction{
+	constructor( callback: (blockData: BlockData, world: World )=>void, domain: string ){
+		super( callback, domain );
+	}
 }
 
 /**
@@ -26,6 +34,10 @@ export class BlockFactory extends Storable{
 	static miniMapColorDictionary = new Map<string, THREE.Color>();
 	
 	static boundingBox: BlockBoundingBox = new BlockBoundingBox( new THREE.Vector3(1,1,1) );
+
+	static contextMenu: ContextMenu = new ContextMenu( "block:base", "Block", [], false );
+
+	static harvestTime: number = 20; // Ticks
 	
 	/**
 	 * Create a new block instance. Unique
@@ -103,7 +115,7 @@ export class BlockFactory extends Storable{
 	 * @override
 	 */
 	static getMinimapColor( blockData: BlockData ){
-		return new THREE.Color(0xffffff);
+		return [0,0,0,0];
 	}
 }
 
@@ -137,7 +149,7 @@ export class BlockData extends Storable{
 
 	/**
 	 * By default, look for the rotation property the
-	 * blockData's metadata
+	 * blockData's parameters
 	 */
 	getRotation():number{
 		if(this.data && this.data.rotation){

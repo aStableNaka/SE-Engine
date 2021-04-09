@@ -35,19 +35,22 @@ export class Item extends Storable{
 	/**
 	 * Create this item data
 	 */
-	static createItemData( metaData:any ){}
+	static createItemData( paramData:any ){}
 }
 
 export class ItemData extends Storable{
 	baseClass: ItemBaseClass;
 	data: any;
 	amount:number = 0;
-	maxCapacity: number = 200;
-	constructor(baseClass:ItemBaseClass, data?:any, amount:number=0){
+	maxCapacity: number;
+	position: THREE.Vector2;
+	constructor(baseClass:ItemBaseClass, position: THREE.Vector2, data?:any, amount:number=0){
 		super();
 		this.baseClass = baseClass;
 		this.data = this.baseClass.parseData(data);
 		this.amount = amount;
+		this.position = position;
+		this.maxCapacity = this.baseClass.stackSize;
 	}
 	
 	get hasInsertsAvailable(){

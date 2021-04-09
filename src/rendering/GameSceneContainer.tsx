@@ -19,6 +19,7 @@ export class GameSceneContainer extends React.Component<GPVProps>{
 		position: 'absolute',
 		top: '0px',
 		left: '0px',
+		zIndex:0
 	}
 	gameController!: GameController;
 

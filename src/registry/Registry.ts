@@ -1,4 +1,5 @@
 import { EventEmitter } from "events";
+import {TickProfiler } from "@TickProfiler";
 
 export interface Registry{
 
@@ -37,6 +38,7 @@ class RegistryRegistryComponent{
 	name: string;
 	namespace: string;
 	registry: Registry;
+
 	constructor(namespace:string,name:string,registry:Registry){
 		this.name = name;
 		this.namespace = namespace;

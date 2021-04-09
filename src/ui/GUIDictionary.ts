@@ -22,7 +22,11 @@ export type GUIComponentWrapper<ComponentType> = {
  * 		with React.createRef()
  */
 export class GUIDictionary{
+
 	contents: Map<string, GUIComponentWrapper<any>> = new Map<string, GUIComponentWrapper<any>>()
+	elements: Map<string, ()=>HTMLElement|null> = new Map<string, ()=>HTMLElement|null>();
+	elementsCache: Map<string, HTMLElement> = new Map<string, HTMLElement>();
+	elementsQueue: Map<string, ((e:HTMLElement)=>void)[]> = new Map<string, ((e:HTMLElement)=>void)[]>();
 
 	constructor(){
 		Verbose.log('Initialized', "GUIDictionary", 0x8);
@@ -31,18 +35,18 @@ export class GUIDictionary{
 	/**
 	 * 
 	 * @param component 
-	 * @param identity camel case
+	 * @param identifier camel case
 	 * @param i 
 	 */
-	register<ComponentType>( component: ComponentWithRef<ComponentType>, identity?:string, i:number=0 ){
+	register<ComponentType>( component: ComponentWithRef<ComponentType>, identifier?:string, i:number=0 ){
 
 		let noIdentity = false;
-		if(!identity){
-			identity = "GUI_UNNAMED";
+		if(!identifier){
+			identifier = "GUI_UNNAMED";
 			noIdentity = true;
 		}
-		if(this.contents.get( identity )) {
-			this.register( component, `${identity}_${i+1}`);
+		if(this.contents.get( identifier )) {
+			this.register( component, `${identifier}_${i+1}`);
 			return;
 		}
 		if(noIdentity) {
@@ -54,8 +58,68 @@ export class GUIDictionary{
 			component: component
 		}
 
-		this.contents.set( identity, componentWrapper );
-		Verbose.log(`Registered ${identity}`, "GUIDict", 0x10)
+		this.contents.set( identifier, componentWrapper );
+		Verbose.log(`Registered ${identifier}`, "GUIDict", 0x10)
+	}
+
+	/**
+	 * Register an HTML Element using a function that will retrieve the
+	 * element if it doesn't exist. Re-registering an element
+	 * will delete the cache
+	 * @param getter 
+	 * @param identifier 
+	 */
+	registerElement( getter: ()=>HTMLElement|null, identifier: string ){
+		this.elements.set( identifier, getter );
+		this.elementsCache.delete( identifier );
+	}
+
+	/**
+	 * Get a registered HTMLElement. Prioritizes cached elements.
+	 * @param identifier 
+	 * @param cache default true. set to false to disable caching
+	 */
+	getElement( identifier: string, cache:boolean=true ): HTMLElement | undefined {
+		const cacheElem = this.elementsCache.get( identifier );
+		const getterOrUndefined = this.elements.get( identifier );
+		let output: HTMLElement | undefined = undefined;
+		if(cacheElem){
+			output = cacheElem;
+		}
+		if(getterOrUndefined && !output){
+			const elem = getterOrUndefined();
+			if(elem){
+
+				if(cache){
+					this.elementsCache.set( identifier, elem );
+				}
+				output = elem;
+			}
+		}
+
+		const queue = this.elementsQueue.get( identifier );
+		if(output && queue){
+			queue.map( ( callback )=>{
+				callback( <HTMLElement>output )
+			});
+			this.elementsQueue.delete( identifier );
+		}
+
+		return output;
+	}
+
+	/**
+	 * Queue a callback for an element. It's the safest way ensure an operation works on an element.
+	 * @param identifier 
+	 * @param callback 
+	 */
+	queueElement( identifier: string, callback:(elem:any)=>void){
+		const element = this.getElement( identifier );
+		if(element){
+			callback( element );
+			return;
+		}
+		this.elementsQueue.set( identifier, [ callback ,...(this.elementsQueue.get(identifier)||[])]);
 	}
 
 	/**
@@ -90,7 +154,7 @@ export class GUIDictionary{
 	getRef<ComponentType>( query: string, onAvilable:( refObject: any )=>void, onUnavailable:()=>void ): void {
 		const componentWrapper = this.get( query );
 		if( componentWrapper ) {
-			TsxTools.provideUIObject<ComponentType>( <any>(componentWrapper.component.ref).current, onAvilable, onUnavailable );
+			TsxTools.provideUIObject<ComponentType>( <any>({current:componentWrapper.component}), onAvilable, onUnavailable );
 		}
 	}
 }

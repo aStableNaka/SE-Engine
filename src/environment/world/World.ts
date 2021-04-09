@@ -10,10 +10,13 @@ import { Vector2, Vector3, Vector4, Group } from "three";
 import { Layer } from "./region/Layer";
 import { regHub } from "../../registry/RegistryHub";
 import { Model } from "../../models/Model";
-import { config } from "../../controls/Config";
+import { config } from "@config";
 import { Entity } from "../entity/Entity";
 import { EntityActor } from "../entity/EntityActor";
 import { Verbose } from "../../utils/Verboosie";
+import { BlockNull } from "../blocks/base/BlockNull";
+import { BlockRegistry } from "../../registry/BlockRegistry";
+import {TickProfiler} from "@TickProfiler";
 
 /**
  * True modulo. For all operations of x mod m
@@ -28,13 +31,19 @@ function mod( x:number, m:number ){
 
 export class World extends Storable{
 	
+	tickProfilerWorld:TickProfiler = new TickProfiler("world");
+	tickProfilerRegions: TickProfiler;
+	tickProfilerEntities: TickProfiler;
+	tickProfilerUpdate: TickProfiler;
+	
+	
 	ff: FrostedFlakes;
 	regions!: Grid<Region>
 	regionUpdateQueue: Region[] = [];
 	limboMeshGroup: Group = new Group();
 
 	worldSize = 4;
-	chunkSize = 16;
+	regionSize = 16;
 
 	tickLoggingLength: number = 10;
 	tickSkip = this.tickLoggingLength*2;
@@ -57,10 +66,16 @@ export class World extends Storable{
 	ready = false;
 
 	entities: Set<Entity> = new Set();
+	itemEntities: Set<Entity> = new Set();
+	
 
 	constructor( ff:FrostedFlakes ){
 		super();
 		this.ff = ff;
+
+		this.tickProfilerEntities = new TickProfiler("entities", this.tickProfilerWorld);
+		this.tickProfilerRegions = new TickProfiler("regions", this.tickProfilerWorld);
+		this.tickProfilerUpdate = new TickProfiler("update", this.tickProfilerWorld);
 
 		Verbose.log(`Initializing`, 'World', 0x8);
 		
@@ -68,6 +83,7 @@ export class World extends Storable{
 		this.setupDefaultTicks();
 
 		Verbose.log( this, "World", 0x20);
+
 	}
 
 	setupDefaultFF(){
@@ -190,7 +206,7 @@ export class World extends Storable{
 	}
 
 	getRegionAtVec2(vec2: THREE.Vector2): Region | null {
-		let pos = vec2.clone().divideScalar(this.chunkSize).floor();
+		let pos = vec2.clone().divideScalar(this.regionSize).floor();
 		return this.regions.get(pos.x, pos.y);
 	}
 
@@ -207,8 +223,8 @@ export class World extends Storable{
 	 */
 	getBlock( x:number, y:number, layerZ:number):BlockData | null{
 		let region = this.getRegionAtVec2(new Vector2(x,y));
-		x = mod(x, this.chunkSize);
-		y = mod(y, this.chunkSize);
+		x = mod(x, this.regionSize);
+		y = mod(y, this.regionSize);
 		if(region){
 			return region.getBlock(x,y,layerZ);
 		}
@@ -255,7 +271,7 @@ export class World extends Storable{
 	 */
 	getBlockColumn( x:number, y:number ):BlockData[]{
 		let region = this.getRegionAtVec2(new Vector2(x,y));
-		[x, y] = [ mod(x, this.chunkSize), mod(y, this.chunkSize)];
+		[x, y] = [ mod(x, this.regionSize), mod(y, this.regionSize)];
 		if(region){
 			return <BlockData[]> region.layers.map(( layer:Layer, i:number )=>{
 				return ( <Region> region ).getBlock(x,y,i);
@@ -272,7 +288,7 @@ export class World extends Storable{
 		this.regionUpdateQueue.push(region);
 		
 		// World space to region space conversion
-		[x, y] = [ mod(x, this.chunkSize), mod(y, this.chunkSize)];
+		[x, y] = [ mod(x, this.regionSize), mod(y, this.regionSize)];
 		region.setBlock(blockData,x,y,layerZ);
 
 		// Lets the block know that it is placed
@@ -280,14 +296,26 @@ export class World extends Storable{
 		blockData.blockDidMount( {position: new Vector3( x, y, layerZ)} );
 	}
 
+	/**
+	 * Removes block from the world without a trace
+	 */
+	removeBlock(x: number, y: number, layerZ: number){
+		this.setBlock( (<BlockRegistry>regHub.get("base:block")).createBlockData("base:BlockEmpty"), x, y, layerZ );
+	}
+
 	tickEntities(): void {
+		this.tickProfilerEntities.start();
 		for( let entity of this.entities ){
 			entity.tick();
 		}
+		this.tickProfilerEntities.end();
 	}
 
 	renderEntities():void{
 		for( let entity of this.entities ){
+			entity.render();
+		}
+		for( let entity of this.itemEntities ){
 			entity.render();
 		}
 	}
@@ -298,19 +326,27 @@ export class World extends Storable{
 	 * 	2 ) Update region states
 	 */
 	tick(): void {
+		this.tickProfilerWorld.start();
 		this.queueNextTick();
-		this.tickComputeDateLast = new Date().getTime();
 		if(this.tickSkip){
 			this.tickSkip--;
 		}else{
+			this.tickProfilerUpdate.start();
 			this.update();
+			this.tickProfilerUpdate.end();
+
+			this.tickProfilerRegions.start();
 			while(this.regionUpdateQueue.length){
 				let region = this.regionUpdateQueue.pop();
 				if(!region) return;
 				region.update()
 			}
+			this.tickProfilerRegions.end();
+
+			
 			this.tickEntities();
+			
 		}
-		this.tickComputeTime = new Date().getTime() - this.tickComputeDateLast;
+		this.tickProfilerWorld.end();
 	}
 }

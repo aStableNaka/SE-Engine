@@ -19,7 +19,9 @@ regF(new ModelType.NoModel("None"));
 
 // Uniform Models, Models that vary in textures but are static. Textures are generated.
 regF(new ModelType.UniformModel("Cube", "SIMPLE/cube.gltf", 16, {scale:0.5, noRaycasting:true}));
+regF(new ModelType.UniformModel("Tile", "SIMPLE/tile.gltf", 16, {scale:0.5, noRaycasting:true}));
 regF(new ModelType.UniformModel("FoliageSix", "FOLIAGE/Six.gltf", 16, { scale:0.5, noRaycasting:true }));
+regF(new ModelType.UniformModel("FoliageFlat", "FOLIAGE/Six.gltf", 16, { scale:0.5, noRaycasting:true }));
 regF(new ModelType.UniformModel("TreeSakura0", "FOLIAGE/Sakura-0.gltf", 1, { scale:0.5 }));
 
 // Railed Models, Models that have animated textures.

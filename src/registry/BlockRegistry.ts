@@ -108,8 +108,8 @@ export class BlockRegistry implements Registry{
 	 * @example
 	 * baseRegistry.createBlockData("base:BlockNull") // [ Object BlockData ]
 	 */
-	createBlockData( blockId:string, metadata?:any ):BlockData{
-		return this.getBlockClass(blockId).createBlockData( metadata );
+	createBlockData( blockId:string, parameters?:any ):BlockData{
+		return this.getBlockClass(blockId).createBlockData( parameters );
 	}
 
 	/**

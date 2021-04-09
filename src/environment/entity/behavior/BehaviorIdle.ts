@@ -1,7 +1,7 @@
 import { ActorBehavior } from "./ActorBehavior";
 import { EntityActor } from "../EntityActor";
 import { Vector2 } from "three";
-import { config } from "../../../controls/Config";
+import { config } from "@config";
 
 export class BehaviorIdle extends ActorBehavior{	
 

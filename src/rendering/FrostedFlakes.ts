@@ -60,6 +60,7 @@ export class FrostedFlakes extends THREE.Scene{
 			RIGHT: 68, // right arrow
 			BOTTOM: 83 // down arrow
 		}*/
+		//this.orbitControlls.enableDamping = false;
 
 		// Debugging
 		

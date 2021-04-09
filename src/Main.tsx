@@ -7,6 +7,9 @@ import { ValuesScope } from './ui/debug/ValuesScope';
 import { GameController } from './GameController';
 import { FrostedFlakes } from './rendering/FrostedFlakes';
 import { MousePointer } from "./ui/core/MousePointer";
+import {Minimap} from "./ui/core/Minimap"
+import { World } from './environment/world/World';
+import { ContextMenuView } from './ui/context/ContextMenu';
 
 type MainState = {
 	gameController: GameController | null;
@@ -60,8 +63,11 @@ export class Main extends React.Component<{},MainState>{
 		let self = this;
 		return (
 			<div>
-				
-				<ValuesScope id="vsmain" ref={this.valuesScope}></ValuesScope>
+				<Minimap></Minimap>
+				<ContextMenuView/>
+				<ValuesScope id="vsmain" ref={this.valuesScope}>
+					<input type="text"></input>
+				</ValuesScope>
 				<GameSceneContainer setController={
 					( gameScene: FrostedFlakes )=>{
 						/**
@@ -72,6 +78,7 @@ export class Main extends React.Component<{},MainState>{
 						return self.gameCtrlr;
 					}
 				}/>
+				
 			</div>
 		)
 	}

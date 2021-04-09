@@ -10,7 +10,7 @@ export class BlockVariantFoliageData extends BlockVariantData{
 }
 
 export class BlockFoliage extends BlockFactory{
-	static model:string = "base:model:FoliageSix";
+	static model:string = "base:model:FoliageFlat";
 	static noModel = false;
 
 	/**
@@ -21,7 +21,11 @@ export class BlockFoliage extends BlockFactory{
 	}
 
 	static getModelKey( blockData:BlockVariantFoliageData ):string{
-		return `base:model:FoliageSix:${ blockData.uniqueData.variant }`;
+		return `base:model:FoliageFlat:${ blockData.uniqueData.variant }`;
 		//return `${this.model}:${blockData.data||0}`;
+	}
+
+	static getMinimapColor( blockData:BlockData ){
+		return [50,255,100,0];
 	}
 }

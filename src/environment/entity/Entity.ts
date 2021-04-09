@@ -3,13 +3,16 @@ import { World } from "../world/World";
 import { Vector3, Vector2, Object3D } from "three";
 import { Region } from "../world/region/Region";
 
-export const enetityMissingGeometry: THREE.Geometry = new THREE.BoxGeometry(0.30902348578,1,0.30902348578);
+export const entityMissingGeometry: THREE.Geometry = new THREE.BoxGeometry(0.30902348578,1,0.30902348578);
 export const entityMissingMaterial: THREE.Material = new THREE.MeshLambertMaterial({color:0xff00ff});
 
 /**
  * Entities are anything that aren't blocks which inhabit the world
  */
 export class Entity{
+	static missingGeom = entityMissingGeometry;
+	static missingMat = entityMissingMaterial;
+
 	position: THREE.Vector2;
 	meshGroup: THREE.Group = new THREE.Group();
 	world:World;
@@ -25,19 +28,23 @@ export class Entity{
 	lifespan:number = 10; // Ticks
 	lifetime: number = 0;
 
-	constructor( world:World ){
+	constructor( world:World){
 		this.position = new THREE.Vector2(0,0);
 		this.world = world;
-		this.world.entities.add( this );
+		this.appendToWorld();
 		this.meshGroup.name = `ENTITY_${this.world.entities.size}`
 		//this.updateRegionPosition();
+	}
+
+	appendToWorld(){
+		this.world.entities.add(this);
 	}
 
 	/**
 	 * Build a mesh for this entity
 	 */
 	meshFactory(): Object3D{
-		const mesh = new THREE.Mesh( enetityMissingGeometry.clone(), entityMissingMaterial );
+		const mesh = new THREE.Mesh( entityMissingGeometry.clone(), entityMissingMaterial );
 		mesh.position.set( 0,0,0 );
 		mesh.matrixWorldNeedsUpdate = true;
 		return mesh;
@@ -53,7 +60,7 @@ export class Entity{
 		this.world.limboMeshGroup.add(this.meshGroup);
 	}
 
-	move( vec2:THREE.Vector2 ){
+	private move( vec2:THREE.Vector2 ){
 		this.position.add(vec2);
 		this.meshGroup.position.set(this.position.x,3,this.position.y);
 	}

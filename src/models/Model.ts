@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { Layer } from "../environment/world/region/Layer";
 import { ModelRegistry } from "../registry/ModelRegistry";
 import { Vector4, Vector2 } from "three";
-import { config } from "../controls/Config";
+import { config } from "@config";
 
 export type ModelOptions = {
 	scale?:number;

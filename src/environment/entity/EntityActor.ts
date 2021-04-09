@@ -1,6 +1,6 @@
-import { Entity, enetityMissingGeometry, entityMissingMaterial } from "./Entity";
-import { config } from "../../controls/Config";
-import { Mesh, Vector2, Object3D } from "three";
+import { Entity } from "./Entity";
+import { config } from "@config";
+import { Mesh, Vector2, Object3D, Group, PointLight } from "three";
 import { World } from "../world/World";
 import { ActorBehavior } from "./behavior/ActorBehavior";
 import { BehaviorIdle } from "./behavior/BehaviorIdle";
@@ -24,10 +24,12 @@ export class EntityActor extends Entity{
 	 * Build a mesh for this entity
 	 */
 	meshFactory(): Object3D{
-		const mesh = new Mesh( enetityMissingGeometry.clone(), entityMissingMaterial );
+		const group = new Group();
+		const mesh = new Mesh( Entity.missingGeom.clone(), Entity.missingMat );
 		mesh.position.set( 0,0,0 );
 		mesh.matrixWorldNeedsUpdate = true;
-		return mesh;
+		group.add(mesh);
+		return group;
 	}
 
 	/**

@@ -3,5 +3,5 @@ export interface MapObject{
 	x: number,
 	y: number,
 	z?: number,
-	meta?: any
+	param?: any
 }
